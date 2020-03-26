@@ -16,15 +16,6 @@ function! dein#util#_set_default(var, val, ...) abort
   endif
 endfunction
 
-function! dein#util#_is_windows() abort
-  return s:is_windows
-endfunction
-function! dein#util#_is_mac() abort
-  return !s:is_windows && !has('win32unix')
-      \ && (has('mac') || has('macunix') || has('gui_macvim') ||
-      \   (!isdirectory('/proc') && executable('sw_vers')))
-endfunction
-
 function! dein#util#_get_base_path() abort
   return g:dein#_base_path
 endfunction
@@ -80,13 +71,13 @@ function! dein#util#_notify(msg) abort
       let cmd .= ' --icon=' . string(icon)
     endif
     let cmd .= ' ' . string(title) . ' ' . string(a:msg)
-  elseif dein#util#_is_windows() && executable('Snarl_CMD')
+  elseif v:lua._is_windows() && executable('Snarl_CMD')
     let cmd = printf('Snarl_CMD snShowMessage %d "%s" "%s"',
           \ g:dein#notification_time, title, a:msg)
     if icon !=# ''
       let cmd .= ' "' . icon . '"'
     endif
-  elseif dein#util#_is_mac()
+  elseif v:lua._is_mac()
     let cmd = ''
     if executable('terminal-notifier')
       let cmd .= 'terminal-notifier -title '
@@ -641,7 +632,7 @@ function! dein#util#_download(uri, outpath) abort
   if g:dein#download_command !=# ''
     return printf('%s "%s" "%s"',
           \ g:dein#download_command, a:outpath, a:uri)
-  elseif dein#util#_is_windows()
+  elseif v:lua._is_windows()
     " Use powershell
     " Todo: Proxy support
     let pscmd = printf("(New-Object Net.WebClient).DownloadFile('%s', '%s')",

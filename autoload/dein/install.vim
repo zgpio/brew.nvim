@@ -746,12 +746,12 @@ function! dein#install#_rm(path) abort
   " Note: In Windows, ['rmdir', '/S', '/Q'] does not work.
   " After Vim 8.0.928, double quote escape does not work in job.  Too bad.
   let cmdline = ' "' . a:path . '"'
-  if dein#util#_is_windows()
+  if v:lua._is_windows()
     " Note: In rm command, must use "\" instead of "/".
     let cmdline = substitute(cmdline, '/', '\\\\', 'g')
   endif
 
-  let rm_command = dein#util#_is_windows() ? 'cmd /C rmdir /S /Q' : 'rm -rf'
+  let rm_command = v:lua._is_windows() ? 'cmd /C rmdir /S /Q' : 'rm -rf'
   let cmdline = rm_command . cmdline
   let result = system(cmdline)
   if v:shell_error
@@ -771,7 +771,7 @@ function! dein#install#_copy_directories(srcs, dest) abort
   endif
 
   let status = 0
-  if dein#util#_is_windows()
+  if v:lua._is_windows()
     if !executable('robocopy')
       call dein#util#_error('robocopy command is needed.')
       return 1
@@ -1415,7 +1415,7 @@ endfunction
 
 function! s:args2string(args) abort
   return type(a:args) == v:t_string ? a:args :
-        \ dein#util#_is_windows() ?
+        \ v:lua._is_windows() ?
         \   dein#install#_args2string_windows(a:args) :
         \   dein#install#_args2string_unix(a:args)
 endfunction
