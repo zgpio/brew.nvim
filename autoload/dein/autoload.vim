@@ -59,9 +59,10 @@ function! dein#autoload#_source(...) abort
 
   let filetype_after = dein#util#_redir('autocmd FileType')
 
-  let is_reset = s:is_reset_ftplugin(sourced)
+  lua require 'dein/autoload'
+  let is_reset = v:lua.is_reset_ftplugin(sourced)
   if is_reset
-    call s:reset_ftplugin()
+    call v:lua.reset_ftplugin()
   endif
 
   if (is_reset || filetype_before !=# filetype_after) && &filetype !=# ''
@@ -298,21 +299,6 @@ function! s:source_plugin(rtps, index, plugin, sourced) abort
     endif
   endif
 endfunction
-function! s:reset_ftplugin() abort
-  let filetype_state = dein#util#_redir('filetype')
-
-  if exists('b:did_indent') || exists('b:did_ftplugin')
-    filetype plugin indent off
-  endif
-
-  if filetype_state =~# 'plugin:ON'
-    silent! filetype plugin on
-  endif
-
-  if filetype_state =~# 'indent:ON'
-    silent! filetype indent on
-  endif
-endfunction
 function! s:get_input() abort
   let input = ''
   let termstr = '<M-_>'
@@ -336,25 +322,6 @@ function! s:get_input() abort
   return input
 endfunction
 
-function! s:is_reset_ftplugin(plugins) abort
-  if &filetype ==# ''
-    return 0
-  endif
-
-  for plugin in a:plugins
-    let ftplugin = plugin.rtp . '/ftplugin/' . &filetype
-    let after = plugin.rtp . '/after/ftplugin/' . &filetype
-    if !empty(filter(['ftplugin', 'indent',
-        \ 'after/ftplugin', 'after/indent',],
-        \ "filereadable(printf('%s/%s/%s.vim',
-        \    plugin.rtp, v:val, &filetype))"))
-        \ || isdirectory(ftplugin) || isdirectory(after)
-        \ || glob(ftplugin. '_*.vim') !=# '' || glob(after . '_*.vim') !=# ''
-      return 1
-    endif
-  endfor
-  return 0
-endfunction
 function! s:mapargrec(map, mode) abort
   let arg = maparg(a:map, a:mode)
   while maparg(arg, a:mode) !=# ''
