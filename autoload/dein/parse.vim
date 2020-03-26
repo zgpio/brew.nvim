@@ -21,7 +21,8 @@ function! dein#parse#_add(repo, options) abort
   endif
 
   if plugin.lazy && plugin.rtp !=# ''
-    call s:parse_lazy(plugin)
+    lua require 'dein/parse'
+    let plugin = v:lua.parse_lazy(plugin)
   endif
 
   if has_key(g:dein#_plugins, plugin.name)
@@ -272,94 +273,6 @@ function! dein#parse#_local(localdir, options, includes) abort
     else
       call dein#add(dir, options)
     endif
-  endfor
-endfunction
-function! s:parse_lazy(plugin) abort
-  " Auto convert2list.
-  for key in filter([
-        \ 'on_ft', 'on_path', 'on_cmd', 'on_func', 'on_map',
-        \ 'on_source', 'on_event',
-        \ ], 'has_key(a:plugin, v:val)
-        \     && type(a:plugin[v:val]) != v:t_list
-        \     && type(a:plugin[v:val]) != v:t_dict
-        \')
-    let a:plugin[key] = [a:plugin[key]]
-  endfor
-
-  if get(a:plugin, 'on_i', 0)
-    let a:plugin.on_event = ['InsertEnter']
-  endif
-  if get(a:plugin, 'on_idle', 0)
-    let a:plugin.on_event = ['FocusLost', 'CursorHold']
-  endif
-  if has_key(a:plugin, 'on_event')
-    for event in a:plugin.on_event
-      if !has_key(g:dein#_event_plugins, event)
-        let g:dein#_event_plugins[event] = [a:plugin.name]
-      else
-        call add(g:dein#_event_plugins[event], a:plugin.name)
-        let g:dein#_event_plugins[event] = dein#util#_uniq(
-              \ g:dein#_event_plugins[event])
-      endif
-    endfor
-  endif
-
-  if has_key(a:plugin, 'on_cmd')
-    call s:generate_dummy_commands(a:plugin)
-  endif
-  if has_key(a:plugin, 'on_map')
-    call s:generate_dummy_mappings(a:plugin)
-  endif
-endfunction
-function! s:generate_dummy_commands(plugin) abort
-  let a:plugin.dummy_commands = []
-  for name in a:plugin.on_cmd
-    " Define dummy commands.
-    let raw_cmd = 'command '
-          \ . '-complete=customlist,dein#autoload#_dummy_complete'
-          \ . ' -bang -bar -range -nargs=* '. name
-          \ . printf(" call dein#autoload#_on_cmd(%s, %s, <q-args>,
-          \  expand('<bang>'), expand('<line1>'), expand('<line2>'))",
-          \   string(name), string(a:plugin.name))
-
-    call add(a:plugin.dummy_commands, [name, raw_cmd])
-    silent! execute raw_cmd
-  endfor
-endfunction
-function! s:generate_dummy_mappings(plugin) abort
-  let a:plugin.dummy_mappings = []
-  let items = type(a:plugin.on_map) == v:t_dict ?
-        \ map(items(a:plugin.on_map),
-        \   "[split(v:val[0], '\\zs'), dein#util#_convert2list(v:val[1])]") :
-        \ map(copy(a:plugin.on_map),
-        \  "type(v:val) == v:t_list ?
-        \     [split(v:val[0], '\\zs'), v:val[1:]] :
-        \     [['n', 'x'], [v:val]]")
-  for [modes, mappings] in items
-    if mappings ==# ['<Plug>']
-      " Use plugin name.
-      let mappings = ['<Plug>(' . a:plugin.normalized_name]
-      if stridx(a:plugin.normalized_name, '-') >= 0
-        " The plugin mappings may use "_" instead of "-".
-        call add(mappings, '<Plug>(' .
-              \ substitute(a:plugin.normalized_name, '-', '_', 'g'))
-      endif
-    endif
-
-    for mapping in mappings
-      " Define dummy mappings.
-      let prefix = printf('dein#autoload#_on_map(%s, %s,',
-            \ string(substitute(mapping, '<', '<lt>', 'g')),
-            \ string(a:plugin.name))
-      for mode in modes
-        let raw_map = mode.'noremap <unique><silent> '.mapping
-            \ . (mode ==# 'c' ? " \<C-r>=" :
-            \    mode ==# 'i' ? " \<C-o>:call " : " :\<C-u>call ") . prefix
-            \ . string(mode) . ')<CR>'
-        call add(a:plugin.dummy_mappings, [mode, mapping, raw_map])
-        silent! execute raw_map
-      endfor
-    endfor
   endfor
 endfunction
 function! s:merge_ftplugin(ftplugin) abort
