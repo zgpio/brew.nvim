@@ -6,9 +6,6 @@
 
 let s:is_windows = has('win32') || has('win64')
 
-function! dein#util#_init() abort
-endfunction
-
 function! dein#util#_set_default(var, val, ...) abort
   if !exists(a:var) || type({a:var}) != type(a:val)
     let alternate_var = get(a:000, 0, '')
@@ -147,10 +144,6 @@ function! dein#util#_is_fish() abort
 endfunction
 function! dein#util#_is_powershell() abort
   return dein#install#_is_async() && fnamemodify(&shell, ':t:r') =~? 'powershell\|pwsh'
-endfunction
-function! dein#util#_has_job() abort
-  return (has('nvim') && exists('v:t_list'))
-        \ || (has('patch-8.0.0027') && has('job'))
 endfunction
 
 function! dein#util#_check_lazy_plugins() abort
@@ -363,11 +356,6 @@ function! dein#util#_begin(path, vimrcs) abort
   let g:dein#_event_plugins = {}
   let g:dein#_ftplugin = {}
   let g:dein#_hook_add = ''
-
-  if !dein#util#_has_job()
-    call dein#util#_error('Does not work in the Vim (' . v:version . ').')
-    return 1
-  endif
 
   if a:path ==# '' || g:dein#_block_level != 0
     call dein#util#_error('Invalid begin/end block usage.')
@@ -734,18 +722,5 @@ function! s:_compare(a, b) abort
 endfunction
 
 function! s:execute(expr) abort
-  if has('nvim')
-    return execute(split(a:expr, '\n'))
-  endif
-
-  let dummy = '_dein_dummy_' .
-        \ substitute(reltimestr(reltime()), '\W', '_', 'g')
-  execute 'function! '.dummy."() abort\n"
-        \ . a:expr . "\nendfunction"
-  call {dummy}()
-  execute 'delfunction' dummy
-endfunction
-
-function! s:neovim_version() abort
-  return str2float(matchstr(execute('version'), 'NVIM v\zs\d\.\d\.\d'))
+  return execute(split(a:expr, '\n'))
 endfunction
