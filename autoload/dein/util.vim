@@ -4,6 +4,7 @@
 " License: MIT license
 "=============================================================================
 
+lua require 'dein/util'
 let s:is_windows = has('win32') || has('win64')
 
 function! dein#util#_set_default(var, val, ...) abort
@@ -32,24 +33,11 @@ function! dein#util#_get_runtime_path() abort
     return g:dein#_runtime_path
   endif
 
-  let g:dein#_runtime_path = dein#util#_get_cache_path() . '/.dein'
+  let g:dein#_runtime_path = v:lua._get_cache_path() . '/.dein'
   if !isdirectory(g:dein#_runtime_path)
     call mkdir(g:dein#_runtime_path, 'p')
   endif
   return g:dein#_runtime_path
-endfunction
-function! dein#util#_get_cache_path() abort
-  if g:dein#_cache_path !=# ''
-    return g:dein#_cache_path
-  endif
-
-  let g:dein#_cache_path = get(g:,
-        \ 'dein#cache_directory', g:dein#_base_path)
-        \ . '/.cache/' . fnamemodify(dein#util#_get_myvimrc(), ':t')
-  if !isdirectory(g:dein#_cache_path)
-    call mkdir(g:dein#_cache_path, 'p')
-  endif
-  return g:dein#_cache_path
 endfunction
 function! dein#util#_get_vimrcs(vimrcs) abort
   return !empty(a:vimrcs) ?
@@ -166,11 +154,11 @@ function! dein#util#_check_clean() abort
 endfunction
 
 function! dein#util#_writefile(path, list) abort
-  if g:dein#_is_sudo || !filewritable(dein#util#_get_cache_path())
+  if g:dein#_is_sudo || !filewritable(v:lua._get_cache_path())
     return 1
   endif
 
-  let path = dein#util#_get_cache_path() . '/' . a:path
+  let path = v:lua._get_cache_path() . '/' . a:path
   let dir = fnamemodify(path, ':h')
   if !isdirectory(dir)
     call mkdir(dir, 'p')
@@ -184,7 +172,7 @@ function! dein#util#_get_type(name) abort
 endfunction
 
 function! dein#util#_save_cache(vimrcs, is_state, is_starting) abort
-  if dein#util#_get_cache_path() ==# '' || !a:is_starting
+  if v:lua._get_cache_path() ==# '' || !a:is_starting
     " Ignore
     return 1
   endif
@@ -240,7 +228,7 @@ function! dein#util#_check_vimrcs() abort
   return ret
 endfunction
 function! dein#util#_load_merged_plugins() abort
-  let path = dein#util#_get_cache_path() . '/merged'
+  let path = v:lua._get_cache_path() . '/merged'
   if !filereadable(path)
     return []
   endif
@@ -254,7 +242,7 @@ function! dein#util#_save_merged_plugins() abort
   let merged = dein#util#_get_merged_plugins()
   call writefile(merged[: g:dein#_merged_length - 2] +
         \ [string(merged[g:dein#_merged_length - 1 :])],
-        \ dein#util#_get_cache_path() . '/merged')
+        \ v:lua._get_cache_path() . '/merged')
 endfunction
 function! dein#util#_get_merged_plugins() abort
   let ftplugin_len = 0
@@ -271,7 +259,7 @@ function! dein#util#_save_state(is_starting) abort
     return 1
   endif
 
-  if dein#util#_get_cache_path() ==# '' || !a:is_starting
+  if v:lua._get_cache_path() ==# '' || !a:is_starting
     " Ignore
     return 1
   endif
@@ -368,7 +356,7 @@ function! dein#util#_begin(path, vimrcs) abort
     let g:dein#_base_path = g:dein#_base_path[: -2]
   endif
   call dein#util#_get_runtime_path()
-  call dein#util#_get_cache_path()
+  call v:lua._get_cache_path()
   let g:dein#_vimrcs = dein#util#_get_vimrcs(a:vimrcs)
   let g:dein#_hook_add = ''
 

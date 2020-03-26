@@ -4,6 +4,7 @@
 " License: MIT license
 "=============================================================================
 
+lua require 'dein/util'
 " Variables
 let s:global_context = {}
 let s:log = []
@@ -206,7 +207,7 @@ function! dein#install#_recache_runtimepath() abort
   call s:log(strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 endfunction
 function! s:clear_runtimepath() abort
-  if dein#util#_get_cache_path() ==# ''
+  if v:lua._get_cache_path() ==# ''
     call dein#util#_error('Invalid base path.')
     return
   endif
@@ -307,7 +308,7 @@ function! dein#install#_load_rollback(rollbackfile, plugins) abort
 endfunction
 function! s:get_rollback_directory() abort
   let parent = printf('%s/rollbacks/%s',
-        \ dein#util#_get_cache_path(), g:dein#_progname)
+        \ v:lua._get_cache_path(), g:dein#_progname)
   if !isdirectory(parent)
     call mkdir(parent, 'p')
   endif
