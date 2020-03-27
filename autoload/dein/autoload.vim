@@ -186,7 +186,8 @@ endfunction
 function! dein#autoload#_on_map(mapping, name, mode) abort
   let cnt = v:count > 0 ? v:count : ''
 
-  let input = s:get_input()
+  lua require 'dein/autoload'
+  let input = v:lua.get_input()
 
   call dein#source(a:name)
 
@@ -298,28 +299,6 @@ function! s:source_plugin(rtps, index, plugin, sourced) abort
       call dein#util#_add_after(a:rtps, a:plugin.rtp.'/after')
     endif
   endif
-endfunction
-function! s:get_input() abort
-  let input = ''
-  let termstr = '<M-_>'
-
-  call feedkeys(termstr, 'n')
-
-  while 1
-    let char = getchar()
-    let input .= (type(char) == v:t_number) ? nr2char(char) : char
-
-    let idx = stridx(input, termstr)
-    if idx >= 1
-      let input = input[: idx - 1]
-      break
-    elseif idx == 0
-      let input = ''
-      break
-    endif
-  endwhile
-
-  return input
 endfunction
 
 function! s:mapargrec(map, mode) abort
