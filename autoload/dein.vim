@@ -60,26 +60,8 @@ function! dein#load_cache_raw(vimrcs) abort
   return [json_decode(list[1]), json_decode(list[2])]
 endfunction
 function! dein#load_state(path, ...) abort
-  if !exists('#dein')
-    call dein#_init()
-  endif
-  let sourced = a:0 > 0 ? a:1 : has('vim_starting') &&
-        \  (!exists('&loadplugins') || &loadplugins)
-  if (g:dein#_is_sudo || !sourced) | return 1 | endif
-  let g:dein#_base_path = expand(a:path)
-
-  let state = get(g:, 'dein#cache_directory', g:dein#_base_path)
-        \ . '/state_' . g:dein#_progname . '.vim'
-  if !filereadable(state) | return 1 | endif
-  try
-    execute 'source' fnameescape(state)
-  catch
-    if v:exception !=# 'Cache loading error'
-      call dein#util#_error('Loading state error: ' . v:exception)
-    endif
-    call dein#clear_state()
-    return 1
-  endtry
+  lua require 'dein'
+  return v:lua.load_state(a:path, a:000)
 endfunction
 
 function! dein#tap(name) abort
