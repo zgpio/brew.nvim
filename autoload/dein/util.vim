@@ -19,17 +19,6 @@ endfunction
 function! dein#util#_get_base_path() abort
   return g:dein#_base_path
 endfunction
-function! dein#util#_get_runtime_path() abort
-  if g:dein#_runtime_path !=# ''
-    return g:dein#_runtime_path
-  endif
-
-  let g:dein#_runtime_path = v:lua._get_cache_path() . '/.dein'
-  if !isdirectory(g:dein#_runtime_path)
-    call mkdir(g:dein#_runtime_path, 'p')
-  endif
-  return g:dein#_runtime_path
-endfunction
 function! dein#util#_get_vimrcs(vimrcs) abort
   return !empty(a:vimrcs) ?
         \ map(dein#util#_convert2list(a:vimrcs), 'expand(v:val)') :
@@ -198,7 +187,7 @@ function! dein#util#_save_cache(vimrcs, is_state, is_starting) abort
         \ .'/cache_' . g:dein#_progname)
 endfunction
 function! dein#util#_check_vimrcs() abort
-  let time = getftime(dein#util#_get_runtime_path())
+  let time = getftime(v:lua._get_runtime_path())
   let ret = !empty(filter(map(copy(g:dein#_vimrcs), 'getftime(expand(v:val))'),
         \ 'time < v:val'))
   if !ret
@@ -347,7 +336,7 @@ function! dein#util#_begin(path, vimrcs) abort
   if g:dein#_base_path[-1:] ==# '/'
     let g:dein#_base_path = g:dein#_base_path[: -2]
   endif
-  call dein#util#_get_runtime_path()
+  call v:lua._get_runtime_path()
   call v:lua._get_cache_path()
   let g:dein#_vimrcs = dein#util#_get_vimrcs(a:vimrcs)
   let g:dein#_hook_add = ''

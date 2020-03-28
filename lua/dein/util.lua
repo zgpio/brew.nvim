@@ -10,6 +10,18 @@ end
 function _is_mac()
   return is_mac
 end
+function _get_runtime_path()
+  local rtp = vim.g['dein#_runtime_path']
+  if rtp ~= '' then
+    return rtp
+  end
+  rtp = _get_cache_path() .. '/.dein'
+  vim.g['dein#_runtime_path'] = rtp
+  if vim.fn.isdirectory(rtp)==0 then
+    vim.fn.mkdir(rtp, 'p')
+  end
+  return rtp
+end
 -- TODO: review
 function _save_cache(vimrcs, is_state, is_starting)
   if _get_cache_path() == '' or (is_starting==0) then

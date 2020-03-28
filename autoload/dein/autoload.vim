@@ -18,7 +18,7 @@ function! dein#autoload#_source(...) abort
 
   lua require 'dein/util'
   let rtps = v:lua._split_rtp(&runtimepath)
-  let index = index(rtps, dein#util#_get_runtime_path())
+  let index = index(rtps, v:lua._get_runtime_path())
   if index < 0
     return 1
   endif

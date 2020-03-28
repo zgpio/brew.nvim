@@ -175,8 +175,8 @@ function! dein#install#_recache_runtimepath() abort
 
   call s:copy_files(filter(copy(merged_plugins), 'v:val.lazy'), '')
   " Remove plugin directory
-  call dein#install#_rm(dein#util#_get_runtime_path() . '/plugin')
-  call dein#install#_rm(dein#util#_get_runtime_path() . '/after/plugin')
+  call dein#install#_rm(v:lua._get_runtime_path() . '/plugin')
+  call dein#install#_rm(v:lua._get_runtime_path() . '/after/plugin')
 
   call s:copy_files(filter(copy(merged_plugins), '!v:val.lazy'), '')
 
@@ -186,9 +186,9 @@ function! dein#install#_recache_runtimepath() abort
 
   " Clear ftdetect and after/ftdetect directories.
   call dein#install#_rm(
-        \ dein#util#_get_runtime_path().'/ftdetect')
+        \ v:lua._get_runtime_path().'/ftdetect')
   call dein#install#_rm(
-        \ dein#util#_get_runtime_path().'/after/ftdetect')
+        \ v:lua._get_runtime_path().'/after/ftdetect')
 
   call s:merge_files(plugins, 'ftdetect')
   call s:merge_files(plugins, 'after/ftdetect')
@@ -212,7 +212,7 @@ function! s:clear_runtimepath() abort
     return
   endif
 
-  let runtimepath = dein#util#_get_runtime_path()
+  let runtimepath = v:lua._get_runtime_path()
 
   " Remove runtime path
   call dein#install#_rm(runtimepath)
@@ -228,7 +228,7 @@ function! s:helptags() abort
   endif
 
   try
-    let tags = dein#util#_get_runtime_path() . '/doc'
+    let tags = v:lua._get_runtime_path() . '/doc'
     if !isdirectory(tags)
       call mkdir(tags, 'p')
     endif
@@ -250,7 +250,7 @@ function! s:copy_files(plugins, directory) abort
   let stride = 50
   for start in range(0, len(srcs), stride)
     call dein#install#_copy_directories(srcs[start : start + stride-1],
-          \ dein#util#_get_runtime_path() . directory)
+          \ v:lua._get_runtime_path() . directory)
   endfor
 endfunction
 function! s:merge_files(plugins, directory) abort
@@ -356,7 +356,7 @@ function! dein#install#_get_default_ftplugin() abort
 endfunction
 function! s:generate_ftplugin() abort
   " Create after/ftplugin
-  let after = dein#util#_get_runtime_path() . '/after/ftplugin'
+  let after = v:lua._get_runtime_path() . '/after/ftplugin'
   if !isdirectory(after)
     call mkdir(after, 'p')
   endif
@@ -382,7 +382,7 @@ function! s:generate_ftplugin() abort
   call writefile(dein#install#_get_default_ftplugin() + [
         \ 'function! s:after_ftplugin()',
         \ ] + get(ftplugin, '_', []) + ['endfunction'],
-        \ dein#util#_get_runtime_path() . '/ftplugin.vim')
+        \ v:lua._get_runtime_path() . '/ftplugin.vim')
 
   " Generate after/ftplugin
   for [filetype, list] in filter(items(ftplugin), "v:val[0] !=# '_'")
