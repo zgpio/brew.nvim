@@ -556,14 +556,6 @@ endfunction
 function! dein#util#_redir(cmd) abort
   if exists('*execute')
     return execute(a:cmd)
-  else
-    let [save_verbose, save_verbosefile] = [&verbose, &verbosefile]
-    set verbose=0 verbosefile=
-    redir => res
-    silent! execute a:cmd
-    redir END
-    let [&verbose, &verbosefile] = [save_verbose, save_verbosefile]
-    return res
   endif
 endfunction
 
