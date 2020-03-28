@@ -676,11 +676,6 @@ function! s:skipempty(string) abort
   return filter(split(a:string, '\n'), "v:val !=# ''")
 endfunction
 
-function! s:escape(path) abort
-  " Escape a path for runtimepath.
-  return substitute(a:path, ',\|\\,\@=', '\\\0', 'g')
-endfunction
-
 function! s:sort(list, expr) abort
   if type(a:expr) == v:t_func
     return sort(a:list, a:expr)
