@@ -16,7 +16,8 @@ function! dein#autoload#_source(...) abort
         \       'get(g:dein#_plugins, v:val, {})')
   endif
 
-  let rtps = dein#util#_split_rtp(&runtimepath)
+  lua require 'dein/util'
+  let rtps = v:lua._split_rtp(&runtimepath)
   let index = index(rtps, dein#util#_get_runtime_path())
   if index < 0
     return 1
@@ -29,7 +30,8 @@ function! dein#autoload#_source(...) abort
   endfor
 
   let filetype_before = dein#util#_redir('autocmd FileType')
-  let &runtimepath = dein#util#_join_rtp(rtps, &runtimepath, '')
+  lua require 'dein/util'
+  let &runtimepath = v:lua._join_rtp(rtps, &runtimepath, '')
 
   call dein#call_hook('source', sourced)
 

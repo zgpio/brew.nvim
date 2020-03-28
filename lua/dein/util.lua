@@ -141,6 +141,25 @@ function _error(msg)
     vim.api.nvim_command('echohl None')
   end
 end
+function _split_rtp(rtp)
+  if vim.fn.stridx(rtp, [[\,]]) < 0 then
+    return vim.fn.split(rtp, ',')
+  end
+
+  local split = vim.fn.split(rtp, [[\\\@<!\%(\\\\\)*\zs,]])
+  return vim.fn.map(split, [[substitute(v:val, '\\\([\\,]\)', '\1', 'g')]])
+end
+function _join_rtp(list, runtimepath, rtp)
+  if vim.fn.stridx(runtimepath, [[\,]]) < 0 and vim.fn.stridx(rtp, ',') < 0 then
+    return vim.fn.join(list, ',')
+  else
+    return vim.fn.join(vim.tbl_map(escape, list), ',')
+  end
+end
+function escape(path)
+  -- Escape a path for runtimepath.
+  return vim.fn.substitute(path, [[,\|\\,\@=]], [[\\\0]], 'g')
+end
 function msg2list(expr)
   if type(expr) == 'table' then
     return expr

@@ -256,8 +256,9 @@ function! dein#util#_save_state(is_starting) abort
   endif
 
   let g:dein#_vimrcs = dein#util#_uniq(g:dein#_vimrcs)
-  let &runtimepath = dein#util#_join_rtp(dein#util#_uniq(
-        \ dein#util#_split_rtp(&runtimepath)), &runtimepath, '')
+  lua require 'dein/util'
+  let &runtimepath = v:lua._join_rtp(dein#util#_uniq(
+        \ v:lua._split_rtp(&runtimepath)), &runtimepath, '')
 
   call dein#util#_save_cache(g:dein#_vimrcs, 1, a:is_starting)
 
@@ -367,7 +368,8 @@ function! dein#util#_begin(path, vimrcs) abort
   endif
 
   " Insert dein runtimepath to the head in 'runtimepath'.
-  let rtps = dein#util#_split_rtp(&runtimepath)
+  lua require 'dein/util'
+  let rtps = v:lua._split_rtp(&runtimepath)
   let idx = index(rtps, $VIMRUNTIME)
   if idx < 0
     call dein#util#_error('Invalid runtimepath.')
@@ -381,7 +383,8 @@ function! dein#util#_begin(path, vimrcs) abort
   endif
   call insert(rtps, g:dein#_runtime_path, idx)
   call dein#util#_add_after(rtps, g:dein#_runtime_path.'/after')
-  let &runtimepath = dein#util#_join_rtp(rtps,
+  lua require 'dein/util'
+  let &runtimepath = v:lua._join_rtp(rtps,
         \ &runtimepath, g:dein#_runtime_path)
 endfunction
 function! dein#util#_end() abort
@@ -398,7 +401,8 @@ function! dein#util#_end() abort
   endif
 
   " Add runtimepath
-  let rtps = dein#util#_split_rtp(&runtimepath)
+  lua require 'dein/util'
+  let rtps = v:lua._split_rtp(&runtimepath)
   let index = index(rtps, g:dein#_runtime_path)
   if index < 0
     call dein#util#_error('Invalid runtimepath.')
@@ -424,7 +428,8 @@ function! dein#util#_end() abort
 
     let plugin.sourced = sourced
   endfor
-  let &runtimepath = dein#util#_join_rtp(rtps, &runtimepath, '')
+  lua require 'dein/util'
+  let &runtimepath = v:lua._join_rtp(rtps, &runtimepath, '')
 
   if !empty(depends)
     call dein#source(depends)
@@ -525,19 +530,6 @@ function! dein#util#_tsort(plugins) abort
   endfor
 
   return sorted
-endfunction
-
-function! dein#util#_split_rtp(runtimepath) abort
-  if stridx(a:runtimepath, '\,') < 0
-    return split(a:runtimepath, ',')
-  endif
-
-  let split = split(a:runtimepath, '\\\@<!\%(\\\\\)*\zs,')
-  return map(split,'substitute(v:val, ''\\\([\\,]\)'', ''\1'', ''g'')')
-endfunction
-function! dein#util#_join_rtp(list, runtimepath, rtp) abort
-  return (stridx(a:runtimepath, '\,') < 0 && stridx(a:rtp, ',') < 0) ?
-        \ join(a:list, ',') : join(map(copy(a:list), 's:escape(v:val)'), ',')
 endfunction
 
 function! dein#util#_add_after(rtps, path) abort

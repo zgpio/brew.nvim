@@ -432,8 +432,9 @@ function! dein#install#_remote_plugins() abort
   call s:log('loaded remote plugins: ' .
         \ string(map(copy(remote_plugins), 'v:val.name')))
 
-  let &runtimepath = dein#util#_join_rtp(dein#util#_uniq(
-        \ dein#util#_split_rtp(&runtimepath)), &runtimepath, '')
+  lua require 'dein/util'
+  let &runtimepath = v:lua._join_rtp(dein#util#_uniq(
+        \ v:lua._split_rtp(&runtimepath)), &runtimepath, '')
 
   let result = execute('UpdateRemotePlugins', '')
   call s:log(result)
