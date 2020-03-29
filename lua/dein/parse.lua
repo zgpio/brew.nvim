@@ -54,11 +54,11 @@ function generate_dummy_commands(plugin)
   plugin.dummy_commands = {}
   for i, name in ipairs(plugin.on_cmd) do
     -- Define dummy commands.
-    local raw_cmd = 'command -complete=customlist,dein#autoload#_dummy_complete -bang -bar -range -nargs=* ' .. name
+    local raw_cmd = 'silent! command -complete=customlist,dein#autoload#_dummy_complete -bang -bar -range -nargs=* ' .. name
       .. vim.fn.printf(" call dein#autoload#_on_cmd(%s, %s, <q-args>, expand('<bang>'), expand('<line1>'), expand('<line2>'))",
        vim.fn.string(name), vim.fn.string(plugin.name))
 
-    plugin.dummy_commands = vim.tbl_extend('force', plugin.dummy_commands, {name, raw_cmd})
+    table.insert(plugin.dummy_commands, {name, raw_cmd})
     vim.api.nvim_command(raw_cmd)
   end
 end
@@ -114,12 +114,12 @@ function generate_dummy_mappings(plugin)
         elseif mode == 'i' then
           t = [[ \<C-o>:call ]]
         else
-          t = [[ :\<C-u>call ]]
+          t = vim.api.nvim_eval([[" :\<C-u>call "]])
         end
         local raw_map = mode..'noremap <unique><silent> '..mapping
             .. t .. prefix .. '"'.. mode.. '"'.. ')<CR>'
         table.insert(plugin.dummy_mappings, {mode, mapping, raw_map})
-        vim.api.nvim_command(raw_map)
+        vim.api.nvim_command('silent! '..raw_map)
       end
     end
   end
