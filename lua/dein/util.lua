@@ -1,4 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
+local M = {}
 local is_windows = vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1
 local is_mac = (not is_windows) and vim.fn.has('win32unix') == 0
   and (vim.fn.has('mac')==1 or vim.fn.has('macunix')==1 or vim.fn.has('gui_macvim')==1
@@ -156,7 +157,7 @@ end
 function execute(expr)
   return vim.fn.execute(vim.split(expr, '\n'))
 end
-function _error(msg)
+function M._error(msg)
   for i, mes in ipairs(msg2list(msg)) do
     local c = string.format('echomsg "[dein] %s"', mes)
     vim.api.nvim_command('echohl WarningMsg')
@@ -190,3 +191,64 @@ function msg2list(expr)
     return vim.split(expr, '\n')
   end
 end
+
+function _begin(path, vimrcs)
+  if vim.fn.exists('#dein')==0 then
+    vim.fn['dein#_init']()
+  end
+
+  -- Reset variables
+  vim.api.nvim_exec([[
+    let g:dein#_plugins = {}
+    let g:dein#_event_plugins = {}
+    let g:dein#_ftplugin = {}
+    let g:dein#_hook_add = ''
+  ]], true)
+
+  if path == '' or vim.g['dein#_block_level'] ~= 0 then
+    M._error('Invalid begin/end block usage.')
+    return 1
+  end
+
+  vim.g['dein#_block_level'] = vim.g['dein#_block_level'] + 1
+  vim.g['dein#_base_path'] = vim.fn['dein#util#_expand'](path)
+  if vim.g['dein#_base_path']:sub(-1) == '/' then
+    vim.g['dein#_base_path'] = vim.g['dein#_base_path']:sub(1, -2)
+  end
+  _get_runtime_path()
+  _get_cache_path()
+  vim.g['dein#_vimrcs'] = vim.fn['dein#util#_get_vimrcs'](vimrcs)
+  vim.g['dein#_hook_add'] = ''
+
+  -- Filetype off
+  if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
+    vim.g['dein#_off1'] = 'filetype off'
+    vim.api.nvim_command('filetype off')
+  end
+  if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
+    vim.g['dein#_off2'] = 'filetype plugin indent off'
+    vim.api.nvim_command('filetype plugin indent off')
+  end
+
+  if vim.fn.has('vim_starting')==0 then
+    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(vim.g['dein#_runtime_path']))
+    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(vim.g['dein#_runtime_path']..'/after'))
+  end
+
+  -- Insert dein runtimepath to the head in 'runtimepath'.
+  local rtps = _split_rtp(vim.o.rtp)
+  local idx = vim.fn.index(rtps, vim.env['VIMRUNTIME'])
+  if idx < 0 then
+    M._error('Invalid runtimepath.')
+    return 1
+  end
+  if vim.fn.fnamemodify(path, ':t') == 'plugin' and vim.fn.index(rtps, vim.fn.fnamemodify(path, ':h')) >= 0 then
+    M._error('You must not set the installation directory under "&runtimepath/plugin"')
+    return 1
+  end
+  rtps = vim.fn.insert(rtps, vim.g['dein#_runtime_path'], idx)
+  rtps = _add_after(rtps, vim.g['dein#_runtime_path']..'/after')
+  vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, vim.g['dein#_runtime_path'])
+end
+
+return M

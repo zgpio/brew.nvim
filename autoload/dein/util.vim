@@ -315,67 +315,6 @@ function! dein#util#_clear_state() abort
   endfor
 endfunction
 
-function! dein#util#_begin(path, vimrcs) abort
-  if !exists('#dein')
-    call dein#_init()
-  endif
-
-  " Reset variables
-  let g:dein#_plugins = {}
-  let g:dein#_event_plugins = {}
-  let g:dein#_ftplugin = {}
-  let g:dein#_hook_add = ''
-
-  if a:path ==# '' || g:dein#_block_level != 0
-    call dein#util#_error('Invalid begin/end block usage.')
-    return 1
-  endif
-
-  let g:dein#_block_level += 1
-  let g:dein#_base_path = dein#util#_expand(a:path)
-  if g:dein#_base_path[-1:] ==# '/'
-    let g:dein#_base_path = g:dein#_base_path[: -2]
-  endif
-  call v:lua._get_runtime_path()
-  call v:lua._get_cache_path()
-  let g:dein#_vimrcs = dein#util#_get_vimrcs(a:vimrcs)
-  let g:dein#_hook_add = ''
-
-  " Filetype off
-  if exists('g:did_load_filetypes') || has('nvim')
-    let g:dein#_off1 = 'filetype off'
-    execute g:dein#_off1
-  endif
-  if exists('b:did_indent') || exists('b:did_ftplugin')
-    let g:dein#_off2 = 'filetype plugin indent off'
-    execute g:dein#_off2
-  endif
-
-  if !has('vim_starting')
-    execute 'set rtp-='.fnameescape(g:dein#_runtime_path)
-    execute 'set rtp-='.fnameescape(g:dein#_runtime_path.'/after')
-  endif
-
-  " Insert dein runtimepath to the head in 'runtimepath'.
-  lua require 'dein/util'
-  let rtps = v:lua._split_rtp(&runtimepath)
-  let idx = index(rtps, $VIMRUNTIME)
-  if idx < 0
-    call dein#util#_error('Invalid runtimepath.')
-    return 1
-  endif
-  if fnamemodify(a:path, ':t') ==# 'plugin'
-        \ && index(rtps, fnamemodify(a:path, ':h')) >= 0
-    call dein#util#_error('You must not set the installation directory'
-          \ .' under "&runtimepath/plugin"')
-    return 1
-  endif
-  call insert(rtps, g:dein#_runtime_path, idx)
-  let rtps = v:lua._add_after(rtps, g:dein#_runtime_path.'/after')
-  lua require 'dein/util'
-  let &runtimepath = v:lua._join_rtp(rtps,
-        \ &runtimepath, g:dein#_runtime_path)
-endfunction
 function! dein#util#_end() abort
   if g:dein#_block_level != 1
     call dein#util#_error('Invalid begin/end block usage.')

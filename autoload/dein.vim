@@ -77,7 +77,8 @@ function! dein#is_sourced(name) abort
         \ && g:dein#_plugins[a:name].sourced
 endfunction
 function! dein#begin(path, ...) abort
-  return dein#util#_begin(a:path, (empty(a:000) ? [] : a:1))
+  lua require 'dein/util'
+  return v:lua._begin(a:path, (empty(a:000) ? [] : a:1))
 endfunction
 function! dein#end() abort
   return dein#util#_end()
