@@ -299,7 +299,9 @@ function! s:source_plugin(rtps, index, plugin, sourced) abort
   if !a:plugin.merged || get(a:plugin, 'local', 0)
     call insert(a:rtps, a:plugin.rtp, index)
     if isdirectory(a:plugin.rtp.'/after')
-      call dein#util#_add_after(a:rtps, a:plugin.rtp.'/after')
+      " call dein#util#_add_after(a:rtps, a:plugin.rtp.'/after')
+      let idx = index(a:rtps, $VIMRUNTIME)
+      call insert(a:rtps, a:plugin.rtp.'/after', (idx <= 0 ? -1 : idx + 1))
     endif
   endif
 endfunction

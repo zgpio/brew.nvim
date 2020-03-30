@@ -58,6 +58,17 @@ function _save_cache(vimrcs, is_state, is_starting)
     (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. vim.g['dein#_progname'])
 end
 
+function _add_after(rtps, path)
+  vim.validate{
+    rtps={rtps, 't'},
+    path={path, 's'},
+  }
+  local idx = vim.fn.index(rtps, vim.env.VIMRUNTIME)
+  local i
+  if idx <= 0 then i = -1 else i = idx + 1 end
+  rtps = vim.fn.insert(rtps, path, i)
+  return rtps
+end
 function _get_lazy_plugins()
   local plugins = vim.tbl_values(vim.g['dein#_plugins'])
   -- table.filter  https://gist.github.com/FGRibreau/3790217

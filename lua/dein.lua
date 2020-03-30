@@ -1,5 +1,6 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local M = {}
+-- https://gist.github.com/cwarden/1207556
 function catch(what)
   return what[1]
 end

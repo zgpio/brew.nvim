@@ -100,7 +100,7 @@ function source_plugin(rtps, index, plugin, sourced)
   if not plugin.merged or (plugin['local'] or 0) then
     vim.fn.insert(rtps, plugin.rtp, index)
     if vim.fn.isdirectory(plugin.rtp..'/after') == 1 then
-      vim.fn['dein#util#_add_after'](rtps, plugin.rtp..'/after')
+      rtps = _add_after(rtps, plugin.rtp..'/after')
     end
   end
   return rtps, index, plugin, sourced

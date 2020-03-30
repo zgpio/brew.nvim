@@ -371,7 +371,7 @@ function! dein#util#_begin(path, vimrcs) abort
     return 1
   endif
   call insert(rtps, g:dein#_runtime_path, idx)
-  call dein#util#_add_after(rtps, g:dein#_runtime_path.'/after')
+  let rtps = v:lua._add_after(rtps, g:dein#_runtime_path.'/after')
   lua require 'dein/util'
   let &runtimepath = v:lua._join_rtp(rtps,
         \ &runtimepath, g:dein#_runtime_path)
@@ -411,7 +411,7 @@ function! dein#util#_end() abort
     if !plugin.merged
       call insert(rtps, plugin.rtp, index)
       if isdirectory(plugin.rtp.'/after')
-        call dein#util#_add_after(rtps, plugin.rtp.'/after')
+        let rtps = v:lua._add_after(rtps, plugin.rtp.'/after')
       endif
     endif
 
