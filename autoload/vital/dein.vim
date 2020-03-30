@@ -11,14 +11,6 @@ if v:version > 703 || v:version == 703 && has('patch1170')
   function! s:_function(fstr) abort
     return function(a:fstr)
   endfunction
-else
-  function! s:_SID() abort
-    return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
-  endfunction
-  let s:_s = '<SNR>' . s:_SID() . '_'
-  function! s:_function(fstr) abort
-    return function(substitute(a:fstr, 's:', s:_s, 'g'))
-  endfunction
 endif
 
 function! vital#{s:plugin_name}#new() abort
@@ -313,16 +305,5 @@ endfunction
 if exists('*uniq')
   function! s:_uniq(list) abort
     return uniq(a:list)
-  endfunction
-else
-  function! s:_uniq(list) abort
-    let i = len(a:list) - 1
-    while 0 < i
-      if a:list[i] ==# a:list[i - 1]
-        call remove(a:list, i)
-      endif
-      let i -= 1
-    endwhile
-    return a:list
   endfunction
 endif
