@@ -252,6 +252,13 @@ function _begin(path, vimrcs)
   vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, vim.g['dein#_runtime_path'])
 end
 
+function _chomp(str)
+  if str ~= '' and str:sub(-1) == '/' then
+    return str:sub(1, -2)
+  else
+    return str
+  end
+end
 function _end()
   if vim.g['dein#_block_level'] ~= 1 then
     M._error('Invalid begin/end block usage.')
@@ -306,6 +313,8 @@ function _end()
   end
 
   local _event_plugins = vim.g['dein#_event_plugins']
+  -- TODO
+  _event_plugins[true] = nil
   for event, plugins in pairs(_event_plugins) do
     if vim.fn.exists('##'..event) then
       local t = event .. ' *'

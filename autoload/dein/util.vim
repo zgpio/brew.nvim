@@ -85,10 +85,6 @@ function! dein#util#_notify(msg) abort
   endif
 endfunction
 
-function! dein#util#_chomp(str) abort
-  return a:str !=# '' && a:str[-1:] ==# '/' ? a:str[: -2] : a:str
-endfunction
-
 function! dein#util#_uniq(list) abort
   let list = copy(a:list)
   let i = 0

@@ -80,7 +80,8 @@ function! dein#parse#_dict(plugin) abort
           \ plugin.repo : dein#util#_get_base_path().'/repos/'.plugin.name
   endif
 
-  let plugin.path = dein#util#_chomp(dein#util#_expand(plugin.path))
+  lua require 'dein/util'
+  let plugin.path = v:lua._chomp(dein#util#_expand(plugin.path))
   if get(plugin, 'rev', '') !=# ''
     " Add revision path
     let plugin.path .= '_' . substitute(
@@ -95,7 +96,8 @@ function! dein#parse#_dict(plugin) abort
   if plugin.rtp[0:] ==# '~'
     let plugin.rtp = dein#util#_expand(plugin.rtp)
   endif
-  let plugin.rtp = dein#util#_chomp(plugin.rtp)
+  lua require 'dein/util'
+  let plugin.rtp = v:lua._chomp(plugin.rtp)
   if g:dein#_is_sudo && !get(plugin, 'trusted', 0)
     let plugin.rtp = ''
   endif
