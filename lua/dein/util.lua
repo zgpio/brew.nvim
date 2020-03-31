@@ -1,4 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
+local a = vim.api
 local M = {}
 local is_windows = vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1
 local is_mac = (not is_windows) and vim.fn.has('win32unix') == 0
@@ -249,6 +250,77 @@ function _begin(path, vimrcs)
   rtps = vim.fn.insert(rtps, vim.g['dein#_runtime_path'], idx)
   rtps = _add_after(rtps, vim.g['dein#_runtime_path']..'/after')
   vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, vim.g['dein#_runtime_path'])
+end
+
+function _end()
+  if vim.g['dein#_block_level'] ~= 1 then
+    M._error('Invalid begin/end block usage.')
+    return 1
+  end
+
+  vim.g['dein#_block_level'] = vim.g['dein#_block_level'] - 1
+
+  if vim.fn.has('vim_starting')==0 then
+    -- TODO
+    -- vim.fn['dein#source'](vim.fn.filter(vim.fn.values(vim.g['dein#_plugins']), "!v:val.lazy && !v:val.sourced && v:val.rtp !=# ''"))
+    a.nvim_command([[call dein#source(filter(values(g:dein#_plugins), "!v:val.lazy && !v:val.sourced && v:val.rtp !=# ''"))]])
+  end
+
+  -- Add runtimepath
+  rtps = _split_rtp(vim.o.rtp)
+  local index = vim.fn.index(rtps, vim.g['dein#_runtime_path'])
+  if index < 0 then
+    M._error('Invalid runtimepath.')
+    return 1
+  end
+
+  local depends = {}
+  local sourced = vim.fn.has('vim_starting')==1 and (vim.fn.exists('&loadplugins')==0 or vim.o.loadplugins)
+  local _plugins = vim.g['dein#_plugins']
+  for _, plugin in ipairs(
+    vim.tbl_filter(function (x) return x.lazy==0 and x.sourced==0 and x.rtp~='' end,
+      vim.tbl_values(_plugins))) do
+    -- Load dependencies
+    if plugin['depends'] ~= nil then
+      depends = depends + plugin.depends
+    end
+
+    if plugin.merged==0 then
+      rtps = vim.fn.insert(rtps, plugin.rtp, index)
+      if vim.fn.isdirectory(plugin.rtp..'/after')==1 then
+        rtps = _add_after(rtps, plugin.rtp..'/after')
+      end
+    end
+
+    plugin.sourced = sourced
+  end
+  vim.g['dein#_plugins'] = _plugins
+  vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
+
+  if vim.fn.empty(depends)==0 then
+    vim.fn['dein#source'](depends)
+  end
+
+  if vim.g['dein#_hook_add'] ~= '' then
+    vim.fn['dein#util#_execute_hook']({}, vim.g['dein#_hook_add'])
+  end
+
+  local _event_plugins = vim.g['dein#_event_plugins']
+  for event, plugins in pairs(_event_plugins) do
+    if vim.fn.exists('##'..event) then
+      local t = event .. ' *'
+      vim.api.nvim_command(
+        vim.fn.printf('autocmd dein-events %s call dein#autoload#_on_event("%s", %s)',
+        t, event, vim.fn.string(plugins))
+      )
+    end
+  end
+
+  if vim.fn.has('vim_starting')==0 then
+    vim.fn['dein#call_hook']('add')
+    vim.fn['dein#call_hook']('source')
+    vim.fn['dein#call_hook']('post_source')
+  end
 end
 
 return M

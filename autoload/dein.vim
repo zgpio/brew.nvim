@@ -81,7 +81,8 @@ function! dein#begin(path, ...) abort
   return v:lua._begin(a:path, (empty(a:000) ? [] : a:1))
 endfunction
 function! dein#end() abort
-  return dein#util#_end()
+  lua require 'dein/util'
+  return v:lua._end()
 endfunction
 function! dein#add(repo, ...) abort
   return dein#parse#_add(a:repo, get(a:000, 0, {}))
