@@ -24,16 +24,17 @@ function _get_runtime_path()
   end
   return rtp
 end
--- TODO: review
+
 function _save_cache(vimrcs, is_state, is_starting)
   if _get_cache_path() == '' or (is_starting==0) then
     -- Ignore
     return true
   end
 
+  -- TODO: deepcopy
   local plugins = vim.fn['dein#get']()
 
-  for i, plugin in ipairs(vim.tbl_values(plugins)) do
+  for _, plugin in ipairs(vim.tbl_values(plugins)) do
     if is_state == 0 then
       plugin.sourced = 0
     end
@@ -42,7 +43,7 @@ function _save_cache(vimrcs, is_state, is_starting)
     end
 
     -- Hooks
-    for i, hook in ipairs({'hook_add', 'hook_source',
+    for _, hook in ipairs({'hook_add', 'hook_source',
       'hook_post_source', 'hook_post_update',}) do
       if plugin[hook] ~= nil and vim.fn.type(plugin[hook]) == 2 then
         plugin[hook] = nil
@@ -51,12 +52,12 @@ function _save_cache(vimrcs, is_state, is_starting)
   end
 
   local base_path = vim.g['dein#_base_path']
-  if not vim.fn.isdirectory(base_path) == 1 then
+  if vim.fn.isdirectory(base_path) == 0 then
     vim.fn.mkdir(base_path, 'p')
   end
 
   local ftplugin = vim.g['dein#_ftplugin']
-  vim.fn.writefile({vim.inspect(vimrcs), vim.fn.json_encode(plugins), vim.fn.json_encode(ftplugin)},
+  vim.fn.writefile({vim.fn.string(vimrcs), vim.fn.json_encode(plugins), vim.fn.json_encode(ftplugin)},
     (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. vim.g['dein#_progname'])
 end
 

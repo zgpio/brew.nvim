@@ -99,41 +99,6 @@ function! dein#util#_get_type(name) abort
   return get(dein#parse#_get_types(), a:name, {})
 endfunction
 
-function! dein#util#_save_cache(vimrcs, is_state, is_starting) abort
-  if v:lua._get_cache_path() ==# '' || !a:is_starting
-    " Ignore
-    return 1
-  endif
-
-  let plugins = deepcopy(dein#get())
-
-  for plugin in values(plugins)
-    if !a:is_state
-      let plugin.sourced = 0
-    endif
-    if has_key(plugin, 'orig_opts')
-      call remove(plugin, 'orig_opts')
-    endif
-
-    " Hooks
-    for hook in filter([
-          \ 'hook_add', 'hook_source',
-          \ 'hook_post_source', 'hook_post_update',
-          \ ], 'has_key(plugin, v:val)
-          \     && type(plugin[v:val]) == v:t_func')
-      call remove(plugin, hook)
-    endfor
-  endfor
-
-  if !isdirectory(g:dein#_base_path)
-    call mkdir(g:dein#_base_path, 'p')
-  endif
-
-  call writefile([string(a:vimrcs),
-        \         json_encode(plugins), json_encode(g:dein#_ftplugin)],
-        \ get(g:, 'dein#cache_directory', g:dein#_base_path)
-        \ .'/cache_' . g:dein#_progname)
-endfunction
 function! dein#util#_check_vimrcs() abort
   let time = getftime(v:lua._get_runtime_path())
   let ret = !empty(filter(map(copy(g:dein#_vimrcs), 'getftime(expand(v:val))'),
@@ -198,7 +163,7 @@ function! dein#util#_save_state(is_starting) abort
   let &runtimepath = v:lua._join_rtp(dein#util#_uniq(
         \ v:lua._split_rtp(&runtimepath)), &runtimepath, '')
 
-  call dein#util#_save_cache(g:dein#_vimrcs, 1, a:is_starting)
+  call v:lua._save_cache(g:dein#_vimrcs, 1, a:is_starting)
 
   " Version check
 
