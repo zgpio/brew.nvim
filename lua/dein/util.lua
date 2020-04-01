@@ -61,6 +61,25 @@ function _save_cache(vimrcs, is_state, is_starting)
     (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. vim.g['dein#_progname'])
 end
 
+--@param ... {{{}, {}, ...}}
+function _call_hook(hook_name, ...)
+  local args = ...
+  local hook = 'hook_' .. hook_name
+  local t
+  if #args > 0 then t = args[1] else t = {} end
+  local plugins = vim.tbl_filter(
+    function(x)
+      return ((hook_name ~= 'source' and hook_name ~= 'post_source')
+        or x.sourced==1) and x.hook ~= nil and vim.fn.isdirectory(x.path)==1
+    end,
+    vim.fn['dein#util#_get_plugins'](t)
+  )
+
+  for _, plugin in ipairs(
+    vim.tbl_filter(function(x) return x.hook ~= nil end, vim.fn['dein#util#_tsort'](plugins))) do
+    vim.fn['dein#util#_execute_hook'](plugin, plugin[hook])
+  end
+end
 function _add_after(rtps, path)
   vim.validate{
     rtps={rtps, 't'},

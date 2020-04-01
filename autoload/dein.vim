@@ -141,7 +141,8 @@ function! dein#recache_runtimepath() abort
   call dein#install#_recache_runtimepath()
 endfunction
 function! dein#call_hook(hook_name, ...) abort
-  return call('dein#util#_call_hook', [a:hook_name] + a:000)
+  lua require 'dein/util'
+  return v:lua._call_hook(a:hook_name, a:000)
 endfunction
 function! dein#check_lazy_plugins() abort
   return dein#util#_check_lazy_plugins()
