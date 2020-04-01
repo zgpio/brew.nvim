@@ -172,11 +172,11 @@ function _save_state(is_starting)
     'let &runtimepath = ' .. vim.fn.string(vim.o.rtp),
   }
 
-  if vim.g['dein#off1'] ~= '' then
-    table.insert(lines, vim.g['dein#off1'])
+  if dein_off1 ~= '' then
+    table.insert(lines, dein_off1)
   end
-  if vim.g['dein#off2'] ~= '' then
-    table.insert(lines, vim.g['dein#off2'])
+  if dein_off2 ~= '' then
+    table.insert(lines, dein_off2)
   end
 
   -- Add dummy mappings/commands
@@ -388,12 +388,12 @@ function _begin(path, vimrcs)
 
   -- Filetype off
   if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
-    vim.g['dein#_off1'] = 'filetype off'
-    vim.api.nvim_command('filetype off')
+    dein_off1 = 'filetype off'
+    vim.api.nvim_command(dein_off1)
   end
   if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
-    vim.g['dein#_off2'] = 'filetype plugin indent off'
-    vim.api.nvim_command('filetype plugin indent off')
+    dein_off2 = 'filetype plugin indent off'
+    vim.api.nvim_command(dein_off2)
   end
 
   if vim.fn.has('vim_starting')==0 then
