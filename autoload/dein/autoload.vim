@@ -185,47 +185,6 @@ function! dein#autoload#_on_cmd(command, name, args, bang, line1, line2) abort
   endtry
 endfunction
 
-function! dein#autoload#_on_map(mapping, name, mode) abort
-  let cnt = v:count > 0 ? v:count : ''
-
-  lua require 'dein/autoload'
-  let input = v:lua.get_input()
-
-  call dein#source(a:name)
-
-  if a:mode ==# 'v' || a:mode ==# 'x'
-    call feedkeys('gv', 'n')
-  elseif a:mode ==# 'o' && v:operator !=# 'c'
-    " TODO: omap
-    " v:prevcount?
-    " Cancel waiting operator mode.
-    call feedkeys(v:operator, 'm')
-  endif
-
-  call feedkeys(cnt, 'n')
-
-  if a:mode ==# 'o' && v:operator ==# 'c'
-    " Note: This is the dirty hack.
-    lua require 'dein/autoload'
-    execute matchstr(v:lua.mapargrec(a:mapping . input, a:mode),
-          \ ':<C-U>\zs.*\ze<CR>')
-  else
-    let mapping = a:mapping
-    while mapping =~# '<[[:alnum:]_-]\+>'
-      let mapping = substitute(mapping, '\c<Leader>',
-            \ get(g:, 'mapleader', '\'), 'g')
-      let mapping = substitute(mapping, '\c<LocalLeader>',
-            \ get(g:, 'maplocalleader', '\'), 'g')
-      let ctrl = matchstr(mapping, '<\zs[[:alnum:]_-]\+\ze>')
-      execute 'let mapping = substitute(
-            \ mapping, "<' . ctrl . '>", "\<' . ctrl . '>", "")'
-    endwhile
-    call feedkeys(mapping . input, 'm')
-  endif
-
-  return ''
-endfunction
-
 function! dein#autoload#_dummy_complete(arglead, cmdline, cursorpos) abort
   let command = matchstr(a:cmdline, '\h\w*')
   if exists(':'.command) == 2

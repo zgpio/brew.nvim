@@ -1,5 +1,6 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 require 'dein/util'
+local a = vim.api
 local M = {}
 function reset_ftplugin()
   local filetype_state = vim.fn.execute('filetype')
@@ -133,9 +134,7 @@ function get_input()
   return input
 end
 
--- TODO: review
-function M._on_map(mapping, name, mode)
-  print('on_map:', mapping, name, mode)
+function _on_map(mapping, name, mode)
   local cnt = vim.v.count
   if cnt <= 0 then cnt = '' end
 
@@ -156,14 +155,15 @@ function M._on_map(mapping, name, mode)
 
   if mode == 'o' and vim.v.operator == 'c' then
     -- Note: This is the dirty hack.
-    vim.api.nvim_command(mapargrec(mapping .. input, mode):gmatch(':<C%-U>(.*)<CR>'))
+    vim.api.nvim_command(mapargrec(mapping .. input, mode):match(':<C%-U>(.*)<CR>'))
   else
-    while vim.fn.match(mapping, [=[<[[:alnum:]_-]\+>]=]) ~= -1 do
-      mapping = vim.fn.substitute(mapping, [[\c<Leader>]], (vim.g['mapleader'] or '\\'), 'g')
-      mapping = vim.fn.substitute(mapping, [[\c<LocalLeader>]], (vim.g['maplocalleader'] or '\\'), 'g')
+    while mapping:find('<[%a%d_-]+>') do
+      -- ('<LeaDer>'):gsub('<[lL][eE][aA][dD][eE][rR]>', vim.g.mapleader)
+      mapping = vim.fn.substitute(mapping, [[\c<Leader>]], (vim.g.mapleader or [[\]]), 'g')
+      mapping = vim.fn.substitute(mapping, [[\c<LocalLeader>]], (vim.g.maplocalleader or [[\]]), 'g')
       local ctrl = vim.fn.matchstr(mapping, [=[<\zs[[:alnum:]_-]\+\ze>]=])
       local s = ("<%s>"):format(ctrl)
-      mapping = vim.fn.substitute(mapping, s, '\\'..s, '')
+      mapping = vim.fn.substitute(mapping, s, vim.api.nvim_replace_termcodes(s, true, true, true), '')
     end
     vim.fn.feedkeys(mapping .. input, 'm')
   end

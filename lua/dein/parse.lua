@@ -54,12 +54,12 @@ function generate_dummy_commands(plugin)
   plugin.dummy_commands = {}
   for i, name in ipairs(plugin.on_cmd) do
     -- Define dummy commands.
-    local raw_cmd = 'silent! command -complete=customlist,dein#autoload#_dummy_complete -bang -bar -range -nargs=* ' .. name
+    local raw_cmd = 'command -complete=customlist,dein#autoload#_dummy_complete -bang -bar -range -nargs=* ' .. name
       .. vim.fn.printf(" call dein#autoload#_on_cmd(%s, %s, <q-args>, expand('<bang>'), expand('<line1>'), expand('<line2>'))",
        vim.fn.string(name), vim.fn.string(plugin.name))
 
     table.insert(plugin.dummy_commands, {name, raw_cmd})
-    vim.api.nvim_command(raw_cmd)
+    vim.api.nvim_command('silent! '..raw_cmd)
   end
 end
 
@@ -105,7 +105,7 @@ function generate_dummy_mappings(plugin)
 
     for i, mapping in ipairs(mappings) do
       -- Define dummy mappings.
-      local prefix = string.format('dein#autoload#_on_map("%s", "%s",',
+      local prefix = string.format('v:lua._on_map("%s", "%s",',
         mapping:gsub('<', '<lt>'), plugin.name)
       for i, mode in ipairs(modes) do
         local t
