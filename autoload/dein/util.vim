@@ -501,25 +501,6 @@ function! s:tsort_impl(target, mark, sorted) abort
   call add(a:sorted, a:target)
 endfunction
 
-function! dein#util#_check_install(plugins) abort
-  if !empty(a:plugins)
-    let invalids = filter(dein#util#_convert2list(a:plugins),
-          \ 'empty(dein#get(v:val))')
-    if !empty(invalids)
-      call dein#util#_error('Invalid plugins: ' .
-            \ string(map(invalids, 'v:val')))
-      return -1
-    endif
-  endif
-  let plugins = empty(a:plugins) ? values(dein#get()) :
-        \ map(dein#util#_convert2list(a:plugins), 'dein#get(v:val)')
-  let plugins = filter(plugins, '!isdirectory(v:val.path)')
-  if empty(plugins) | return 0 | endif
-  call dein#util#_notify('Not installed plugins: ' .
-        \ string(map(plugins, 'v:val.name')))
-  return 1
-endfunction
-
 function! s:msg2list(expr) abort
   return type(a:expr) ==# v:t_list ? a:expr : split(a:expr, '\n')
 endfunction

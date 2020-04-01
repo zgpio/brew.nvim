@@ -97,7 +97,8 @@ function! dein#source(...) abort
   return call('dein#autoload#_source', a:000)
 endfunction
 function! dein#check_install(...) abort
-  return dein#util#_check_install(get(a:000, 0, []))
+  lua require 'dein/util'
+  return v:lua._check_install(get(a:000, 0, []))
 endfunction
 function! dein#check_clean() abort
   return dein#util#_check_clean()

@@ -185,6 +185,25 @@ function escape(path)
   -- Escape a path for runtimepath.
   return vim.fn.substitute(path, [[,\|\\,\@=]], [[\\\0]], 'g')
 end
+function _check_install(plugins)
+  if not vim.tbl_isempty(plugins) then
+    local invalids = vim.tbl_filter(function(x) return vim.tbl_isempty(vim.fn['dein#get'](x)) end,
+      vim.fn['dein#util#_convert2list'](plugins))
+    if not vim.tbl_isempty(invalids) then
+      M._error('Invalid plugins: ' .. vim.fn.string(vim.fn.map(invalids, 'v:val')))
+      return -1
+    end
+  end
+  if vim.tbl_isempty(plugins) then
+    plugins = vim.tbl_values(vim.fn['dein#get']())
+  else
+    plugins = vim.fn.map(vim.fn['dein#util#_convert2list'](plugins), 'dein#get(v:val)')
+  end
+  plugins = vim.tbl_filter(function(x) return vim.fn.isdirectory(x.path)==0 end, plugins)
+  if vim.tbl_isempty(plugins) then return 0 end
+  vim.fn['dein#util#_notify']('Not installed plugins: ' .. vim.fn.string(vim.fn.map(plugins, 'v:val.name')))
+  return 1
+end
 function msg2list(expr)
   if type(expr) == 'table' then
     return expr
