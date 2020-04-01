@@ -201,8 +201,53 @@ function _check_install(plugins)
   end
   plugins = vim.tbl_filter(function(x) return vim.fn.isdirectory(x.path)==0 end, plugins)
   if vim.tbl_isempty(plugins) then return 0 end
-  vim.fn['dein#util#_notify']('Not installed plugins: ' .. vim.fn.string(vim.fn.map(plugins, 'v:val.name')))
+  _notify('Not installed plugins: ' .. vim.fn.string(vim.fn.map(plugins, 'v:val.name')))
   return 1
+end
+
+function _notify(msg)
+  vim.fn['dein#util#_set_default']('g:dein#enable_notification', 0)
+  vim.fn['dein#util#_set_default']('g:dein#notification_icon', '')
+  vim.fn['dein#util#_set_default']('g:dein#notification_time', 2)
+
+  if vim.g['dein#enable_notification']==0 or msg == '' or vim.fn.has('vim_starting')==1 then
+    M._error(msg)
+    return
+  end
+
+  local icon = vim.fn['dein#util#_expand'](vim.g['dein#notification_icon'])
+
+  local title = '[dein]'
+  local cmd = ''
+  if vim.fn.executable('notify-send')==1 then
+    cmd = vim.fn.printf('notify-send --expire-time=%d', vim.g['dein#notification_time'] * 1000)
+    if icon ~= '' then
+      cmd = cmd.. ' --icon=' .. vim.fn.string(icon)
+    end
+    cmd = cmd.. ' ' .. vim.fn.string(title) .. ' ' .. vim.fn.string(msg)
+  elseif _is_windows() and vim.fn.executable('Snarl_CMD')==1 then
+    cmd = vim.fn.printf('Snarl_CMD snShowMessage %d "%s" "%s"',
+           vim.g['dein#notification_time'], title, msg)
+    if icon ~= '' then
+      cmd = cmd.. ' "' .. icon .. '"'
+    end
+  elseif _is_mac() then
+    cmd = ''
+    if vim.fn.executable('terminal-notifier')==1 then
+      cmd = cmd .. 'terminal-notifier -title ' ..
+        vim.fn.string(title) .. ' -message ' .. vim.fn.string(msg)
+      if icon ~= '' then
+        cmd = cmd.. ' -appIcon ' .. vim.fn.string(icon)
+      end
+    else
+      cmd = cmd .. vim.fn.printf("osascript -e 'display notification "
+                    .."\"%s\" with title \"%s\"'", msg, title)
+    end
+  end
+
+  if cmd ~= '' then
+    vim.fn['dein#install#_system'](cmd)
+  end
 end
 function msg2list(expr)
   if type(expr) == 'table' then

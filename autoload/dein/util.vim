@@ -36,54 +36,6 @@ function! dein#util#_error(msg) abort
     echohl WarningMsg | echomsg '[dein] ' . mes | echohl None
   endfor
 endfunction
-function! dein#util#_notify(msg) abort
-  call dein#util#_set_default(
-        \ 'g:dein#enable_notification', 0)
-  call dein#util#_set_default(
-        \ 'g:dein#notification_icon', '')
-  call dein#util#_set_default(
-        \ 'g:dein#notification_time', 2)
-
-  if !g:dein#enable_notification || a:msg ==# '' || has('vim_starting')
-    call dein#util#_error(a:msg)
-    return
-  endif
-
-  let icon = dein#util#_expand(g:dein#notification_icon)
-
-  let title = '[dein]'
-  let cmd = ''
-  if executable('notify-send')
-    let cmd = printf('notify-send --expire-time=%d',
-          \ g:dein#notification_time * 1000)
-    if icon !=# ''
-      let cmd .= ' --icon=' . string(icon)
-    endif
-    let cmd .= ' ' . string(title) . ' ' . string(a:msg)
-  elseif v:lua._is_windows() && executable('Snarl_CMD')
-    let cmd = printf('Snarl_CMD snShowMessage %d "%s" "%s"',
-          \ g:dein#notification_time, title, a:msg)
-    if icon !=# ''
-      let cmd .= ' "' . icon . '"'
-    endif
-  elseif v:lua._is_mac()
-    let cmd = ''
-    if executable('terminal-notifier')
-      let cmd .= 'terminal-notifier -title '
-            \ . string(title) . ' -message ' . string(a:msg)
-      if icon !=# ''
-        let cmd .= ' -appIcon ' . string(icon)
-      endif
-    else
-      let cmd .= printf("osascript -e 'display notification "
-            \        ."\"%s\" with title \"%s\"'", a:msg, title)
-    endif
-  endif
-
-  if cmd !=# ''
-    call dein#install#_system(cmd)
-  endif
-endfunction
 
 function! dein#util#_uniq(list) abort
   let list = copy(a:list)
@@ -196,7 +148,8 @@ function! dein#util#_check_vimrcs() abort
     silent execute 'source' dein#util#_get_myvimrc()
 
     if dein#util#_get_merged_plugins() !=# dein#util#_load_merged_plugins()
-      call dein#util#_notify('auto recached')
+      lua require 'dein/util'
+      call v:lua._notify('auto recached')
       call dein#recache_runtimepath()
     endif
   endif

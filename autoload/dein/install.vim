@@ -1288,7 +1288,8 @@ function! s:notify(msg) abort
   endif
 
   if context.message_type ==# 'echo'
-    call dein#util#_notify(a:msg)
+    lua require 'dein/util'
+    call v:lua._notify(a:msg)
   endif
 
   call s:updates_log(msg)
