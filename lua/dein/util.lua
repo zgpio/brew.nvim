@@ -138,6 +138,84 @@ end
 --         \ tr(a:path, '\', '/') : a:path
 -- endfunction
 
+function _save_state(is_starting)
+  if vim.g['dein#_block_level'] ~= 0 then
+    _error('Invalid dein#save_state() usage.')
+    return 1
+  end
+
+  if _get_cache_path() == '' or is_starting == 0 then
+    -- Ignore
+    return 1
+  end
+
+  vim.g['dein#_vimrcs'] = _uniq(vim.g['dein#_vimrcs'])
+  vim.o.rtp = _join_rtp(_uniq(_split_rtp(vim.o.rtp)), vim.o.rtp, '')
+
+  _save_cache(vim.g['dein#_vimrcs'], 1, is_starting)
+
+  -- Version check
+
+  local lines = {
+    'lua require "dein/autoload"',
+    'if g:dein#_cache_version !=# ' .. vim.g['dein#_cache_version'] .. ' || ' ..
+    'g:dein#_init_runtimepath !=# ' .. vim.fn.string(vim.g['dein#_init_runtimepath']) ..
+         ' | throw "Cache loading error" | endif',
+    'let [plugins, ftplugin] = dein#load_cache_raw('..
+         vim.fn.string(vim.g['dein#_vimrcs']) ..')',
+    "if empty(plugins) | throw 'Cache loading error' | endif",
+    'let g:dein#_plugins = plugins',
+    'let g:dein#_ftplugin = ftplugin',
+    'let g:dein#_base_path = ' .. vim.fn.string(vim.g['dein#_base_path']),
+    'let g:dein#_runtime_path = ' .. vim.fn.string(vim.g['dein#_runtime_path']),
+    'let g:dein#_cache_path = ' .. vim.fn.string(vim.g['dein#_cache_path']),
+    'let &runtimepath = ' .. vim.fn.string(vim.o.rtp),
+  }
+
+  if vim.g['dein#off1'] ~= '' then
+    table.insert(lines, vim.g['dein#off1'])
+  end
+  if vim.g['dein#off2'] ~= '' then
+    table.insert(lines, vim.g['dein#off2'])
+  end
+
+  -- Add dummy mappings/commands
+  for _, plugin in ipairs(vim.fn['dein#util#_get_lazy_plugins']()) do
+    for _, command in ipairs(plugin['dummy_commands'] or {}) do
+      table.insert(lines, 'silent! ' .. command[2])
+    end
+    for _, mapping in ipairs(plugin['dummy_mappings'] or {}) do
+      table.insert(lines, 'silent! ' .. mapping[3])
+    end
+  end
+
+  -- Add hooks
+  if vim.fn.empty(vim.g['dein#_hook_add'])==0 then
+    vim.list_extend(lines, skipempty(vim.g['dein#_hook_add']))
+  end
+  for _, plugin in ipairs(vim.fn['dein#util#_tsort'](vim.fn.values(vim.fn['dein#get']()))) do
+    if plugin.hook_add~=nil and type(plugin.hook_add) == 'string' then
+      vim.list_extend(lines, skipempty(plugin.hook_add))
+    end
+  end
+
+  -- Add events
+  for event, plugins in pairs(vim.g['dein#_event_plugins']) do
+    if vim.fn.exists('##' .. event)==1 then
+      local e
+      if vim.fn.exists('##' .. event)==1 then
+        e = event .. ' *'
+      else
+        e = 'User ' .. event
+      end
+      vim.list_extend(lines, {vim.fn.printf('autocmd dein-events %s call dein#autoload#_on_event("%s", %s)',
+            e, event, vim.fn.string(plugins))})
+    end
+  end
+
+  vim.fn.writefile(lines,
+    (vim.g['dein#cache_directory'] or vim.g['dein#_base_path']) ..'/state_' .. vim.g['dein#_progname'] .. '.vim')
+end
 function _writefile(path, list)
   if vim.g['dein#_is_sudo'] == 1 or (vim.fn.filewritable(_get_cache_path())==0) then
     return 1
@@ -152,6 +230,9 @@ function _writefile(path, list)
   return vim.fn.writefile(list, path)
 end
 
+function skipempty(string)
+  return vim.tbl_filter(function(x) return x~='' end, vim.split(string, '\n'))
+end
 -- TODO
 function _get_plugins(plugins)
   local rv = {}
