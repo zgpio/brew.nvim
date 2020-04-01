@@ -433,7 +433,7 @@ function! dein#install#_remote_plugins() abort
         \ string(map(copy(remote_plugins), 'v:val.name')))
 
   lua require 'dein/util'
-  let &runtimepath = v:lua._join_rtp(dein#util#_uniq(
+  let &runtimepath = v:lua._join_rtp(v:lua._uniq(
         \ v:lua._split_rtp(&runtimepath)), &runtimepath, '')
 
   let result = execute('UpdateRemotePlugins', '')

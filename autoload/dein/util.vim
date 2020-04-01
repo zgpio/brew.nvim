@@ -37,24 +37,6 @@ function! dein#util#_error(msg) abort
   endfor
 endfunction
 
-function! dein#util#_uniq(list) abort
-  let list = copy(a:list)
-  let i = 0
-  let seen = {}
-  while i < len(list)
-    let key = list[i]
-    if key !=# '' && has_key(seen, key)
-      call remove(list, i)
-    else
-      if key !=# ''
-        let seen[key] = 1
-      endif
-      let i += 1
-    endif
-  endwhile
-  return list
-endfunction
-
 function! dein#util#_is_fish() abort
   return dein#install#_is_async() && fnamemodify(&shell, ':t:r') ==# 'fish'
 endfunction
@@ -158,9 +140,9 @@ function! dein#util#_save_state(is_starting) abort
     return 1
   endif
 
-  let g:dein#_vimrcs = dein#util#_uniq(g:dein#_vimrcs)
   lua require 'dein/util'
-  let &runtimepath = v:lua._join_rtp(dein#util#_uniq(
+  let g:dein#_vimrcs = v:lua._uniq(g:dein#_vimrcs)
+  let &runtimepath = v:lua._join_rtp(v:lua._uniq(
         \ v:lua._split_rtp(&runtimepath)), &runtimepath, '')
 
   call v:lua._save_cache(g:dein#_vimrcs, 1, a:is_starting)

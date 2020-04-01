@@ -264,7 +264,8 @@ function! dein#parse#_local(localdir, options, includes) abort
           \   fnamemodify(v:val, ':p')), '/$', '', '')")
   endfor
 
-  for dir in dein#util#_uniq(directories)
+  lua require 'dein/util'
+  for dir in v:lua._uniq(directories)
     let options = extend({
           \ 'repo': dir, 'local': 1, 'path': dir,
           \ 'name': fnamemodify(dir, ':t')

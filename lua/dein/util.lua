@@ -416,4 +416,20 @@ function _end()
   end
 end
 
+--@param list basic type list
+function _uniq(list)
+  list = vim.deepcopy(list)
+  local l = {}
+  local i = 1
+  local seen = {}
+  for _, x in ipairs(list) do
+    if seen[x] == nil then
+      seen[x] = 1
+      l[i] = x
+      i = i + 1
+    end
+  end
+  return l
+end
+
 return M
