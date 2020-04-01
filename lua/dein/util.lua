@@ -13,12 +13,12 @@ function _is_mac()
   return is_mac
 end
 function _get_runtime_path()
-  local rtp = vim.g['dein#_runtime_path']
+  local rtp = dein_runtime_path
   if rtp ~= '' then
     return rtp
   end
   rtp = _get_cache_path() .. '/.dein'
-  vim.g['dein#_runtime_path'] = rtp
+  dein_runtime_path = rtp
   if vim.fn.isdirectory(rtp)==0 then
     vim.fn.mkdir(rtp, 'p')
   end
@@ -167,7 +167,7 @@ function _save_state(is_starting)
     'let g:dein#_plugins = plugins',
     'let g:dein#_ftplugin = ftplugin',
     'let g:dein#_base_path = ' .. vim.fn.string(vim.g['dein#_base_path']),
-    'let g:dein#_runtime_path = ' .. vim.fn.string(vim.g['dein#_runtime_path']),
+    'lua dein_runtime_path = ' .. vim.fn.string(dein_runtime_path),
     'let g:dein#_cache_path = ' .. vim.fn.string(vim.g['dein#_cache_path']),
     'let &runtimepath = ' .. vim.fn.string(vim.o.rtp),
   }
@@ -397,8 +397,8 @@ function _begin(path, vimrcs)
   end
 
   if vim.fn.has('vim_starting')==0 then
-    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(vim.g['dein#_runtime_path']))
-    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(vim.g['dein#_runtime_path']..'/after'))
+    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein_runtime_path))
+    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein_runtime_path..'/after'))
   end
 
   -- Insert dein runtimepath to the head in 'runtimepath'.
@@ -412,9 +412,9 @@ function _begin(path, vimrcs)
     M._error('You must not set the installation directory under "&runtimepath/plugin"')
     return 1
   end
-  rtps = vim.fn.insert(rtps, vim.g['dein#_runtime_path'], idx)
-  rtps = _add_after(rtps, vim.g['dein#_runtime_path']..'/after')
-  vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, vim.g['dein#_runtime_path'])
+  rtps = vim.fn.insert(rtps, dein_runtime_path, idx)
+  rtps = _add_after(rtps, dein_runtime_path..'/after')
+  vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, dein_runtime_path)
 end
 
 function _chomp(str)
@@ -440,7 +440,7 @@ function _end()
 
   -- Add runtimepath
   rtps = _split_rtp(vim.o.rtp)
-  local index = vim.fn.index(rtps, vim.g['dein#_runtime_path'])
+  local index = vim.fn.index(rtps, dein_runtime_path)
   if index < 0 then
     M._error('Invalid runtimepath.')
     return 1

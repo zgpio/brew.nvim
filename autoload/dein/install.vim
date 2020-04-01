@@ -223,7 +223,7 @@ function! s:clear_runtimepath() abort
   endif
 endfunction
 function! s:helptags() abort
-  if g:dein#_runtime_path ==# '' || g:dein#_is_sudo
+  if luaeval('dein_runtime_path') ==# '' || g:dein#_is_sudo
     return ''
   endif
 
