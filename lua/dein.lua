@@ -59,5 +59,8 @@ function load_state(path, ...)
     }
   }
 end
-
+-- TODO: 临时
+function set_dein_vimrcs(l)
+  dein_vimrcs = l
+end
 return M

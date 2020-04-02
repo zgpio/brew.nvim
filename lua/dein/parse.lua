@@ -128,6 +128,9 @@ end
 function set_dein_hook_add(s)
   dein_hook_add = s
 end
+function add_dein_vimrcs(s)
+  table.insert(dein_vimrcs, s)
+end
 
 -- TODO
 function merge_ftplugin(ftplugin)

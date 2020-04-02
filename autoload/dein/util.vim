@@ -83,7 +83,7 @@ endfunction
 
 function! dein#util#_check_vimrcs() abort
   let time = getftime(v:lua._get_runtime_path())
-  let ret = !empty(filter(map(copy(g:dein#_vimrcs), 'getftime(expand(v:val))'),
+  let ret = !empty(filter(map(copy(luaeval('dein_vimrcs')), 'getftime(expand(v:val))'),
         \ 'time < v:val'))
   if !ret
     return 0

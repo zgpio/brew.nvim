@@ -149,10 +149,10 @@ function _save_state(is_starting)
     return 1
   end
 
-  vim.g['dein#_vimrcs'] = _uniq(vim.g['dein#_vimrcs'])
+  dein_vimrcs = _uniq(dein_vimrcs)
   vim.o.rtp = _join_rtp(_uniq(_split_rtp(vim.o.rtp)), vim.o.rtp, '')
 
-  _save_cache(vim.g['dein#_vimrcs'], 1, is_starting)
+  _save_cache(dein_vimrcs, 1, is_starting)
 
   -- Version check
 
@@ -162,7 +162,7 @@ function _save_state(is_starting)
     'g:dein#_init_runtimepath !=# ' .. vim.fn.string(vim.g['dein#_init_runtimepath']) ..
          ' | throw "Cache loading error" | endif',
     'let [plugins, ftplugin] = dein#load_cache_raw('..
-         vim.fn.string(vim.g['dein#_vimrcs']) ..')',
+         vim.fn.string(dein_vimrcs) ..')',
     "if empty(plugins) | throw 'Cache loading error' | endif",
     'let g:dein#_plugins = plugins',
     'let g:dein#_ftplugin = ftplugin',
@@ -383,7 +383,7 @@ function _begin(path, vimrcs)
   end
   _get_runtime_path()
   _get_cache_path()
-  vim.g['dein#_vimrcs'] = vim.fn['dein#util#_get_vimrcs'](vimrcs)
+  dein_vimrcs = vim.fn['dein#util#_get_vimrcs'](vimrcs)
   dein_hook_add = ''
 
   -- Filetype off

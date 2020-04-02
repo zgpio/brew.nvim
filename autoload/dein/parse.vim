@@ -190,8 +190,8 @@ function! dein#parse#_load_toml(filename, default) abort
     endfor
   endif
 
-  " Add to g:dein#_vimrcs
-  call add(g:dein#_vimrcs, dein#util#_expand(a:filename))
+  " Add to dein_vimrcs
+  call v:lua.add_dein_vimrcs(dein#util#_expand(a:filename))
 endfunction
 function! dein#parse#_plugins2toml(plugins) abort
   let toml = []

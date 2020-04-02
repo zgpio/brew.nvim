@@ -4,6 +4,7 @@
 " License: MIT license
 "=============================================================================
 
+lua require 'dein'
 function! dein#_init() abort
   let g:dein#_cache_version = 150
   let g:dein#_merged_format =
@@ -19,7 +20,7 @@ function! dein#_init() abort
   let g:dein#_ftplugin = {}
   lua dein_off1 = ''
   lua dein_off2 = ''
-  let g:dein#_vimrcs = []
+  lua dein_vimrcs = {}
   lua dein_block_level = 0
   let g:dein#_event_plugins = {}
   let g:dein#_is_sudo = $SUDO_USER !=# '' && $USER !=# $SUDO_USER
@@ -45,22 +46,21 @@ function! dein#_init() abort
         \ call dein#autoload#_on_pre_cmd(expand('<afile>'))
 endfunction
 function! dein#load_cache_raw(vimrcs) abort
-  let g:dein#_vimrcs = a:vimrcs
+  call v:lua.set_dein_vimrcs(a:vimrcs)
   let cache = get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
         \ .'/cache_' . luaeval('dein_progname')
   let time = getftime(cache)
-  if !empty(filter(map(copy(g:dein#_vimrcs),
+  if !empty(filter(map(copy(luaeval('dein_vimrcs')),
         \ 'getftime(expand(v:val))'), 'time < v:val'))
     return [{}, {}]
   endif
   let list = readfile(cache)
-  if len(list) != 3 || string(g:dein#_vimrcs) !=# list[0]
+  if len(list) != 3 || string(luaeval('dein_vimrcs')) !=# list[0]
     return [{}, {}]
   endif
   return [json_decode(list[1]), json_decode(list[2])]
 endfunction
 function! dein#load_state(path, ...) abort
-  lua require 'dein'
   return v:lua.load_state(a:path, a:000)
 endfunction
 
