@@ -25,7 +25,7 @@ function! dein#_init() abort
   let g:dein#_is_sudo = $SUDO_USER !=# '' && $USER !=# $SUDO_USER
         \ && $HOME !=# expand('~'.$USER)
         \ && $HOME ==# expand('~'.$SUDO_USER)
-  let g:dein#_progname = fnamemodify(v:progname, ':r')
+  lua dein_progname = vim.fn.fnamemodify(vim.v.progname, ':r')
   let g:dein#_init_runtimepath = &runtimepath
 
   augroup dein
@@ -47,7 +47,7 @@ endfunction
 function! dein#load_cache_raw(vimrcs) abort
   let g:dein#_vimrcs = a:vimrcs
   let cache = get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
-        \ .'/cache_' . g:dein#_progname
+        \ .'/cache_' . luaeval('dein_progname')
   let time = getftime(cache)
   if !empty(filter(map(copy(g:dein#_vimrcs),
         \ 'getftime(expand(v:val))'), 'time < v:val'))

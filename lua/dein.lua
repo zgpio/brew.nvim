@@ -41,7 +41,7 @@ function load_state(path, ...)
   dein_base_path = vim.fn.expand(path)
 
   local state = (vim.g['dein#cache_directory'] or dein_base_path)
-    .. '/state_' .. vim.g['dein#_progname'] .. '.vim'
+    .. '/state_' .. dein_progname .. '.vim'
   if vim.fn.filereadable(state)==0 then return 1 end
   try {
     function()

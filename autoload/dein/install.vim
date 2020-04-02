@@ -308,7 +308,7 @@ function! dein#install#_load_rollback(rollbackfile, plugins) abort
 endfunction
 function! s:get_rollback_directory() abort
   let parent = printf('%s/rollbacks/%s',
-        \ v:lua._get_cache_path(), g:dein#_progname)
+        \ v:lua._get_cache_path(), luaeval('dein_progname'))
   if !isdirectory(parent)
     call mkdir(parent, 'p')
   endif

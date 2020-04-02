@@ -58,7 +58,7 @@ function _save_cache(vimrcs, is_state, is_starting)
 
   local ftplugin = vim.g['dein#_ftplugin']
   vim.fn.writefile({vim.fn.string(vimrcs), vim.fn.json_encode(plugins), vim.fn.json_encode(ftplugin)},
-    (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. vim.g['dein#_progname'])
+    (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. dein_progname)
 end
 
 --@param ... {{{}, {}, ...}}
@@ -214,7 +214,7 @@ function _save_state(is_starting)
   end
 
   vim.fn.writefile(lines,
-    (vim.g['dein#cache_directory'] or dein_base_path) ..'/state_' .. vim.g['dein#_progname'] .. '.vim')
+    (vim.g['dein#cache_directory'] or dein_base_path) ..'/state_' .. dein_progname .. '.vim')
 end
 function _writefile(path, list)
   if vim.g['dein#_is_sudo'] == 1 or (vim.fn.filewritable(_get_cache_path())==0) then
