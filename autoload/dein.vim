@@ -27,7 +27,7 @@ function! dein#_init() abort
         \ && $HOME !=# expand('~'.$USER)
         \ && $HOME ==# expand('~'.$SUDO_USER)
   lua dein_progname = vim.fn.fnamemodify(vim.v.progname, ':r')
-  let g:dein#_init_runtimepath = &runtimepath
+  lua dein_init_runtimepath = vim.o.rtp
 
   augroup dein
     autocmd!
