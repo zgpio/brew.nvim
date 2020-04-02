@@ -109,15 +109,15 @@ function! dein#util#_load_merged_plugins() abort
     return []
   endif
   let merged = readfile(path)
-  if len(merged) != g:dein#_merged_length
+  if len(merged) != luaeval('dein_merged_length')
     return []
   endif
-  sandbox return merged[: g:dein#_merged_length - 2] + eval(merged[-1])
+  sandbox return merged[: luaeval('dein_merged_length') - 2] + eval(merged[-1])
 endfunction
 function! dein#util#_save_merged_plugins() abort
   let merged = dein#util#_get_merged_plugins()
-  call writefile(merged[: g:dein#_merged_length - 2] +
-        \ [string(merged[g:dein#_merged_length - 1 :])],
+  call writefile(merged[: luaeval('dein_merged_length') - 2] +
+        \ [string(merged[luaeval('dein_merged_length') - 1 :])],
         \ v:lua._get_cache_path() . '/merged')
 endfunction
 function! dein#util#_get_merged_plugins() abort
