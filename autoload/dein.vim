@@ -12,7 +12,7 @@ function! dein#_init() abort
   let g:dein#name = ''
   let g:dein#plugin = {}
   let g:dein#_plugins = {}
-  let g:dein#_cache_path = ''
+  lua dein_cache_path = ''
   lua dein_base_path = ''
   lua dein_runtime_path = ''
   let g:dein#_hook_add = ''

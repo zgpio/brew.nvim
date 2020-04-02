@@ -119,14 +119,14 @@ function _check_lazy_plugins()
 end
 
 function _get_cache_path()
-  local cache_path = vim.g['dein#_cache_path']
+  local cache_path = dein_cache_path
   if cache_path ~= '' then
     return cache_path
   end
 
   cache_path = (vim.g['dein#cache_directory'] or dein_base_path)
     ..'/.cache/'..vim.fn.fnamemodify(vim.fn['dein#util#_get_myvimrc'](), ':t')
-  vim.g['dein#_cache_path'] = cache_path
+  dein_cache_path = cache_path
   if vim.fn.isdirectory(cache_path) == 0 then
     vim.fn.mkdir(cache_path, 'p')
   end
@@ -168,7 +168,7 @@ function _save_state(is_starting)
     'let g:dein#_ftplugin = ftplugin',
     'lua dein_base_path = ' .. vim.fn.string(dein_base_path),
     'lua dein_runtime_path = ' .. vim.fn.string(dein_runtime_path),
-    'let g:dein#_cache_path = ' .. vim.fn.string(vim.g['dein#_cache_path']),
+    'lua dein_cache_path = ' .. vim.fn.string(dein_cache_path),
     'let &runtimepath = ' .. vim.fn.string(vim.o.rtp),
   }
 
