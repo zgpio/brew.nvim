@@ -58,53 +58,51 @@ function source_plugin(rtps, index, plugin, sourced)
   table.insert(sourced, plugin)
 
   -- Load dependencies
-  for i, name in ipairs((plugin['depends'] or {})) do
+  for _, name in ipairs((plugin['depends'] or {})) do
     if vim.g['dein#_plugins'][name] == nil then
-      vim.fn['dein#util#_error'](string.format('Plugin name "%s" is not found.', name))
-    elseif not (plugin.lazy == 1) and (vim.g['dein#_plugins'][name].lazy == 1) then
-      vim.fn['dein#util#_error'](
+      require 'dein/util'._error(string.format('Plugin name "%s" is not found.', name))
+    elseif plugin.lazy==0 and (vim.g['dein#_plugins'][name].lazy == 1) then
+      require 'dein/util'._error(
         string.format('Not lazy plugin "%s" depends lazy "%s" plugin.', plugin.name, name))
     else
-      rtps, index, plugin, sourced = source_plugin(rtps, index, vim.g['dein#_plugins'][name], sourced)
+      source_plugin(rtps, index, vim.g['dein#_plugins'][name], sourced)
     end
   end
 
   plugin.sourced = 1
 
   local sources = {}
-  for i, t in ipairs(_get_lazy_plugins()) do
+  for _, t in ipairs(_get_lazy_plugins()) do
     local get = t['on_source'] or {}
     if vim.tbl_contains(get, plugin.name) then
       table.insert(sources, t)
     end
   end
-  print(vim.inspect(sources))
-  print("==========================================================================")
-  for i, on_source in ipairs(sources) do
-    rtps, index, plugin, sourced = source_plugin(rtps, index, on_source, sourced)
+
+  for _, on_source in ipairs(sources) do
+    source_plugin(rtps, index, on_source, sourced)
   end
 
   if plugin['dummy_commands'] ~= nil then
-    for i, command in ipairs(plugin.dummy_commands) do
-      vim.api.nvim_command('delcommand '..command[1])
+    for _, command in ipairs(plugin.dummy_commands) do
+      vim.api.nvim_command('silent! delcommand '..command[1])
     end
     plugin.dummy_commands = {}
   end
 
   if plugin['dummy_mappings'] ~= nil then
-    for i, map in ipairs(plugin.dummy_mappings) do
+    for _, map in ipairs(plugin.dummy_mappings) do
       vim.api.nvim_command(map[1]..'unmap '..map[2])
     end
     plugin.dummy_mappings = {}
   end
 
-  if not plugin.merged or (plugin['local'] or 0) then
-    vim.fn.insert(rtps, plugin.rtp, index)
+  if plugin.merged==0 or (plugin['local'] or 0) then
+    rtps = vim.fn.insert(rtps, plugin.rtp, index)
     if vim.fn.isdirectory(plugin.rtp..'/after') == 1 then
       rtps = _add_after(rtps, plugin.rtp..'/after')
     end
   end
-  return rtps, index, plugin, sourced
 end
 
 function get_input()

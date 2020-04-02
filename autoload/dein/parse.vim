@@ -4,6 +4,7 @@
 " License: MIT license
 "=============================================================================
 
+lua require 'dein/parse'
 " Global options definition."
 let g:dein#enable_name_conversion =
       \ get(g:, 'dein#enable_name_conversion', 0)
@@ -21,7 +22,6 @@ function! dein#parse#_add(repo, options) abort
   endif
 
   if plugin.lazy && plugin.rtp !=# ''
-    lua require 'dein/parse'
     let plugin = v:lua.parse_lazy(plugin)
   endif
 
@@ -171,8 +171,8 @@ function! dein#parse#_load_toml(filename, default) abort
   " Parse.
   if has_key(toml, 'hook_add')
     let pattern = '\n\s*\\\|\%(^\|\n\)\s*"[^\n]*'
-    let g:dein#_hook_add .= "\n" . substitute(
-          \ toml.hook_add, pattern, '', 'g')
+    call v:lua.set_dein_hook_add(luaeval('dein_hook_add')."\n" . substitute(
+          \ toml.hook_add, pattern, '', 'g'))
   endif
   if has_key(toml, 'ftplugin')
     call s:merge_ftplugin(toml.ftplugin)

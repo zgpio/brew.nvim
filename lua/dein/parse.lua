@@ -124,6 +124,10 @@ function generate_dummy_mappings(plugin)
     end
   end
 end
+-- TODO: 临时的
+function set_dein_hook_add(s)
+  dein_hook_add = s
+end
 
 -- TODO
 function merge_ftplugin(ftplugin)

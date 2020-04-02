@@ -190,8 +190,8 @@ function _save_state(is_starting)
   end
 
   -- Add hooks
-  if vim.fn.empty(vim.g['dein#_hook_add'])==0 then
-    vim.list_extend(lines, skipempty(vim.g['dein#_hook_add']))
+  if vim.fn.empty(dein_hook_add)==0 then
+    vim.list_extend(lines, skipempty(dein_hook_add))
   end
   for _, plugin in ipairs(vim.fn['dein#util#_tsort'](vim.fn.values(vim.fn['dein#get']()))) do
     if plugin.hook_add~=nil and type(plugin.hook_add) == 'string' then
@@ -368,7 +368,7 @@ function _begin(path, vimrcs)
     let g:dein#_plugins = {}
     let g:dein#_event_plugins = {}
     let g:dein#_ftplugin = {}
-    let g:dein#_hook_add = ''
+    lua dein_hook_add = ''
   ]], true)
 
   if path == '' or vim.g['dein#_block_level'] ~= 0 then
@@ -384,7 +384,7 @@ function _begin(path, vimrcs)
   _get_runtime_path()
   _get_cache_path()
   vim.g['dein#_vimrcs'] = vim.fn['dein#util#_get_vimrcs'](vimrcs)
-  vim.g['dein#_hook_add'] = ''
+  dein_hook_add = ''
 
   -- Filetype off
   if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
@@ -473,8 +473,8 @@ function _end()
     vim.fn['dein#source'](depends)
   end
 
-  if vim.g['dein#_hook_add'] ~= '' then
-    vim.fn['dein#util#_execute_hook']({}, vim.g['dein#_hook_add'])
+  if dein_hook_add ~= '' then
+    vim.fn['dein#util#_execute_hook']({}, dein_hook_add)
   end
 
   local _event_plugins = vim.g['dein#_event_plugins']
