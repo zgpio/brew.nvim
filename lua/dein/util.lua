@@ -200,7 +200,7 @@ function _save_state(is_starting)
   end
 
   -- Add events
-  for event, plugins in pairs(vim.g['dein#_event_plugins']) do
+  for event, plugins in pairs(dein_event_plugins) do
     if vim.fn.exists('##' .. event)==1 then
       local e
       if vim.fn.exists('##' .. event)==1 then
@@ -366,7 +366,7 @@ function _begin(path, vimrcs)
   -- Reset variables
   vim.api.nvim_exec([[
     let g:dein#_plugins = {}
-    let g:dein#_event_plugins = {}
+    lua dein_event_plugins = {}
     let g:dein#_ftplugin = {}
     lua dein_hook_add = ''
   ]], true)
@@ -477,7 +477,7 @@ function _end()
     vim.fn['dein#util#_execute_hook']({}, dein_hook_add)
   end
 
-  local _event_plugins = vim.g['dein#_event_plugins']
+  local _event_plugins = dein_event_plugins
   -- TODO
   _event_plugins[true] = nil
   for event, plugins in pairs(_event_plugins) do

@@ -26,7 +26,7 @@ function parse_lazy(plugin)
   if plugin['on_idle'] ~= nil and plugin['on_idle'] ~= 0 then
     plugin.on_event = {'FocusLost', 'CursorHold'}
   end
-  local event_plugins = vim.g['dein#_event_plugins']
+  local event_plugins = dein_event_plugins
   -- TODO: https://github.com/neovim/neovim/issues/12048
   event_plugins[true] = nil
   if plugin['on_event'] ~= nil then
@@ -39,7 +39,7 @@ function parse_lazy(plugin)
       end
     end
   end
-  vim.g['dein#_event_plugins'] = event_plugins
+  dein_event_plugins = event_plugins
 
   if plugin['on_cmd'] ~= nil then
     generate_dummy_commands(plugin)

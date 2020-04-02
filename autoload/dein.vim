@@ -22,7 +22,7 @@ function! dein#_init() abort
   lua dein_off2 = ''
   lua dein_vimrcs = {}
   lua dein_block_level = 0
-  let g:dein#_event_plugins = {}
+  lua dein_event_plugins = {}
   let g:dein#_is_sudo = $SUDO_USER !=# '' && $USER !=# $SUDO_USER
         \ && $HOME !=# expand('~'.$USER)
         \ && $HOME ==# expand('~'.$SUDO_USER)
