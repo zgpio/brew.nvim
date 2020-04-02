@@ -45,21 +45,6 @@ function! dein#_init() abort
   autocmd dein CmdUndefined *
         \ call dein#autoload#_on_pre_cmd(expand('<afile>'))
 endfunction
-function! dein#load_cache_raw(vimrcs) abort
-  call v:lua.set_dein_vimrcs(a:vimrcs)
-  let cache = get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
-        \ .'/cache_' . luaeval('dein_progname')
-  let time = getftime(cache)
-  if !empty(filter(map(copy(luaeval('dein_vimrcs')),
-        \ 'getftime(expand(v:val))'), 'time < v:val'))
-    return [{}, {}]
-  endif
-  let list = readfile(cache)
-  if len(list) != 3 || string(luaeval('dein_vimrcs')) !=# list[0]
-    return [{}, {}]
-  endif
-  return [json_decode(list[1]), json_decode(list[2])]
-endfunction
 function! dein#load_state(path, ...) abort
   return v:lua.load_state(a:path, a:000)
 endfunction

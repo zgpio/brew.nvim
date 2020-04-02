@@ -161,7 +161,7 @@ function _save_state(is_starting)
     'if g:dein#_cache_version !=# ' .. vim.g['dein#_cache_version'] .. ' || ' ..
     'g:dein#_init_runtimepath !=# ' .. vim.fn.string(vim.g['dein#_init_runtimepath']) ..
          ' | throw "Cache loading error" | endif',
-    'let [plugins, ftplugin] = dein#load_cache_raw('..
+    'let [plugins, ftplugin] = v:lua.load_cache_raw('..
          vim.fn.string(dein_vimrcs) ..')',
     "if empty(plugins) | throw 'Cache loading error' | endif",
     'let g:dein#_plugins = plugins',

@@ -59,8 +59,29 @@ function load_state(path, ...)
     }
   }
 end
--- TODO: 临时
-function set_dein_vimrcs(l)
-  dein_vimrcs = l
+function load_cache_raw(vimrcs)
+  dein_vimrcs = vimrcs
+  local cache = (vim.g['dein#cache_directory'] or dein_base_path) ..'/cache_' .. dein_progname
+  local time = vim.fn.getftime(cache)
+  local t = vim.tbl_filter(
+    function(v)
+      return time < v
+    end,
+    vim.tbl_map(
+      function(v)
+       return vim.fn.getftime(vim.fn.expand(v))
+      end,
+      vim.deepcopy(dein_vimrcs)
+    )
+  )
+  if #t~=0 then
+    return {{}, {}}
+  end
+  local list = vim.fn.readfile(cache)
+  if #list ~= 3 or vim.fn.string(dein_vimrcs) ~= list[1] then
+    return {{}, {}}
+  end
+  return {vim.fn.json_decode(list[2]), vim.fn.json_decode(list[3])}
 end
+
 return M
