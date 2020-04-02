@@ -3,79 +3,7 @@
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
 " License: MIT license
 "=============================================================================
-
-function! dein#autoload#_source(...) abort
-  let plugins = empty(a:000) ? values(g:dein#_plugins) :
-        \ dein#util#_convert2list(a:1)
-  if empty(plugins)
-    return
-  endif
-
-  if type(plugins[0]) != v:t_dict
-    let plugins = map(dein#util#_convert2list(a:1),
-        \       'get(g:dein#_plugins, v:val, {})')
-  endif
-
-  lua require 'dein/util'
-  let rtps = v:lua._split_rtp(&runtimepath)
-  let index = index(rtps, v:lua._get_runtime_path())
-  if index < 0
-    return 1
-  endif
-
-  let sourced = []
-  for plugin in filter(plugins,
-        \ "!empty(v:val) && !v:val.sourced && v:val.rtp !=# ''")
-    call s:source_plugin(rtps, index, plugin, sourced)
-  endfor
-
-  let filetype_before = dein#util#_redir('autocmd FileType')
-  lua require 'dein/util'
-  let &runtimepath = v:lua._join_rtp(rtps, &runtimepath, '')
-
-  call dein#call_hook('source', sourced)
-
-  " Reload script files.
-  for plugin in sourced
-    for directory in filter(['plugin', 'after/plugin'],
-          \ "isdirectory(plugin.rtp.'/'.v:val)")
-      for file in dein#util#_globlist(plugin.rtp.'/'.directory.'/**/*.vim')
-        execute 'source' fnameescape(file)
-      endfor
-    endfor
-
-    if !has('vim_starting')
-      let augroup = get(plugin, 'augroup', plugin.normalized_name)
-      if exists('#'.augroup.'#VimEnter')
-        silent execute 'doautocmd' augroup 'VimEnter'
-      endif
-      if has('gui_running') && &term ==# 'builtin_gui'
-            \ && exists('#'.augroup.'#GUIEnter')
-        silent execute 'doautocmd' augroup 'GUIEnter'
-      endif
-      if exists('#'.augroup.'#BufRead')
-        silent execute 'doautocmd' augroup 'BufRead'
-      endif
-    endif
-  endfor
-
-  let filetype_after = dein#util#_redir('autocmd FileType')
-
-  lua require 'dein/autoload'
-  let is_reset = v:lua.is_reset_ftplugin(sourced)
-  if is_reset
-    call v:lua.reset_ftplugin()
-  endif
-
-  if (is_reset || filetype_before !=# filetype_after) && &filetype !=# ''
-    " Recall FileType autocmd
-    let &filetype = &filetype
-  endif
-
-  if !has('vim_starting')
-    call dein#call_hook('post_source', sourced)
-  endif
-endfunction
+lua require 'dein/autoload'
 
 function! dein#autoload#_on_default_event(event) abort
   let lazy_plugins = dein#util#_get_lazy_plugins()
@@ -121,7 +49,7 @@ function! s:source_events(event, plugins) abort
 
   let prev_autocmd = execute('autocmd ' . a:event)
 
-  call dein#autoload#_source(a:plugins)
+  call v:lua._source(a:plugins)
 
   let new_autocmd = execute('autocmd ' . a:event)
 
@@ -150,13 +78,13 @@ function! dein#autoload#_on_func(name) abort
     return
   endif
 
-  call dein#autoload#_source(filter(dein#util#_get_lazy_plugins(),
+  call v:lua._source(filter(dein#util#_get_lazy_plugins(),
         \  "stridx(function_prefix, v:val.normalized_name.'#') == 0
         \   || (index(get(v:val, 'on_func', []), a:name) >= 0)"))
 endfunction
 
 function! dein#autoload#_on_pre_cmd(name) abort
-  call dein#autoload#_source(
+  call v:lua._source(
         \ filter(dein#util#_get_lazy_plugins(),
         \ "index(map(copy(get(v:val, 'on_cmd', [])),
         \            'tolower(v:val)'), a:name) >= 0
@@ -201,66 +129,4 @@ function! dein#autoload#_dummy_complete(arglead, cmdline, cursorpos) abort
   endif
 
   return [a:arglead]
-endfunction
-
-function! s:source_plugin(rtps, index, plugin, sourced) abort
-  if a:plugin.sourced || index(a:sourced, a:plugin) >= 0
-    return
-  endif
-
-  call add(a:sourced, a:plugin)
-
-  let index = a:index
-
-  " Load dependencies
-  for name in get(a:plugin, 'depends', [])
-    if !has_key(g:dein#_plugins, name)
-      call dein#util#_error(printf(
-            \ 'Plugin name "%s" is not found.', name))
-      continue
-    endif
-
-    if !a:plugin.lazy && g:dein#_plugins[name].lazy
-      call dein#util#_error(printf(
-            \ 'Not lazy plugin "%s" depends lazy "%s" plugin.',
-            \ a:plugin.name, name))
-      continue
-    endif
-
-    if s:source_plugin(a:rtps, index, g:dein#_plugins[name], a:sourced)
-      let index += 1
-    endif
-  endfor
-
-  let a:plugin.sourced = 1
-
-  for on_source in filter(dein#util#_get_lazy_plugins(),
-        \ "index(get(v:val, 'on_source', []), a:plugin.name) >= 0")
-    if s:source_plugin(a:rtps, index, on_source, a:sourced)
-      let index += 1
-    endif
-  endfor
-
-  if has_key(a:plugin, 'dummy_commands')
-    for command in a:plugin.dummy_commands
-      silent! execute 'delcommand' command[0]
-    endfor
-    let a:plugin.dummy_commands = []
-  endif
-
-  if has_key(a:plugin, 'dummy_mappings')
-    for map in a:plugin.dummy_mappings
-      silent! execute map[0].'unmap' map[1]
-    endfor
-    let a:plugin.dummy_mappings = []
-  endif
-
-  if !a:plugin.merged || get(a:plugin, 'local', 0)
-    call insert(a:rtps, a:plugin.rtp, index)
-    if isdirectory(a:plugin.rtp.'/after')
-      " call dein#util#_add_after(a:rtps, a:plugin.rtp.'/after')
-      let idx = index(a:rtps, $VIMRUNTIME)
-      call insert(a:rtps, a:plugin.rtp.'/after', (idx <= 0 ? -1 : idx + 1))
-    endif
-  endif
 endfunction

@@ -87,15 +87,16 @@ function _add_after(rtps, path)
   }
   local idx = vim.fn.index(rtps, vim.env.VIMRUNTIME)
   local i
-  if idx <= 0 then i = -1 else i = idx + 1 end
-  rtps = vim.fn.insert(rtps, path, i)
+  if idx <= 0 then i = #rtps+1 else i = idx + 2 end
+  table.insert(rtps, i, path)
   return rtps
 end
+--@returns [{}, {}]
 function _get_lazy_plugins()
   local plugins = vim.tbl_values(vim.g['dein#_plugins'])
   -- table.filter  https://gist.github.com/FGRibreau/3790217
   local rv = {}
-  for i, t in ipairs(plugins) do
+  for _, t in ipairs(plugins) do
     if t.sourced == 0 and t.rtp ~= '' then
       table.insert(rv, t)
     end
@@ -282,6 +283,19 @@ function _join_rtp(list, runtimepath, rtp)
     return vim.fn.join(vim.tbl_map(escape, list), ',')
   end
 end
+function _convert2list(expr)
+  if type(expr) == 'table' then
+    return vim.deepcopy(expr)
+  elseif type(expr) == 'string' then
+    if expr == '' then
+      return {}
+    else
+      return vim.split(expr, '\r?\n')
+    end
+  else
+    return {expr}
+  end
+end
 function escape(path)
   -- Escape a path for runtimepath.
   return vim.fn.substitute(path, [[,\|\\,\@=]], [[\\\0]], 'g')
@@ -289,7 +303,7 @@ end
 function _check_install(plugins)
   if not vim.tbl_isempty(plugins) then
     local invalids = vim.tbl_filter(function(x) return vim.tbl_isempty(vim.fn['dein#get'](x)) end,
-      vim.fn['dein#util#_convert2list'](plugins))
+      _convert2list(plugins))
     if not vim.tbl_isempty(invalids) then
       M._error('Invalid plugins: ' .. vim.fn.string(vim.fn.map(invalids, 'v:val')))
       return -1
@@ -298,7 +312,7 @@ function _check_install(plugins)
   if vim.tbl_isempty(plugins) then
     plugins = vim.tbl_values(vim.fn['dein#get']())
   else
-    plugins = vim.fn.map(vim.fn['dein#util#_convert2list'](plugins), 'dein#get(v:val)')
+    plugins = vim.fn.map(_convert2list(plugins), 'dein#get(v:val)')
   end
   plugins = vim.tbl_filter(function(x) return vim.fn.isdirectory(x.path)==0 end, plugins)
   if vim.tbl_isempty(plugins) then return 0 end
@@ -458,7 +472,7 @@ function _end()
     end
 
     if plugin.merged==0 then
-      rtps = vim.fn.insert(rtps, plugin.rtp, index)
+      table.insert(rtps, index+1, plugin.rtp)
       if vim.fn.isdirectory(plugin.rtp..'/after')==1 then
         rtps = _add_after(rtps, plugin.rtp..'/after')
       end

@@ -79,7 +79,7 @@ function! dein#get(...) abort
   return empty(a:000) ? copy(g:dein#_plugins) : get(g:dein#_plugins, a:1, {})
 endfunction
 function! dein#source(...) abort
-  return call('dein#autoload#_source', a:000)
+  return v:lua._source(a:000)
 endfunction
 function! dein#check_install(...) abort
   lua require 'dein/util'

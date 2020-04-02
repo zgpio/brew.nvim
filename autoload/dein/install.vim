@@ -427,7 +427,8 @@ function! dein#install#_remote_plugins() abort
   let remote_plugins = filter(values(dein#get()),
         \ "isdirectory(v:val.rtp . '/rplugin') && !v:val.sourced")
 
-  call dein#autoload#_source(remote_plugins)
+  lua require 'dein/autoload'
+  call v:lua._source(remote_plugins)
 
   call s:log('loaded remote plugins: ' .
         \ string(map(copy(remote_plugins), 'v:val.name')))
