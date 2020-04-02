@@ -159,7 +159,7 @@ function _save_state(is_starting)
 
   local lines = {
     'lua require "dein/autoload"',
-    'if g:dein#_cache_version !=# ' .. vim.g['dein#_cache_version'] .. ' || ' ..
+    'if luaeval("dein_cache_version") !=# ' .. dein_cache_version .. ' || ' ..
     'luaeval("dein_init_runtimepath") !=# ' .. vim.fn.string(dein_init_runtimepath) ..
          ' | throw "Cache loading error" | endif',
     'let [plugins, ftplugin] = v:lua.load_cache_raw('..
