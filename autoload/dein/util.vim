@@ -125,8 +125,8 @@ function! dein#util#_get_merged_plugins() abort
   for ftplugin in values(g:dein#_ftplugin)
     let ftplugin_len += len(ftplugin)
   endfor
-  return [g:dein#_merged_format, string(ftplugin_len)] +
-         \ sort(map(values(g:dein#_plugins), g:dein#_merged_format))
+  return [luaeval('dein_merged_format'), string(ftplugin_len)] +
+         \ sort(map(values(g:dein#_plugins), luaeval('dein_merged_format')))
 endfunction
 
 function! dein#util#_clear_state() abort
@@ -202,11 +202,6 @@ function! dein#util#_tsort(plugins) abort
   endfor
 
   return sorted
-endfunction
-
-function! dein#util#_add_after(rtps, path) abort
-  let idx = index(a:rtps, $VIMRUNTIME)
-  call insert(a:rtps, a:path, (idx <= 0 ? -1 : idx + 1))
 endfunction
 
 function! dein#util#_expand(path) abort

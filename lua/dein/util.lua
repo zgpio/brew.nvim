@@ -447,9 +447,14 @@ function _end()
   dein_block_level = dein_block_level - 1
 
   if vim.fn.has('vim_starting')==0 then
-    -- TODO
-    -- vim.fn['dein#source'](vim.fn.filter(vim.fn.values(vim.g['dein#_plugins']), "!v:val.lazy && !v:val.sourced && v:val.rtp !=# ''"))
-    a.nvim_command([[call dein#source(filter(values(g:dein#_plugins), "!v:val.lazy && !v:val.sourced && v:val.rtp !=# ''"))]])
+    require 'dein/autoload'
+    local plugins = vim.tbl_filter(
+      function(v)
+        return v.lazy==0 and v.sourced==0 and v.rtp ~= ''
+      end,
+      vim.tbl_values(vim.g['dein#_plugins'])
+    )
+    _source(plugins)
   end
 
   -- Add runtimepath

@@ -7,8 +7,7 @@
 lua require 'dein'
 function! dein#_init() abort
   let g:dein#_cache_version = 150
-  let g:dein#_merged_format =
-        \ "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
+  lua dein_merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
   lua dein_merged_length = 3
   let g:dein#name = ''
   let g:dein#plugin = {}
