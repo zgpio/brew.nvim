@@ -51,7 +51,7 @@ function _save_cache(vimrcs, is_state, is_starting)
     end
   end
 
-  local base_path = vim.g['dein#_base_path']
+  local base_path = dein_base_path
   if vim.fn.isdirectory(base_path) == 0 then
     vim.fn.mkdir(base_path, 'p')
   end
@@ -124,7 +124,7 @@ function _get_cache_path()
     return cache_path
   end
 
-  cache_path = (vim.g['dein#cache_directory'] or vim.g['dein#_base_path'])
+  cache_path = (vim.g['dein#cache_directory'] or dein_base_path)
     ..'/.cache/'..vim.fn.fnamemodify(vim.fn['dein#util#_get_myvimrc'](), ':t')
   vim.g['dein#_cache_path'] = cache_path
   if vim.fn.isdirectory(cache_path) == 0 then
@@ -166,7 +166,7 @@ function _save_state(is_starting)
     "if empty(plugins) | throw 'Cache loading error' | endif",
     'let g:dein#_plugins = plugins',
     'let g:dein#_ftplugin = ftplugin',
-    'let g:dein#_base_path = ' .. vim.fn.string(vim.g['dein#_base_path']),
+    'lua dein_base_path = ' .. vim.fn.string(dein_base_path),
     'lua dein_runtime_path = ' .. vim.fn.string(dein_runtime_path),
     'let g:dein#_cache_path = ' .. vim.fn.string(vim.g['dein#_cache_path']),
     'let &runtimepath = ' .. vim.fn.string(vim.o.rtp),
@@ -214,7 +214,7 @@ function _save_state(is_starting)
   end
 
   vim.fn.writefile(lines,
-    (vim.g['dein#cache_directory'] or vim.g['dein#_base_path']) ..'/state_' .. vim.g['dein#_progname'] .. '.vim')
+    (vim.g['dein#cache_directory'] or dein_base_path) ..'/state_' .. vim.g['dein#_progname'] .. '.vim')
 end
 function _writefile(path, list)
   if vim.g['dein#_is_sudo'] == 1 or (vim.fn.filewritable(_get_cache_path())==0) then
@@ -377,9 +377,9 @@ function _begin(path, vimrcs)
   end
 
   vim.g['dein#_block_level'] = vim.g['dein#_block_level'] + 1
-  vim.g['dein#_base_path'] = vim.fn['dein#util#_expand'](path)
-  if vim.g['dein#_base_path']:sub(-1) == '/' then
-    vim.g['dein#_base_path'] = vim.g['dein#_base_path']:sub(1, -2)
+  dein_base_path = vim.fn['dein#util#_expand'](path)
+  if dein_base_path:sub(-1) == '/' then
+    dein_base_path = dein_base_path:sub(1, -2)
   end
   _get_runtime_path()
   _get_cache_path()

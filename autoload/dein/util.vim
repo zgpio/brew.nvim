@@ -17,7 +17,7 @@ function! dein#util#_set_default(var, val, ...) abort
 endfunction
 
 function! dein#util#_get_base_path() abort
-  return g:dein#_base_path
+  return luaeval('dein_base_path')
 endfunction
 function! dein#util#_get_vimrcs(vimrcs) abort
   return !empty(a:vimrcs) ?
@@ -130,7 +130,7 @@ function! dein#util#_get_merged_plugins() abort
 endfunction
 
 function! dein#util#_clear_state() abort
-  let base = get(g:, 'dein#cache_directory', g:dein#_base_path)
+  let base = get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
   for cache in dein#util#_globlist(base.'/state_*.vim')
         \ + dein#util#_globlist(base.'/cache_*')
     call delete(cache)

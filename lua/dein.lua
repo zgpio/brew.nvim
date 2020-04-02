@@ -38,9 +38,9 @@ function load_state(path, ...)
     sourced = vim.fn.has('vim_starting')==1 and vim.o.loadplugins
   end
   if (vim.g['dein#_is_sudo']==1 or not sourced) then return 1 end
-  vim.g['dein#_base_path'] = vim.fn.expand(path)
+  dein_base_path = vim.fn.expand(path)
 
-  local state = (vim.g['dein#cache_directory'] or vim.g['dein#_base_path'])
+  local state = (vim.g['dein#cache_directory'] or dein_base_path)
     .. '/state_' .. vim.g['dein#_progname'] .. '.vim'
   if vim.fn.filereadable(state)==0 then return 1 end
   try {

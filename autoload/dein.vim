@@ -12,8 +12,8 @@ function! dein#_init() abort
   let g:dein#name = ''
   let g:dein#plugin = {}
   let g:dein#_plugins = {}
-  let g:dein#_base_path = ''
   let g:dein#_cache_path = ''
+  lua dein_base_path = ''
   lua dein_runtime_path = ''
   let g:dein#_hook_add = ''
   let g:dein#_ftplugin = {}
@@ -46,7 +46,7 @@ function! dein#_init() abort
 endfunction
 function! dein#load_cache_raw(vimrcs) abort
   let g:dein#_vimrcs = a:vimrcs
-  let cache = get(g:, 'dein#cache_directory', g:dein#_base_path)
+  let cache = get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
         \ .'/cache_' . g:dein#_progname
   let time = getftime(cache)
   if !empty(filter(map(copy(g:dein#_vimrcs),
@@ -119,7 +119,7 @@ function! dein#direct_install(repo, ...) abort
   call dein#install#_direct_install(a:repo, (a:0 ? a:1 : {}))
 endfunction
 function! dein#get_direct_plugins_path() abort
-  return get(g:, 'dein#cache_directory', g:dein#_base_path)
+  return get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
         \ .'/direct_install.vim'
 endfunction
 function! dein#reinstall(plugins) abort
