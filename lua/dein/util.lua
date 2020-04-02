@@ -139,7 +139,7 @@ end
 -- endfunction
 
 function _save_state(is_starting)
-  if vim.g['dein#_block_level'] ~= 0 then
+  if dein_block_level ~= 0 then
     _error('Invalid dein#save_state() usage.')
     return 1
   end
@@ -371,12 +371,12 @@ function _begin(path, vimrcs)
     lua dein_hook_add = ''
   ]], true)
 
-  if path == '' or vim.g['dein#_block_level'] ~= 0 then
+  if path == '' or dein_block_level ~= 0 then
     M._error('Invalid begin/end block usage.')
     return 1
   end
 
-  vim.g['dein#_block_level'] = vim.g['dein#_block_level'] + 1
+  dein_block_level = dein_block_level + 1
   dein_base_path = vim.fn['dein#util#_expand'](path)
   if dein_base_path:sub(-1) == '/' then
     dein_base_path = dein_base_path:sub(1, -2)
@@ -425,12 +425,12 @@ function _chomp(str)
   end
 end
 function _end()
-  if vim.g['dein#_block_level'] ~= 1 then
+  if dein_block_level ~= 1 then
     M._error('Invalid begin/end block usage.')
     return 1
   end
 
-  vim.g['dein#_block_level'] = vim.g['dein#_block_level'] - 1
+  dein_block_level = dein_block_level - 1
 
   if vim.fn.has('vim_starting')==0 then
     -- TODO
