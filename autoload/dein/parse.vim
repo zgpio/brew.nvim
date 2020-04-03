@@ -193,62 +193,6 @@ function! dein#parse#_load_toml(filename, default) abort
   " Add to dein_vimrcs
   call v:lua.add_dein_vimrcs(dein#util#_expand(a:filename))
 endfunction
-function! dein#parse#_plugins2toml(plugins) abort
-  let toml = []
-
-  let default = dein#parse#_dict(dein#parse#_init('', {}))
-  let default.if = ''
-  let default.frozen = 0
-  let default.local = 0
-  let default.depends = []
-  let default.on_i = 0
-  let default.on_idle = 0
-  let default.on_ft = []
-  let default.on_cmd = []
-  let default.on_func = []
-  let default.on_map = []
-  let default.on_path = []
-  let default.on_source = []
-  let default.build = ''
-  let default.hook_add = ''
-  let default.hook_source = ''
-  let default.hook_post_source = ''
-  let default.hook_post_update = ''
-
-  let skip_default = {
-        \ 'type': 1,
-        \ 'path': 1,
-        \ 'rtp': 1,
-        \ 'sourced': 1,
-        \ 'orig_opts': 1,
-        \ 'repo': 1,
-        \ }
-
-  for plugin in dein#util#_sort_by(a:plugins, 'v:val.repo')
-    let toml += ['[[plugins]]',
-          \ 'repo = ' . string(plugin.repo)]
-
-    for key in filter(sort(keys(default)),
-          \ '!has_key(skip_default, v:val) && has_key(plugin, v:val)
-          \  && (type(plugin[v:val]) !=# type(default[v:val])
-          \      || plugin[v:val] !=# default[v:val])')
-      let val = plugin[key]
-      if key =~# '^hook_'
-        call add(toml, key . " = '''")
-        let toml += split(val, '\n')
-        call add(toml, "'''")
-      else
-        call add(toml, key . ' = ' . string(
-              \ (type(val) == v:t_list && len(val) == 1) ? val[0] : val))
-      endif
-      unlet! val
-    endfor
-
-    call add(toml, '')
-  endfor
-
-  return toml
-endfunction
 function! dein#parse#_load_dict(dict, default) abort
   for [repo, options] in items(a:dict)
     call dein#add(repo, extend(copy(options), a:default, 'keep'))
