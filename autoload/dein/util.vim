@@ -60,20 +60,6 @@ function! dein#util#_check_clean() abort
         \  && index(plugins_directories, v:val) < 0")
 endfunction
 
-function! dein#util#_writefile(path, list) abort
-  if g:dein#_is_sudo || !filewritable(v:lua._get_cache_path())
-    return 1
-  endif
-
-  let path = v:lua._get_cache_path() . '/' . a:path
-  let dir = fnamemodify(path, ':h')
-  if !isdirectory(dir)
-    call mkdir(dir, 'p')
-  endif
-
-  return writefile(a:list, path)
-endfunction
-
 function! dein#util#_get_type(name) abort
   return get(dein#parse#_get_types(), a:name, {})
 endfunction

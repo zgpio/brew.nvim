@@ -264,7 +264,7 @@ function! s:merge_files(plugins, directory) abort
   endfor
 
   if !empty(files)
-    call dein#util#_writefile(printf('.dein/%s/%s.vim',
+    call v:lua._writefile(printf('.dein/%s/%s.vim',
           \ a:directory, a:directory), files)
   endif
 endfunction
