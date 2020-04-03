@@ -80,6 +80,31 @@ function _source(...)
   end
   vim.g['dein#_plugins'] = _plugins
 end
+function source_events(event, plugins)
+  if vim.tbl_isempty(plugins) then
+    return
+  end
+
+  local prev_autocmd = vim.fn.execute('autocmd ' .. event)
+  _source(plugins)
+  local new_autocmd = vim.fn.execute('autocmd ' .. event)
+
+  if event == 'InsertCharPre' then
+    -- Queue this key again
+    vim.fn.feedkeys(vim.v.char)
+    vim.v.char = ''
+  else
+    if vim.fn.exists('#BufReadCmd')==1 and event == 'BufNew' then
+      -- For BufReadCmd plugins
+      a.nvim_command('silent doautocmd <nomodeline> BufReadCmd')
+    end
+    if vim.fn.exists('#' .. event)==1 and prev_autocmd ~= new_autocmd then
+      a.nvim_command('doautocmd <nomodeline> ' .. event)
+    elseif vim.fn.exists('#User#' .. event)==1 then
+      a.nvim_command('doautocmd <nomodeline> User ' ..event)
+    end
+  end
+end
 function reset_ftplugin()
   local filetype_state = vim.fn.execute('filetype')
 

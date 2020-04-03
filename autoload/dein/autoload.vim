@@ -28,7 +28,7 @@ function! dein#autoload#_on_default_event(event) abort
         \ "!has_key(v:val, 'on_event')
         \  && has_key(v:val, 'on_if') && eval(v:val.on_if)")
 
-  call s:source_events(a:event, plugins)
+  call v:lua.source_events(a:event, plugins)
 endfunction
 function! dein#autoload#_on_event(event, plugins) abort
   let lazy_plugins = filter(dein#util#_get_plugins(a:plugins),
@@ -40,34 +40,7 @@ function! dein#autoload#_on_event(event, plugins) abort
 
   let plugins = filter(copy(lazy_plugins),
         \ "!has_key(v:val, 'on_if') || eval(v:val.on_if)")
-  call s:source_events(a:event, plugins)
-endfunction
-function! s:source_events(event, plugins) abort
-  if empty(a:plugins)
-    return
-  endif
-
-  let prev_autocmd = execute('autocmd ' . a:event)
-
-  call v:lua._source(a:plugins)
-
-  let new_autocmd = execute('autocmd ' . a:event)
-
-  if a:event ==# 'InsertCharPre'
-    " Queue this key again
-    call feedkeys(v:char)
-    let v:char = ''
-  else
-    if exists('#BufReadCmd') && a:event ==# 'BufNew'
-      " For BufReadCmd plugins
-      silent doautocmd <nomodeline> BufReadCmd
-    endif
-    if exists('#' . a:event) && prev_autocmd !=# new_autocmd
-      execute 'doautocmd <nomodeline>' a:event
-    elseif exists('#User#' . a:event)
-      execute 'doautocmd <nomodeline> User' a:event
-    endif
-  endif
+  call v:lua.source_events(a:event, plugins)
 endfunction
 
 function! dein#autoload#_on_func(name) abort
