@@ -449,6 +449,21 @@ function _save_merged_plugins()
   vim.list_extend(h, {vim.fn.string(t)})
   vim.fn.writefile(h, _get_cache_path() .. '/merged')
 end
+function _load_merged_plugins()
+  local path = _get_cache_path() .. '/merged'
+  if vim.fn.filereadable(path)==0 then
+    return {}
+  end
+  local merged = vim.fn.readfile(path)
+  if #merged ~= dein_merged_length then
+    return {}
+  end
+  -- TODO sandbox
+  local h = slice(merged, 1, dein_merged_length - 1)
+  local t = a.nvim_eval(merged[#merged])
+  vim.list_extend(h, t)
+  return h
+end
 function _get_merged_plugins()
   local ftplugin_len = 0
   local _ftplugin = dein_ftplugin

@@ -77,7 +77,7 @@ function! dein#util#_check_vimrcs() abort
   if get(g:, 'dein#auto_recache', 0)
     silent execute 'source' dein#util#_get_myvimrc()
 
-    if v:lua._get_merged_plugins() !=# dein#util#_load_merged_plugins()
+    if v:lua._get_merged_plugins() !=# v:lua._load_merged_plugins()
       lua require 'dein/util'
       call v:lua._notify('auto recached')
       call dein#recache_runtimepath()
@@ -85,17 +85,6 @@ function! dein#util#_check_vimrcs() abort
   endif
 
   return ret
-endfunction
-function! dein#util#_load_merged_plugins() abort
-  let path = v:lua._get_cache_path() . '/merged'
-  if !filereadable(path)
-    return []
-  endif
-  let merged = readfile(path)
-  if len(merged) != luaeval('dein_merged_length')
-    return []
-  endif
-  sandbox return merged[: luaeval('dein_merged_length') - 2] + eval(merged[-1])
 endfunction
 
 function! dein#util#_clear_state() abort
