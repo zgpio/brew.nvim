@@ -106,24 +106,6 @@ function! dein#util#_clear_state() abort
   endfor
 endfunction
 
-function! dein#util#_config(arg, dict) abort
-  let name = type(a:arg) == v:t_dict ?
-        \   g:dein#name : a:arg
-  let dict = type(a:arg) == v:t_dict ?
-        \   a:arg : a:dict
-  if !has_key(g:dein#_plugins, name)
-        \ || g:dein#_plugins[name].sourced
-    return {}
-  endif
-
-  let plugin = g:dein#_plugins[name]
-  let options = extend({'repo': plugin.repo}, dict)
-  if has_key(plugin, 'orig_opts')
-    call extend(options, copy(plugin.orig_opts), 'keep')
-  endif
-  return v:lua._add(options.repo, options)
-endfunction
-
 function! dein#util#_execute_hook(plugin, hook) abort
   try
     let g:dein#plugin = a:plugin

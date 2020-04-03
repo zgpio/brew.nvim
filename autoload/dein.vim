@@ -153,11 +153,6 @@ endfunction
 function! dein#build(...) abort
   return dein#install#_build(a:0 ? a:1 : [])
 endfunction
-function! dein#config(arg, ...) abort
-  return type(a:arg) != v:t_list ?
-        \ dein#util#_config(a:arg, get(a:000, 0, {})) :
-        \ map(copy(a:arg), 'dein#util#_config(v:val, a:1)')
-endfunction
 function! dein#set_hook(plugins, hook_name, hook) abort
   return dein#util#_set_hook(a:plugins, a:hook_name, a:hook)
 endfunction
