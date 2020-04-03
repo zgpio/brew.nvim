@@ -153,9 +153,6 @@ endfunction
 function! dein#build(...) abort
   return dein#install#_build(a:0 ? a:1 : [])
 endfunction
-function! dein#set_hook(plugins, hook_name, hook) abort
-  return dein#util#_set_hook(a:plugins, a:hook_name, a:hook)
-endfunction
 function! dein#save_state() abort
   lua require 'dein/util'
   return v:lua._save_state(has('vim_starting'))

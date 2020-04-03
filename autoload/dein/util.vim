@@ -111,23 +111,6 @@ function! dein#util#_execute_hook(plugin, hook) abort
     call dein#util#_error(v:exception)
   endtry
 endfunction
-function! dein#util#_set_hook(plugins, hook_name, hook) abort
-  let names = empty(a:plugins) ? keys(dein#get()) :
-        \ dein#util#_convert2list(a:plugins)
-  for name in names
-    if !has_key(g:dein#_plugins, name)
-      call dein#util#_error(name . ' is not found.')
-      return 1
-    endif
-    let plugin = g:dein#_plugins[name]
-    let plugin[a:hook_name] =
-          \ type(a:hook) != v:t_string ? a:hook :
-          \   substitute(a:hook, '\n\s*\\\|\%(^\|\n\)\s*"[^\n]*', '', 'g')
-    if a:hook_name ==# 'hook_add'
-      call dein#util#_execute_hook(plugin, plugin[a:hook_name])
-    endif
-  endfor
-endfunction
 
 function! dein#util#_sort_by(list, expr) abort
   let pairs = map(a:list, printf('[v:val, %s]', a:expr))
