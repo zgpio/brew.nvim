@@ -84,4 +84,13 @@ function load_cache_raw(vimrcs)
   return {vim.fn.json_decode(list[2]), vim.fn.json_decode(list[3])}
 end
 
+function tap(name)
+  local _plugins = vim.g['dein#_plugins']
+  if _plugins.name==nil or vim.fn.isdirectory(_plugins[name].path)==0 then
+    return 0
+  end
+  vim.g['dein#name'] = name
+  vim.g['dein#plugin'] = _plugins[name]
+  return 1
+end
 return M

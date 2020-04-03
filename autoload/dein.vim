@@ -48,13 +48,6 @@ function! dein#load_state(path, ...) abort
   return v:lua.load_state(a:path, a:000)
 endfunction
 
-function! dein#tap(name) abort
-  if !has_key(g:dein#_plugins, a:name)
-        \ || !isdirectory(g:dein#_plugins[a:name].path) | return 0 | endif
-  let g:dein#name = a:name
-  let g:dein#plugin = g:dein#_plugins[a:name]
-  return 1
-endfunction
 function! dein#is_sourced(name) abort
   return has_key(g:dein#_plugins, a:name)
         \ && isdirectory(g:dein#_plugins[a:name].path)
