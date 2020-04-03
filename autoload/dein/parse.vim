@@ -34,7 +34,7 @@ function! dein#parse#_add(repo, options) abort
     call dein#util#_execute_hook(plugin, plugin.hook_add)
   endif
   if has_key(plugin, 'ftplugin')
-    call s:merge_ftplugin(plugin.ftplugin)
+    call v:lua.merge_ftplugin(plugin.ftplugin)
   endif
   return plugin
 endfunction
@@ -73,7 +73,7 @@ function! dein#parse#_load_toml(filename, default) abort
           \ toml.hook_add, pattern, '', 'g'))
   endif
   if has_key(toml, 'ftplugin')
-    call s:merge_ftplugin(toml.ftplugin)
+    call v:lua.merge_ftplugin(toml.ftplugin)
   endif
 
   if has_key(toml, 'plugins')
@@ -119,17 +119,6 @@ function! dein#parse#_local(localdir, options, includes) abort
       call dein#add(dir, options)
     endif
   endfor
-endfunction
-function! s:merge_ftplugin(ftplugin) abort
-  let pattern = '\n\s*\\\|\%(^\|\n\)\s*"[^\n]*'
-  for [ft, val] in items(a:ftplugin)
-    if !has_key(g:dein#_ftplugin, ft)
-      let g:dein#_ftplugin[ft] = val
-    else
-      let g:dein#_ftplugin[ft] .= "\n" . val
-    endif
-  endfor
-  call map(g:dein#_ftplugin, "substitute(v:val, pattern, '', 'g')")
 endfunction
 
 function! dein#parse#_get_types() abort

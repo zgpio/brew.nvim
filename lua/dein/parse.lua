@@ -132,23 +132,24 @@ function add_dein_vimrcs(s)
   table.insert(dein_vimrcs, s)
 end
 
--- TODO
 function merge_ftplugin(ftplugin)
-  print(ftplugin)
+  local _ftplugin = vim.g['dein#_ftplugin']
+  -- TODO
+  _ftplugin[true]=nil
   for ft, val in pairs(ftplugin) do
-    if not vim.g['dein#_ftplugin'][ft] ~= nil then
-      vim.g['dein#_ftplugin'][ft] = val
+    if _ftplugin[ft] == nil then
+      _ftplugin[ft] = val
     else
-      vim.g['dein#_ftplugin'][ft] = vim.g['dein#_ftplugin'][ft] .. "\n" .. val
+      _ftplugin[ft] = _ftplugin[ft] .. '\n' .. val
     end
   end
-  print(vim.inspect(vim.g['dein#_ftplugin']))
-  for ft, val in pairs(vim.g['dein#_ftplugin']) do
-    print(val)
-    vim.g['dein#_ftplugin'][ft] = val:gsub('^%s*"[^\n]*', '')
-    vim.g['dein#_ftplugin'][ft] = val:gsub('\n%s*"[^\n]*', '')
-    vim.g['dein#_ftplugin'][ft] = val:gsub('\n%s*\\', '')
-  end
+  _ftplugin = vim.tbl_map(
+    function(v)
+      return vim.fn.substitute(v, [=[\n\s*\\\|\%(^\|\n\)\s*"[^\n]*]=], '', 'g')
+    end,
+    _ftplugin
+  )
+  vim.g['dein#_ftplugin'] = _ftplugin
 end
 
 function _dict(plug)
