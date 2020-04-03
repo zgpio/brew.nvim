@@ -25,6 +25,9 @@ function _get_runtime_path()
   return rtp
 end
 
+function _get_base_path()
+  return dein_base_path
+end
 function _save_cache(vimrcs, is_state, is_starting)
   if _get_cache_path() == '' or (is_starting==0) then
     -- Ignore

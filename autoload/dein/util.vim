@@ -16,9 +16,6 @@ function! dein#util#_set_default(var, val, ...) abort
   endif
 endfunction
 
-function! dein#util#_get_base_path() abort
-  return luaeval('dein_base_path')
-endfunction
 function! dein#util#_get_vimrcs(vimrcs) abort
   return !empty(a:vimrcs) ?
         \ map(dein#util#_convert2list(a:vimrcs), 'expand(v:val)') :
@@ -57,7 +54,7 @@ endfunction
 function! dein#util#_check_clean() abort
   let plugins_directories = map(values(dein#get()), 'v:val.path')
   let path = dein#util#_substitute_path(
-        \ globpath(dein#util#_get_base_path(), 'repos/*/*/*'))
+        \ globpath(v:lua._get_base_path(), 'repos/*/*/*'))
   return filter(split(path, "\n"),
         \ "isdirectory(v:val) && fnamemodify(v:val, ':t') !=# 'dein.vim'
         \  && index(plugins_directories, v:val) < 0")

@@ -48,8 +48,9 @@ function! s:type.init(repo, options) abort
   let directory = substitute(directory, '^https:/\+\|^git@', '', '')
   let directory = substitute(directory, ':', '/', 'g')
 
+  lua require 'dein/util'
   return { 'type': 'git',
-        \  'path': dein#util#_get_base_path().'/repos/'.directory }
+        \  'path': v:lua._get_base_path().'/repos/'.directory }
 endfunction
 function! s:type.get_uri(repo, options) abort
   if a:repo =~# '^/\|^\a:[/\\]'

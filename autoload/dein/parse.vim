@@ -75,12 +75,12 @@ function! dein#parse#_dict(plugin) abort
     let plugin.name = plugin.normalized_name
   endif
 
+  lua require 'dein/util'
   if !has_key(plugin, 'path')
     let plugin.path = (plugin.repo =~# '^/\|^\a:[/\\]') ?
-          \ plugin.repo : dein#util#_get_base_path().'/repos/'.plugin.name
+          \ plugin.repo : v:lua._get_base_path().'/repos/'.plugin.name
   endif
 
-  lua require 'dein/util'
   let plugin.path = v:lua._chomp(dein#util#_expand(plugin.path))
   if get(plugin, 'rev', '') !=# ''
     " Add revision path
@@ -137,7 +137,7 @@ function! dein#parse#_dict(plugin) abort
           \ && !has_key(plugin, 'local')
           \ && !has_key(plugin, 'build')
           \ && !has_key(plugin, 'if')
-          \ && stridx(plugin.rtp, dein#util#_get_base_path()) == 0
+          \ && stridx(plugin.rtp, v:lua._get_base_path()) == 0
   endif
 
   if has_key(plugin, 'if') && type(plugin.if) == v:t_string
