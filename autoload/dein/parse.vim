@@ -12,32 +12,6 @@ let g:dein#enable_name_conversion =
 
 let s:git = dein#types#git#define()
 
-function! dein#parse#_add(repo, options) abort
-  let plugin = v:lua._dict(dein#parse#_init(a:repo, a:options))
-  if (has_key(g:dein#_plugins, plugin.name)
-        \ && g:dein#_plugins[plugin.name].sourced)
-        \ || !get(plugin, 'if', 1)
-    " Skip already loaded or not enabled plugin.
-    return {}
-  endif
-
-  if plugin.lazy && plugin.rtp !=# ''
-    let plugin = v:lua.parse_lazy(plugin)
-  endif
-
-  if has_key(g:dein#_plugins, plugin.name)
-        \ && g:dein#_plugins[plugin.name].sourced
-    let plugin.sourced = 1
-  endif
-  let g:dein#_plugins[plugin.name] = plugin
-  if has_key(plugin, 'hook_add')
-    call dein#util#_execute_hook(plugin, plugin.hook_add)
-  endif
-  if has_key(plugin, 'ftplugin')
-    call v:lua.merge_ftplugin(plugin.ftplugin)
-  endif
-  return plugin
-endfunction
 function! dein#parse#_init(repo, options) abort
   let repo = dein#util#_expand(a:repo)
   let plugin = has_key(a:options, 'type') ?

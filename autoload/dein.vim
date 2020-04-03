@@ -69,7 +69,8 @@ function! dein#end() abort
   return v:lua._end()
 endfunction
 function! dein#add(repo, ...) abort
-  return dein#parse#_add(a:repo, get(a:000, 0, {}))
+  lua require 'dein/util'
+  return v:lua._add(a:repo, get(a:000, 0, {}))
 endfunction
 function! dein#local(dir, ...) abort
   return dein#parse#_local(a:dir, get(a:000, 0, {}), get(a:000, 1, ['*']))

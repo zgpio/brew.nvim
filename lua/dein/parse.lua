@@ -11,6 +11,33 @@ function unique(items)
   return rv
 end
 
+function _add(repo, options)
+  local _plugins = vim.g['dein#_plugins']
+  local plugin = _dict(vim.fn['dein#parse#_init'](repo, options))
+  if (_plugins[plugin.name]~=nil
+        and _plugins[plugin.name].sourced==1)
+        or (plugin['if'] or 1)==0 then
+    -- Skip already loaded or not enabled plugin.
+    return {}
+  end
+
+  if plugin.lazy==1 and plugin.rtp ~= '' then
+    plugin = parse_lazy(plugin)
+  end
+
+  if _plugins[plugin.name]~=nil and _plugins[plugin.name].sourced==1 then
+    plugin.sourced = 1
+  end
+  _plugins[plugin.name] = plugin
+  if plugin['hook_add']~=nil then
+    vim.fn['dein#util#_execute_hook'](plugin, plugin.hook_add)
+  end
+  if plugin['ftplugin']~=nil then
+    merge_ftplugin(plugin.ftplugin)
+  end
+  vim.g['dein#_plugins'] = _plugins
+  return plugin
+end
 function parse_lazy(plugin)
   -- Auto convert2list.
   for i, key in ipairs({'on_ft', 'on_path', 'on_cmd', 'on_func', 'on_map',
