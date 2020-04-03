@@ -250,5 +250,8 @@ function mapargrec(map, mode)
   end
   return arg
 end
+function set_dein_ftplugin(ftplugin)
+  dein_ftplugin = ftplugin
+end
 
 return M

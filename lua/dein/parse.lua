@@ -160,7 +160,7 @@ function add_dein_vimrcs(s)
 end
 
 function merge_ftplugin(ftplugin)
-  local _ftplugin = vim.g['dein#_ftplugin']
+  local _ftplugin = dein_ftplugin
   -- TODO
   _ftplugin[true]=nil
   for ft, val in pairs(ftplugin) do
@@ -176,7 +176,7 @@ function merge_ftplugin(ftplugin)
     end,
     _ftplugin
   )
-  vim.g['dein#_ftplugin'] = _ftplugin
+  dein_ftplugin = _ftplugin
 end
 
 function _dict(plug)

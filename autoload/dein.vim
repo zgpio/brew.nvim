@@ -16,7 +16,7 @@ function! dein#_init() abort
   lua dein_base_path = ''
   lua dein_runtime_path = ''
   lua dein_hook_add = ''
-  let g:dein#_ftplugin = {}
+  lua dein_ftplugin = {}
   lua dein_off1 = ''
   lua dein_off2 = ''
   lua dein_vimrcs = {}

@@ -59,7 +59,7 @@ function _save_cache(vimrcs, is_state, is_starting)
     vim.fn.mkdir(base_path, 'p')
   end
 
-  local ftplugin = vim.g['dein#_ftplugin']
+  local ftplugin = dein_ftplugin
   vim.fn.writefile({vim.fn.string(vimrcs), vim.fn.json_encode(plugins), vim.fn.json_encode(ftplugin)},
     (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. dein_progname)
 end
@@ -169,7 +169,7 @@ function _save_state(is_starting)
          vim.fn.string(dein_vimrcs) ..')',
     "if empty(plugins) | throw 'Cache loading error' | endif",
     'let g:dein#_plugins = plugins',
-    'let g:dein#_ftplugin = ftplugin',
+    'call luaeval("set_dein_ftplugin(_A)", ftplugin)',
     'lua dein_base_path = ' .. vim.fn.string(dein_base_path),
     'lua dein_runtime_path = ' .. vim.fn.string(dein_runtime_path),
     'lua dein_cache_path = ' .. vim.fn.string(dein_cache_path),
@@ -384,7 +384,7 @@ function _begin(path, vimrcs)
   vim.api.nvim_exec([[
     let g:dein#_plugins = {}
     lua dein_event_plugins = {}
-    let g:dein#_ftplugin = {}
+    lua dein_ftplugin = {}
     lua dein_hook_add = ''
   ]], true)
 
@@ -451,7 +451,7 @@ function _save_merged_plugins()
 end
 function _get_merged_plugins()
   local ftplugin_len = 0
-  local _ftplugin = vim.g['dein#_ftplugin']
+  local _ftplugin = dein_ftplugin
   for _, ftplugin in ipairs(vim.tbl_values(_ftplugin)) do
     ftplugin_len = ftplugin_len + #ftplugin
   end

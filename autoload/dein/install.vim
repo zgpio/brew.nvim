@@ -361,9 +361,9 @@ function! s:generate_ftplugin() abort
     call mkdir(after, 'p')
   endif
 
-  " Merge g:dein#_ftplugin
+  " Merge dein_ftplugin
   let ftplugin = {}
-  for [key, string] in items(g:dein#_ftplugin)
+  for [key, string] in items(luaeval('dein_ftplugin'))
     for ft in (key ==# '_' ? ['_'] : split(key, '_'))
       if !has_key(ftplugin, ft)
         let ftplugin[ft] = (ft ==# '_') ? [] : [
