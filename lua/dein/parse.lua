@@ -151,6 +151,110 @@ function merge_ftplugin(ftplugin)
   end
 end
 
+function _dict(plug)
+  plugin = vim.tbl_extend('force', { rtp='', sourced=0 }, plug)
+
+  if plugin.name == nil then
+    plugin.name = vim.fn['dein#parse#_name_conversion'](plugin.repo)
+  end
+
+  if plugin.normalized_name == nil then
+    plugin.normalized_name = vim.fn.substitute(
+          vim.fn.fnamemodify(plugin.name, ':r'),
+          [[\c^n\?vim[_-]\|[_-]n\?vim$]], '', 'g')
+  end
+
+  if plug.name==nil and vim.g['dein#enable_name_conversion']==1 then
+    -- Use normalized name.
+    plugin.name = plugin.normalized_name
+  end
+
+  if plugin.path==nil then
+    if plugin.path:find('^%a:[/\\]') or plugin.path:find('^/') then
+      plugin.path = plugin.repo
+    else
+      plugin.path = _get_base_path()..'/repos/'..plugin.name
+    end
+  end
+
+  require 'dein/util'
+  plugin.path = _chomp(vim.fn['dein#util#_expand'](plugin.path))
+  if (plugin.rev or '') ~= '' then
+    -- Add revision path
+    plugin.path = plugin.path ..'_'.. vim.fn.substitute(plugin.rev, '[^[:alnum:].-]', '_', 'g')
+  end
+
+  -- Check relative path
+  if (plug.rtp==nil or plug.rtp ~= '')
+         and not (plugin.rtp:find('^[~/]') or plugin.rtp:find('^%a+:')) then
+    plugin.rtp = plugin.path..'/'..plugin.rtp
+  end
+  -- TODO ?_? dein use [0:]
+  if plugin.rtp == '~' then
+    plugin.rtp = vim.fn['dein#util#_expand'](plugin.rtp)
+  end
+  plugin.rtp = _chomp(plugin.rtp)
+  if vim.g['dein#_is_sudo']==1 and not (plugin.trusted==1) then
+    plugin.rtp = ''
+  end
+
+  if plugin.script_type ~= nil then
+    -- Add script_type.
+    plugin.path = plugin.path..'/'.. plugin.script_type
+  end
+
+  if plugin.depends~=nil and type(plugin.depends) ~= 'table' then
+    plugin.depends = {plugin.depends}
+  end
+
+  -- Deprecated check.
+  for _, key in ipairs({'directory', 'base'}) do
+    if plugin[key] ~= nil then
+      require 'dein/util'._error('plugin name = ' .. plugin.name)
+      require 'dein/util'._error(vim.fn.string(key) .. ' is deprecated.')
+    end
+  end
+
+  if plugin.lazy==nil then
+    plugin.lazy = plugin.on_i ~= nil
+          or plugin.on_idle ~= nil
+          or plugin.on_ft ~= nil
+          or plugin.on_cmd ~= nil
+          or plugin.on_func ~= nil
+          or plugin.on_map ~= nil
+          or plugin.on_path ~= nil
+          or plugin.on_if ~= nil
+          or plugin.on_event ~= nil
+          or plugin.on_source ~= nil
+    if plugin.lazy then plugin.lazy = 1 else plugin.lazy = 0 end
+  end
+
+  if plug.merged==nil then
+    plugin.merged = plugin.lazy==0
+      and plugin.normalized_name ~= 'dein'
+      and plugin['local']==nil
+      and plugin['build']==nil
+      and plugin['if']==nil
+      and vim.fn.stridx(plugin.rtp, _get_base_path()) == 0
+    if plugin.merged then plugin.merged = 1 else plugin.merged = 0 end
+  end
+
+  if plugin['if']~=nil and type(plugin['if']) == 'string' then
+    plugin['if'] = vim.api.nvim_eval(plug['if'])
+  end
+
+  -- Hooks
+  for _, hook in ipairs({
+    'hook_add', 'hook_source',
+    'hook_post_source', 'hook_post_update',
+    }) do
+    if plugin[hook] ~= nil and type(plugin[hook]) == 'string' then
+      plugin[hook] = vim.fn.substitute(plugin[hook], [=[\n\s*\\\|\%(^\|\n\)\s*"[^\n]*]=], '', 'g')
+    end
+  end
+
+  return plugin
+end
 -- function check_type(repo, options)
 --   local plugin = {}
 --   for type in values(dein#parse#_get_types()) do
