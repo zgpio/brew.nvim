@@ -434,6 +434,34 @@ function _begin(path, vimrcs)
   vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, dein_runtime_path)
 end
 
+-- TODO: duplicate
+function slice(tbl, first, last, step)
+  local sliced = {}
+  for i = first or 1, last or #tbl, step or 1 do
+    sliced[#sliced+1] = tbl[i]
+  end
+  return sliced
+end
+function _save_merged_plugins()
+  local merged = _get_merged_plugins()
+  local h = slice(merged, 1, dein_merged_length - 1)
+  local t = slice(merged, dein_merged_length)
+  vim.list_extend(h, {vim.fn.string(t)})
+  vim.fn.writefile(h, _get_cache_path() .. '/merged')
+end
+function _get_merged_plugins()
+  local ftplugin_len = 0
+  local _ftplugin = vim.g['dein#_ftplugin']
+  for _, ftplugin in ipairs(vim.tbl_values(_ftplugin)) do
+    ftplugin_len = ftplugin_len + #ftplugin
+  end
+  local _plugins = vim.g['dein#_plugins']
+  local r1 = {dein_merged_format, vim.fn.string(ftplugin_len)}
+  local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), dein_merged_format))
+  vim.list_extend(r1, r2)
+  return r1
+end
+
 function _chomp(str)
   if str ~= '' and str:sub(-1) == '/' then
     return str:sub(1, -2)

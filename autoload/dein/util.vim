@@ -91,7 +91,7 @@ function! dein#util#_check_vimrcs() abort
   if get(g:, 'dein#auto_recache', 0)
     silent execute 'source' dein#util#_get_myvimrc()
 
-    if dein#util#_get_merged_plugins() !=# dein#util#_load_merged_plugins()
+    if v:lua._get_merged_plugins() !=# dein#util#_load_merged_plugins()
       lua require 'dein/util'
       call v:lua._notify('auto recached')
       call dein#recache_runtimepath()
@@ -110,20 +110,6 @@ function! dein#util#_load_merged_plugins() abort
     return []
   endif
   sandbox return merged[: luaeval('dein_merged_length') - 2] + eval(merged[-1])
-endfunction
-function! dein#util#_save_merged_plugins() abort
-  let merged = dein#util#_get_merged_plugins()
-  call writefile(merged[: luaeval('dein_merged_length') - 2] +
-        \ [string(merged[luaeval('dein_merged_length') - 1 :])],
-        \ v:lua._get_cache_path() . '/merged')
-endfunction
-function! dein#util#_get_merged_plugins() abort
-  let ftplugin_len = 0
-  for ftplugin in values(g:dein#_ftplugin)
-    let ftplugin_len += len(ftplugin)
-  endfor
-  return [luaeval('dein_merged_format'), string(ftplugin_len)] +
-         \ sort(map(values(g:dein#_plugins), luaeval('dein_merged_format')))
 endfunction
 
 function! dein#util#_clear_state() abort

@@ -283,23 +283,6 @@ function _dict(plug)
 
   return plugin
 end
--- function check_type(repo, options)
---   local plugin = {}
---   for type in values(dein#parse#_get_types()) do
---     let plugin = type.init(repo, options)
---     if !empty(plugin)
---       break
---     end
---   end
---
---   if #plugin == 0 then
---     plugin.type = 'none'
---     plugin.local = 1
---     plugin.path = isdirectory(repo) ? repo : ''
---   end
---
---   return plugin
--- end
 
 -- local types
 -- function get_types()
