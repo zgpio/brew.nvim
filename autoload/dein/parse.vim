@@ -87,7 +87,7 @@ function! dein#parse#_local(localdir, options, includes) abort
           \ 'name': fnamemodify(dir, ':t')
           \ }, a:options)
 
-    if has_key(g:dein#_plugins, options.name)
+    if has_key(luaeval('dein_plugins'), options.name)
       call dein#config(options.name, options)
     else
       call dein#add(dir, options)

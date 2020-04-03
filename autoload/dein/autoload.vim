@@ -6,7 +6,8 @@
 lua require 'dein/autoload'
 
 function! dein#autoload#_on_default_event(event) abort
-  let lazy_plugins = dein#util#_get_lazy_plugins()
+  lua require 'dein/util'
+  let lazy_plugins = v:lua._get_lazy_plugins()
   let plugins = []
 
   let path = expand('<afile>')
@@ -51,14 +52,16 @@ function! dein#autoload#_on_func(name) abort
     return
   endif
 
-  call v:lua._source(filter(dein#util#_get_lazy_plugins(),
+  lua require 'dein/util'
+  call v:lua._source(filter(v:lua._get_lazy_plugins(),
         \  "stridx(function_prefix, v:val.normalized_name.'#') == 0
         \   || (index(get(v:val, 'on_func', []), a:name) >= 0)"))
 endfunction
 
 function! dein#autoload#_on_pre_cmd(name) abort
+  lua require 'dein/util'
   call v:lua._source(
-        \ filter(dein#util#_get_lazy_plugins(),
+        \ filter(v:lua._get_lazy_plugins(),
         \ "index(map(copy(get(v:val, 'on_cmd', [])),
         \            'tolower(v:val)'), a:name) >= 0
         \  || stridx(tolower(a:name),

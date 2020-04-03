@@ -7,7 +7,7 @@ local M = {}
 --If you omit it, it will source all plugins.
 function _source(...)
   local plugins = {...}
-  local _plugins = vim.g['dein#_plugins']
+  local _plugins = dein_plugins
   if #plugins == 0 then plugins = vim.tbl_values(_plugins)
   else plugins = ... end
   if #plugins == 0 then
@@ -78,7 +78,7 @@ function _source(...)
   if vim.fn.has('vim_starting')==0 then
     vim.fn['dein#call_hook']('post_source', sourced)
   end
-  vim.g['dein#_plugins'] = _plugins
+  dein_plugins = _plugins
 end
 function source_events(event, plugins)
   if vim.tbl_isempty(plugins) then
@@ -277,6 +277,9 @@ function mapargrec(map, mode)
 end
 function set_dein_ftplugin(ftplugin)
   dein_ftplugin = ftplugin
+end
+function set_dein_plugins(plugins)
+  dein_plugins = plugins
 end
 
 return M

@@ -85,7 +85,7 @@ function load_cache_raw(vimrcs)
 end
 
 function tap(name)
-  local _plugins = vim.g['dein#_plugins']
+  local _plugins = dein_plugins
   if _plugins.name==nil or vim.fn.isdirectory(_plugins[name].path)==0 then
     return 0
   end
@@ -94,7 +94,7 @@ function tap(name)
   return 1
 end
 function is_sourced(name)
-  local _plugins = vim.g['dein#_plugins']
+  local _plugins = dein_plugins
   return _plugins.name~=nil
     and vim.fn.isdirectory(_plugins[name].path)==1
     and _plugins[name].sourced==1

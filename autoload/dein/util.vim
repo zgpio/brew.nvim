@@ -41,16 +41,6 @@ function! dein#util#_is_powershell() abort
   return dein#install#_is_async() && fnamemodify(&shell, ':t:r') =~? 'powershell\|pwsh'
 endfunction
 
-function! dein#util#_check_lazy_plugins() abort
-  return map(filter(dein#util#_get_lazy_plugins(),
-        \   "isdirectory(v:val.rtp)
-        \    && !get(v:val, 'local', 0)
-        \    && get(v:val, 'hook_source', '') ==# ''
-        \    && get(v:val, 'hook_add', '') ==# ''
-        \    && !isdirectory(v:val.rtp . '/plugin')
-        \    && !isdirectory(v:val.rtp . '/after/plugin')"),
-        \   'v:val.name')
-endfunction
 function! dein#util#_check_clean() abort
   let plugins_directories = map(values(dein#get()), 'v:val.path')
   let path = dein#util#_substitute_path(
@@ -158,11 +148,6 @@ function! dein#util#_redir(cmd) abort
   if exists('*execute')
     return execute(a:cmd)
   endif
-endfunction
-
-function! dein#util#_get_lazy_plugins() abort
-  return filter(values(g:dein#_plugins),
-        \ "!v:val.sourced && v:val.rtp !=# ''")
 endfunction
 
 function! dein#util#_get_plugins(plugins) abort

@@ -12,7 +12,7 @@ function unique(items)
 end
 
 function _add(repo, options)
-  local _plugins = vim.g['dein#_plugins']
+  local _plugins = dein_plugins
   local plugin = _dict(vim.fn['dein#parse#_init'](repo, options))
   if (_plugins[plugin.name]~=nil
         and _plugins[plugin.name].sourced==1)
@@ -35,7 +35,7 @@ function _add(repo, options)
   if plugin['ftplugin']~=nil then
     merge_ftplugin(plugin.ftplugin)
   end
-  vim.g['dein#_plugins'] = _plugins
+  dein_plugins = _plugins
   return plugin
 end
 function parse_lazy(plugin)

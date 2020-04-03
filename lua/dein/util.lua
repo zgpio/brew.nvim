@@ -96,7 +96,7 @@ function _add_after(rtps, path)
 end
 --@returns [{}, {}]
 function _get_lazy_plugins()
-  local plugins = vim.tbl_values(vim.g['dein#_plugins'])
+  local plugins = vim.tbl_values(dein_plugins)
   -- table.filter  https://gist.github.com/FGRibreau/3790217
   local rv = {}
   for _, t in ipairs(plugins) do
@@ -109,9 +109,9 @@ end
 
 function _check_lazy_plugins()
   local rv = {}
-  for i, t in ipairs(_get_lazy_plugins()) do
+  for _, t in ipairs(_get_lazy_plugins()) do
     if vim.fn.isdirectory(t.rtp) == 1
-      and not (t['local'] or false)
+      and (t['local'] or 0) == 0
       and (t['hook_source'] or '') == ''
       and (t['hook_add'] or '') == ''
       and vim.fn.isdirectory(t.rtp..'/plugin') == 0
@@ -168,7 +168,7 @@ function _save_state(is_starting)
     'let [plugins, ftplugin] = v:lua.load_cache_raw('..
          vim.fn.string(dein_vimrcs) ..')',
     "if empty(plugins) | throw 'Cache loading error' | endif",
-    'let g:dein#_plugins = plugins',
+    'call luaeval("set_dein_plugins(_A)", plugins)',
     'call luaeval("set_dein_ftplugin(_A)", ftplugin)',
     'lua dein_base_path = ' .. vim.fn.string(dein_base_path),
     'lua dein_runtime_path = ' .. vim.fn.string(dein_runtime_path),
@@ -184,7 +184,7 @@ function _save_state(is_starting)
   end
 
   -- Add dummy mappings/commands
-  for _, plugin in ipairs(vim.fn['dein#util#_get_lazy_plugins']()) do
+  for _, plugin in ipairs(_get_lazy_plugins()) do
     for _, command in ipairs(plugin['dummy_commands'] or {}) do
       table.insert(lines, 'silent! ' .. command[2])
     end
@@ -382,7 +382,7 @@ function _begin(path, vimrcs)
 
   -- Reset variables
   vim.api.nvim_exec([[
-    let g:dein#_plugins = {}
+    lua dein_plugins = {}
     lua dein_event_plugins = {}
     lua dein_ftplugin = {}
     lua dein_hook_add = ''
@@ -470,7 +470,7 @@ function _get_merged_plugins()
   for _, ftplugin in ipairs(vim.tbl_values(_ftplugin)) do
     ftplugin_len = ftplugin_len + #ftplugin
   end
-  local _plugins = vim.g['dein#_plugins']
+  local _plugins = dein_plugins
   local r1 = {dein_merged_format, vim.fn.string(ftplugin_len)}
   local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), dein_merged_format))
   vim.list_extend(r1, r2)
@@ -498,7 +498,7 @@ function _end()
       function(v)
         return v.lazy==0 and v.sourced==0 and v.rtp ~= ''
       end,
-      vim.tbl_values(vim.g['dein#_plugins'])
+      vim.tbl_values(dein_plugins)
     )
     _source(plugins)
   end
@@ -513,7 +513,7 @@ function _end()
 
   local depends = {}
   local sourced = vim.fn.has('vim_starting')==1 and (vim.fn.exists('&loadplugins')==0 or vim.o.loadplugins)
-  local _plugins = vim.g['dein#_plugins']
+  local _plugins = dein_plugins
   for _, plugin in ipairs(
     vim.tbl_filter(function (x) return x.lazy==0 and x.sourced==0 and x.rtp~='' end,
       vim.tbl_values(_plugins))) do
@@ -531,7 +531,7 @@ function _end()
 
     plugin.sourced = sourced
   end
-  vim.g['dein#_plugins'] = _plugins
+  dein_plugins = _plugins
   vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
 
   if vim.fn.empty(depends)==0 then

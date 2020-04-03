@@ -11,7 +11,7 @@ function! dein#_init() abort
   lua dein_merged_length = 3
   let g:dein#name = ''
   let g:dein#plugin = {}
-  let g:dein#_plugins = {}
+  lua dein_plugins = {}
   lua dein_cache_path = ''
   lua dein_base_path = ''
   lua dein_runtime_path = ''
@@ -64,7 +64,7 @@ function! dein#local(dir, ...) abort
   return dein#parse#_local(a:dir, get(a:000, 0, {}), get(a:000, 1, ['*']))
 endfunction
 function! dein#get(...) abort
-  return empty(a:000) ? copy(g:dein#_plugins) : get(g:dein#_plugins, a:1, {})
+  return empty(a:000) ? copy(luaeval('dein_plugins')) : get(luaeval('dein_plugins'), a:1, {})
 endfunction
 function! dein#source(...) abort
   return v:lua._source(a:000)
@@ -118,7 +118,8 @@ function! dein#call_hook(hook_name, ...) abort
   return v:lua._call_hook(a:hook_name, a:000)
 endfunction
 function! dein#check_lazy_plugins() abort
-  return dein#util#_check_lazy_plugins()
+  lua require 'dein/util'
+  return v:lua._check_lazy_plugins()
 endfunction
 function! dein#load_toml(filename, ...) abort
   return dein#parse#_load_toml(a:filename, get(a:000, 0, {}))
