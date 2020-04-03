@@ -153,9 +153,6 @@ endfunction
 function! dein#build(...) abort
   return dein#install#_build(a:0 ? a:1 : [])
 endfunction
-function! dein#disable(names) abort
-  return dein#util#_disable(a:names)
-endfunction
 function! dein#config(arg, ...) abort
   return type(a:arg) != v:t_list ?
         \ dein#util#_config(a:arg, get(a:000, 0, {})) :
