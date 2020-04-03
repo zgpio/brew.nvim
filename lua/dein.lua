@@ -93,4 +93,10 @@ function tap(name)
   vim.g['dein#plugin'] = _plugins[name]
   return 1
 end
+function is_sourced(name)
+  local _plugins = vim.g['dein#_plugins']
+  return _plugins.name~=nil
+    and vim.fn.isdirectory(_plugins[name].path)==1
+    and _plugins[name].sourced==1
+end
 return M

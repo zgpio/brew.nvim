@@ -48,11 +48,6 @@ function! dein#load_state(path, ...) abort
   return v:lua.load_state(a:path, a:000)
 endfunction
 
-function! dein#is_sourced(name) abort
-  return has_key(g:dein#_plugins, a:name)
-        \ && isdirectory(g:dein#_plugins[a:name].path)
-        \ && g:dein#_plugins[a:name].sourced
-endfunction
 function! dein#begin(path, ...) abort
   lua require 'dein/util'
   return v:lua._begin(a:path, (empty(a:000) ? [] : a:1))
