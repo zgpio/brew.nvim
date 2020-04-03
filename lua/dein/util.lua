@@ -547,6 +547,29 @@ function _end()
   end
 end
 
+function _download(uri, outpath)
+  if vim.fn.exists('g:dein#download_command')==0 then
+    local c
+    if vim.fn.executable('curl')==1 then
+      c = 'curl --silent --location --output'
+    elseif vim.fn.executable('wget')==1 then
+      c = 'wget -q -O'
+    else
+      c = ''
+    end
+    vim.g['dein#download_command'] = c
+  end
+  if c ~= '' then
+    return vim.fn.printf('%s "%s" "%s"', c, outpath, uri)
+  elseif _is_windows() then
+    -- Use powershell
+    -- TODO: Proxy support
+    local pscmd = vim.fn.printf("(New-Object Net.WebClient).DownloadFile('%s', '%s')", uri, outpath)
+    return vim.fn.printf('powershell -Command "%s"', pscmd)
+  else
+    return 'E: curl or wget command is not available!'
+  end
+end
 --@param list basic type list
 function _uniq(list)
   list = vim.deepcopy(list)

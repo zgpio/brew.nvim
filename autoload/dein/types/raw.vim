@@ -35,5 +35,6 @@ function! s:type.get_sync_command(plugin) abort
   endif
 
   let outpath = path . '/' . fnamemodify(a:plugin.repo, ':t')
-  return dein#util#_download(a:plugin.repo, outpath)
+  lua require 'dein/util'
+  return v:lua._download(a:plugin.repo, outpath)
 endfunction

@@ -255,28 +255,6 @@ function! dein#util#_disable(names) abort
   endfor
 endfunction
 
-function! dein#util#_download(uri, outpath) abort
-  if !exists('g:dein#download_command')
-    let g:dein#download_command =
-          \ executable('curl') ?
-          \   'curl --silent --location --output' :
-          \ executable('wget') ?
-          \   'wget -q -O' : ''
-  endif
-  if g:dein#download_command !=# ''
-    return printf('%s "%s" "%s"',
-          \ g:dein#download_command, a:outpath, a:uri)
-  elseif v:lua._is_windows()
-    " Use powershell
-    " Todo: Proxy support
-    let pscmd = printf("(New-Object Net.WebClient).DownloadFile('%s', '%s')",
-          \ a:uri, a:outpath)
-    return printf('powershell -Command "%s"', pscmd)
-  else
-    return 'E: curl or wget command is not available!'
-  endif
-endfunction
-
 function! s:tsort_impl(target, mark, sorted) abort
   if empty(a:target) || has_key(a:mark, a:target.name)
     return
