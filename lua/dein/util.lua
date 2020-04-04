@@ -444,7 +444,7 @@ end
 
 function _begin(path, vimrcs)
   if vim.fn.exists('#dein')==0 then
-    vim.fn['dein#_init']()
+    _init()
   end
 
   -- Reset variables

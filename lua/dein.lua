@@ -1,4 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
+local a = vim.api
 local M = {}
 -- https://gist.github.com/cwarden/1207556
 function catch(what)
@@ -26,9 +27,51 @@ end
 --     end
 --   }
 -- }
+function _init()
+  dein_cache_version = 150
+  dein_merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
+  dein_merged_length = 3
+  vim.g['dein#name'] = ''
+  vim.g['dein#plugin'] = {}
+  dein_plugins = {}
+  dein_cache_path = ''
+  dein_base_path = ''
+  dein_runtime_path = ''
+  dein_hook_add = ''
+  dein_ftplugin = {}
+  dein_off1 = ''
+  dein_off2 = ''
+  dein_vimrcs = {}
+  dein_block_level = 0
+  dein_event_plugins = {}
+  dein_progname = vim.fn.fnamemodify(vim.v.progname, ':r')
+  dein_init_runtimepath = vim.o.rtp
+  local SUDO_USER = vim.env['SUDO_USER']
+  local USER = vim.env['USER']
+  local HOME = vim.env['HOME']
+  dein_is_sudo = (SUDO_USER~=nil and USER ~= SUDO_USER
+    and HOME ~= vim.fn.expand('~'..USER)
+    and HOME == vim.fn.expand('~'..SUDO_USER))
+
+  vim.api.nvim_exec([[
+    augroup dein
+      autocmd!
+      autocmd FuncUndefined * call luaeval("require'dein/autoload'._on_func(_A)", expand('<afile>'))
+      autocmd BufRead *? lua _on_default_event('BufRead')
+      autocmd BufNew,BufNewFile *? lua _on_default_event('BufNew')
+      autocmd VimEnter *? lua _on_default_event('VimEnter')
+      autocmd FileType *? lua _on_default_event('FileType')
+      autocmd BufWritePost *.vim,*.toml,vimrc,.vimrc lua _check_vimrcs()
+    augroup END
+    augroup dein-events | augroup END
+  ]], true)
+
+  if vim.fn.exists('##CmdUndefined')==0 then return end
+  a.nvim_command([[autocmd dein CmdUndefined *  call v:lua._on_pre_cmd(expand('<afile>'))]])
+end
 function load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then
-    vim.fn['dein#_init']()
+    _init()
   end
   local args = ...
   local sourced
