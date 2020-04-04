@@ -36,7 +36,7 @@ function! dein#install#_update(plugins, update_type, async) abort
     return
   endif
 
-  let plugins = dein#util#_get_plugins(a:plugins)
+  let plugins = v:lua._get_plugins(a:plugins)
 
   if a:update_type ==# 'install'
     let plugins = filter(plugins, '!isdirectory(v:val.path)')
@@ -105,7 +105,7 @@ function! s:update_loop(context) abort
 endfunction
 
 function! dein#install#_reinstall(plugins) abort
-  let plugins = dein#util#_get_plugins(a:plugins)
+  let plugins = v:lua._get_plugins(a:plugins)
 
   for plugin in plugins
     " Remove the plugin
@@ -273,7 +273,7 @@ function! s:list_directory(directory) abort
 endfunction
 function! dein#install#_save_rollback(rollbackfile, plugins) abort
   let revisions = {}
-  for plugin in filter(dein#util#_get_plugins(a:plugins),
+  for plugin in filter(v:lua._get_plugins(a:plugins),
         \ 's:check_rollback(v:val)')
     let rev = s:get_revision_number(plugin)
     if rev !=# ''
@@ -286,7 +286,7 @@ endfunction
 function! dein#install#_load_rollback(rollbackfile, plugins) abort
   let revisions = json_decode(readfile(a:rollbackfile)[0])
 
-  let plugins = dein#util#_get_plugins(a:plugins)
+  let plugins = v:lua._get_plugins(a:plugins)
   call filter(plugins, "has_key(revisions, v:val.name)
         \ && has_key(dein#util#_get_type(v:val.type),
         \            'get_rollback_command')
@@ -442,7 +442,7 @@ function! dein#install#_remote_plugins() abort
 endfunction
 
 function! dein#install#_each(cmd, plugins) abort
-  let plugins = filter(dein#util#_get_plugins(a:plugins),
+  let plugins = filter(v:lua._get_plugins(a:plugins),
         \ 'isdirectory(v:val.path)')
 
   let global_context_save = s:global_context
@@ -472,7 +472,7 @@ function! dein#install#_each(cmd, plugins) abort
 endfunction
 function! dein#install#_build(plugins) abort
   let error = 0
-  for plugin in filter(dein#util#_get_plugins(a:plugins),
+  for plugin in filter(v:lua._get_plugins(a:plugins),
         \ "isdirectory(v:val.path) && has_key(v:val, 'build')")
     call s:print_progress_message('Building: ' . plugin.name)
     if dein#install#_each(plugin.build, plugin)

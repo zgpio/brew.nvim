@@ -75,7 +75,7 @@ function _call_hook(hook_name, ...)
       return ((hook_name ~= 'source' and hook_name ~= 'post_source')
         or x.sourced==1) and x.hook ~= nil and vim.fn.isdirectory(x.path)==1
     end,
-    vim.fn['dein#util#_get_plugins'](t)
+    _get_plugins(t)
   )
 
   for _, plugin in ipairs(
@@ -237,20 +237,30 @@ end
 function skipempty(string)
   return vim.tbl_filter(function(x) return x~='' end, vim.split(string, '\n'))
 end
--- TODO
+
 function _get_plugins(plugins)
   local rv = {}
-  if #plugins == 0 then
-    rv = vim.tbl_values(vim.fn['dein#get']())
+  if vim.tbl_isempty(plugins) then
+    return vim.tbl_values(vim.fn['dein#get']())
   else
-    if not vim.tbl_islist(plugins) then
-      plugins = {plugins}
+    plugins = vim.tbl_map(
+      function(v)
+        if type(v)=='table' and not vim.tbl_islist(v) then
+          return v
+        else
+          return vim.fn['dein#get'](v)
+        end
+      end,
+      _convert2list(plugins)
+    )
+    local rv = {}
+    for k, v in pairs(plugins) do
+      if not vim.tbl_isempty(v) then
+        rv[k] = v
+      end
     end
-    for i, t in ipairs(plugins) do
-
-    end
+    return rv
   end
-  return rv
 end
 
 -- function _set_default(var, val, ...)
