@@ -16,11 +16,6 @@ function! dein#util#_set_default(var, val, ...) abort
   endif
 endfunction
 
-function! dein#util#_get_vimrcs(vimrcs) abort
-  return !empty(a:vimrcs) ?
-        \ map(v:lua._convert2list(a:vimrcs), 'expand(v:val)') :
-        \ [dein#util#_get_myvimrc()]
-endfunction
 function! dein#util#_get_myvimrc() abort
   let vimrc = $MYVIMRC !=# '' ? $MYVIMRC :
         \ matchstr(split(dein#util#_redir('scriptnames'), '\n')[0],

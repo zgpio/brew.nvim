@@ -387,6 +387,18 @@ function msg2list(expr)
     return vim.split(expr, '\n')
   end
 end
+function _get_vimrcs(vimrcs)
+  if vim.fn.empty(vimrcs)==1 then
+    return {vim.fn['dein#util#_get_myvimrc']()}
+  else
+    return vim.tbl_map(
+      function(v)
+        return vim.fn.expand(v)
+      end,
+      _convert2list(vimrcs)
+    )
+  end
+end
 
 function _begin(path, vimrcs)
   if vim.fn.exists('#dein')==0 then
@@ -413,7 +425,7 @@ function _begin(path, vimrcs)
   end
   _get_runtime_path()
   _get_cache_path()
-  dein_vimrcs = vim.fn['dein#util#_get_vimrcs'](vimrcs)
+  dein_vimrcs = _get_vimrcs(vimrcs)
   dein_hook_add = ''
 
   -- Filetype off
