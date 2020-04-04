@@ -3,6 +3,24 @@ require 'dein/util'
 local a = vim.api
 local M = {}
 
+function _dummy_complete(arglead, cmdline, cursorpos)
+  local command = vim.fn.matchstr(cmdline, [[\h\w*]])
+  local exists = vim.fn.exists(':'..command)
+  if exists == 2 then
+    -- Remove the dummy command.
+    a.nvim_command('silent! delcommand ' ..command)
+  end
+
+  -- Load plugins
+  _on_pre_cmd(command:lower())
+
+  if exists == 2 then
+    -- Print the candidates
+    vim.fn.feedkeys(a.nvim_replace_termcodes('<c-d>', true, true, true), 'n')
+  end
+
+  return {arglead}
+end
 function _on_pre_cmd(name)
   require 'dein/util'
   local t = vim.tbl_filter(

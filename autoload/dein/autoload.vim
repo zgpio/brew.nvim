@@ -26,19 +26,5 @@ function! dein#autoload#_on_cmd(command, name, args, bang, line1, line2) abort
 endfunction
 
 function! dein#autoload#_dummy_complete(arglead, cmdline, cursorpos) abort
-  let command = matchstr(a:cmdline, '\h\w*')
-  if exists(':'.command) == 2
-    " Remove the dummy command.
-    silent! execute 'delcommand' command
-  endif
-
-  " Load plugins
-  call v:lua._on_pre_cmd(tolower(command))
-
-  if exists(':'.command) == 2
-    " Print the candidates
-    call feedkeys("\<C-d>", 'n')
-  endif
-
-  return [a:arglead]
+  return v:lua._dummy_complete(a:arglead, a:cmdline, a:cursorpos)
 endfunction
