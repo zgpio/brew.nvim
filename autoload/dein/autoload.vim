@@ -32,20 +32,6 @@ function! dein#autoload#_on_default_event(event) abort
   call v:lua.source_events(a:event, plugins)
 endfunction
 
-function! dein#autoload#_on_func(name) abort
-  let function_prefix = substitute(a:name, '[^#]*$', '', '')
-  if function_prefix =~# '^dein#'
-        \ || function_prefix =~# '^vital#'
-        \ || has('vim_starting')
-    return
-  endif
-
-  lua require 'dein/util'
-  call v:lua._source(filter(v:lua._get_lazy_plugins(),
-        \  "stridx(function_prefix, v:val.normalized_name.'#') == 0
-        \   || (index(get(v:val, 'on_func', []), a:name) >= 0)"))
-endfunction
-
 function! dein#autoload#_on_pre_cmd(name) abort
   lua require 'dein/util'
   call v:lua._source(

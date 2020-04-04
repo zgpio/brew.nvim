@@ -93,6 +93,22 @@ function _on_event(event, plugins)
         "!has_key(v:val, 'on_if') || eval(v:val.on_if)")
   source_events(event, plugins)
 end
+function M._on_func(name)
+  local function_prefix = vim.fn.substitute(name, '[^#]*$', '', '')
+  if function_prefix:find('^dein#') or function_prefix:find('^vital#') or vim.fn.has('vim_starting')==1 then
+    return
+  end
+
+  require 'dein/util'
+  local x = vim.tbl_filter(
+    function(v)
+      return vim.fn.stridx(function_prefix, v.normalized_name..'#') == 0
+        or vim.tbl_contains(v.on_func or {}, name)
+    end,
+    _get_lazy_plugins()
+  )
+  _source(x)
+end
 function source_events(event, plugins)
   if vim.tbl_isempty(plugins) then
     return

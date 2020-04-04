@@ -30,7 +30,7 @@ function! dein#_init() abort
 
   augroup dein
     autocmd!
-    autocmd FuncUndefined * call dein#autoload#_on_func(expand('<afile>'))
+    autocmd FuncUndefined * call luaeval("require'dein/autoload'._on_func(_A)", expand('<afile>'))
     autocmd BufRead *? call dein#autoload#_on_default_event('BufRead')
     autocmd BufNew,BufNewFile *? call dein#autoload#_on_default_event('BufNew')
     autocmd VimEnter *? call dein#autoload#_on_default_event('VimEnter')
