@@ -79,8 +79,8 @@ endfunction
 
 function! dein#util#_clear_state() abort
   let base = get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
-  for cache in dein#util#_globlist(base.'/state_*.vim')
-        \ + dein#util#_globlist(base.'/cache_*')
+  for cache in v:lua._globlist(base.'/state_*.vim')
+        \ + v:lua._globlist(base.'/cache_*')
     call delete(cache)
   endfor
 endfunction
@@ -128,9 +128,6 @@ endfunction
 function! dein#util#_substitute_path(path) abort
   return ((s:is_windows || has('win32unix')) && a:path =~# '\\') ?
         \ tr(a:path, '\', '/') : a:path
-endfunction
-function! dein#util#_globlist(path) abort
-  return split(glob(a:path), '\n')
 endfunction
 
 function! dein#util#_split(expr) abort

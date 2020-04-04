@@ -116,7 +116,7 @@ function _source(...)
   for _, plugin in ipairs(sourced) do
     for _, directory in ipairs({'plugin', 'after/plugin'}) do
       if vim.fn.isdirectory(plugin.rtp..'/'..directory)==1 then
-        for _, file in ipairs(vim.fn['dein#util#_globlist'](plugin.rtp..'/'..directory..'/**/*.vim')) do
+        for _, file in ipairs(_globlist(plugin.rtp..'/'..directory..'/**/*.vim')) do
           vim.api.nvim_command('source ' .. vim.fn.fnameescape(file))
         end
       end

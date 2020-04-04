@@ -83,6 +83,9 @@ function _call_hook(hook_name, ...)
     vim.fn['dein#util#_execute_hook'](plugin, plugin[hook])
   end
 end
+function _globlist(path)
+  return vim.split(vim.fn.glob(path), '\n')
+end
 function _add_after(rtps, path)
   vim.validate{
     rtps={rtps, 't'},

@@ -71,10 +71,11 @@ function! dein#parse#_load_dict(dict, default) abort
   endfor
 endfunction
 function! dein#parse#_local(localdir, options, includes) abort
+  lua require 'dein/util'
   let base = fnamemodify(dein#util#_expand(a:localdir), ':p')
   let directories = []
   for glob in a:includes
-    let directories += map(filter(dein#util#_globlist(base . glob),
+    let directories += map(filter(v:lua._globlist(base . glob),
           \ 'isdirectory(v:val)'), "
           \ substitute(dein#util#_substitute_path(
           \   fnamemodify(v:val, ':p')), '/$', '', '')")

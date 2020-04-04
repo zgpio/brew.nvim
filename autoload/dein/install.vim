@@ -153,7 +153,7 @@ function! dein#install#_direct_install(repo, options) abort
 endfunction
 function! dein#install#_rollback(date, plugins) abort
   let glob = s:get_rollback_directory() . '/' . a:date . '*'
-  let rollbacks = reverse(sort(dein#util#_globlist(glob)))
+  let rollbacks = reverse(sort(v:lua._globlist(glob)))
   if empty(rollbacks)
     return
   endif
@@ -269,7 +269,8 @@ function! s:merge_files(plugins, directory) abort
   endif
 endfunction
 function! s:list_directory(directory) abort
-  return dein#util#_globlist(a:directory . '/*')
+  lua require 'dein/util'
+  return v:lua._globlist(a:directory . '/*')
 endfunction
 function! dein#install#_save_rollback(rollbackfile, plugins) abort
   let revisions = {}
