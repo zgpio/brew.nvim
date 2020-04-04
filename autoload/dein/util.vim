@@ -18,7 +18,7 @@ endfunction
 
 function! dein#util#_get_myvimrc() abort
   let vimrc = $MYVIMRC !=# '' ? $MYVIMRC :
-        \ matchstr(split(dein#util#_redir('scriptnames'), '\n')[0],
+        \ matchstr(split(execute('scriptnames'), '\n')[0],
         \  '^\s*\d\+:\s\zs.*')
   return v:lua._substitute_path(vimrc)
 endfunction
@@ -116,12 +116,6 @@ endfunction
 function! dein#util#_split(expr) abort
   return type(a:expr) ==# v:t_list ? copy(a:expr) :
         \ split(a:expr, '\r\?\n')
-endfunction
-
-function! dein#util#_redir(cmd) abort
-  if exists('*execute')
-    return execute(a:cmd)
-  endif
 endfunction
 
 function! s:tsort_impl(target, mark, sorted) abort

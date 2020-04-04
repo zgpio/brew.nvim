@@ -107,7 +107,7 @@ function _source(...)
     end
   end
 
-  local filetype_before = vim.fn['dein#util#_redir']('autocmd FileType')
+  local filetype_before = vim.fn.execute('autocmd FileType')
   vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
 
   vim.fn['dein#call_hook']('source', sourced)
@@ -139,7 +139,7 @@ function _source(...)
     end
   end
 
-  local filetype_after = vim.fn['dein#util#_redir']('autocmd FileType')
+  local filetype_after = vim.fn.execute('autocmd FileType')
 
   local is_reset = is_reset_ftplugin(sourced)
   if is_reset==1 then
