@@ -20,7 +20,7 @@ function! dein#util#_get_myvimrc() abort
   let vimrc = $MYVIMRC !=# '' ? $MYVIMRC :
         \ matchstr(split(dein#util#_redir('scriptnames'), '\n')[0],
         \  '^\s*\d\+:\s\zs.*')
-  return dein#util#_substitute_path(vimrc)
+  return v:lua._substitute_path(vimrc)
 endfunction
 
 function! dein#util#_error(msg) abort
@@ -38,7 +38,7 @@ endfunction
 
 function! dein#util#_check_clean() abort
   let plugins_directories = map(values(dein#get()), 'v:val.path')
-  let path = dein#util#_substitute_path(
+  let path = v:lua._substitute_path(
         \ globpath(v:lua._get_base_path(), 'repos/*/*/*'))
   return filter(split(path, "\n"),
         \ "isdirectory(v:val) && fnamemodify(v:val, ':t') !=# 'dein.vim'
@@ -110,11 +110,7 @@ function! dein#util#_expand(path) abort
         \               '^\$\h\w*', '\=eval(submatch(0))', '') :
         \ a:path
   return (s:is_windows && path =~# '\\') ?
-        \ dein#util#_substitute_path(path) : path
-endfunction
-function! dein#util#_substitute_path(path) abort
-  return ((s:is_windows || has('win32unix')) && a:path =~# '\\') ?
-        \ tr(a:path, '\', '/') : a:path
+        \ v:lua._substitute_path(path) : path
 endfunction
 
 function! dein#util#_split(expr) abort

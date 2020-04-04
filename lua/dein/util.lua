@@ -179,10 +179,13 @@ function _get_cache_path()
   return cache_path
 end
 
--- function! dein#util#_substitute_path(path) abort
---   return ((s:is_windows || has('win32unix')) && a:path =~# '\\') ?
---         \ tr(a:path, '\', '/') : a:path
--- endfunction
+function _substitute_path(path)
+  if (is_windows or vim.fn.has('win32unix')==1) and path:find([[\]]) then
+    return vim.fn.tr(path, [[\]], '/')
+  else
+    return path
+  end
+end
 
 function _save_state(is_starting)
   if dein_block_level ~= 0 then

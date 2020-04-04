@@ -77,7 +77,7 @@ function! dein#parse#_local(localdir, options, includes) abort
   for glob in a:includes
     let directories += map(filter(v:lua._globlist(base . glob),
           \ 'isdirectory(v:val)'), "
-          \ substitute(dein#util#_substitute_path(
+          \ substitute(v:lua._substitute_path(
           \   fnamemodify(v:val, ':p')), '/$', '', '')")
   endfor
 
