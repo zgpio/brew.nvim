@@ -35,8 +35,7 @@ function! dein#_init() abort
     autocmd BufNew,BufNewFile *? lua _on_default_event('BufNew')
     autocmd VimEnter *? lua _on_default_event('VimEnter')
     autocmd FileType *? lua _on_default_event('FileType')
-    autocmd BufWritePost *.vim,*.toml,vimrc,.vimrc
-          \ call dein#util#_check_vimrcs()
+    autocmd BufWritePost *.vim,*.toml,vimrc,.vimrc lua _check_vimrcs()
   augroup END
   augroup dein-events | augroup END
 
@@ -147,5 +146,6 @@ function! dein#save_state() abort
   return v:lua._save_state(has('vim_starting'))
 endfunction
 function! dein#clear_state() abort
-  return dein#util#_clear_state()
+  lua require 'dein/util'
+  call v:lua._clear_state()
 endfunction

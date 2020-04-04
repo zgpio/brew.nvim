@@ -72,14 +72,6 @@ function! dein#util#_check_vimrcs() abort
   return ret
 endfunction
 
-function! dein#util#_clear_state() abort
-  let base = get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
-  for cache in v:lua._globlist(base.'/state_*.vim')
-        \ + v:lua._globlist(base.'/cache_*')
-    call delete(cache)
-  endfor
-endfunction
-
 function! dein#util#_execute_hook(plugin, hook) abort
   try
     let g:dein#plugin = a:plugin

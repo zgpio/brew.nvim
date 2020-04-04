@@ -28,6 +28,45 @@ end
 function _get_base_path()
   return dein_base_path
 end
+function _clear_state()
+  local base = vim.g['dein#cache_directory'] or dein_base_path
+  local caches = _globlist(base..'/state_*.vim')
+  vim.list_extend(caches, _globlist(base..'/cache_*'))
+  caches = vim.tbl_filter(function(v) return v~='' end, caches)
+  for _, cache in ipairs(caches) do
+    vim.fn.delete(cache)
+  end
+end
+
+function _check_vimrcs()
+  local time = vim.fn.getftime(_get_runtime_path())
+  local ret = vim.tbl_isempty(vim.tbl_filter(
+    function(v)
+      return time < v
+    end,
+    vim.tbl_map(
+      function(v)
+        return vim.fn.getftime(vim.fn.expand(v))
+      end,
+      vim.deepcopy(dein_vimrcs)
+    )))
+  if ret then
+    return 0
+  end
+
+  _clear_state()
+
+  if (vim.g['dein#auto_recache'] or 0)==1 then
+    a.nvim_command('silent source '.. vim.fn['dein#util#_get_myvimrc']())
+
+    if _get_merged_plugins() ~= _load_merged_plugins() then
+      _notify('auto recached')
+      vim.fn['dein#recache_runtimepath']()
+    end
+  end
+
+  return 1
+end
 function _save_cache(vimrcs, is_state, is_starting)
   if _get_cache_path() == '' or (is_starting==0) then
     -- Ignore
