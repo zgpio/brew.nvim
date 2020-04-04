@@ -31,7 +31,7 @@ function! s:get_job() abort
 endfunction
 
 function! dein#install#_update(plugins, update_type, async) abort
-  if g:dein#_is_sudo
+  if luaeval('dein_is_sudo')
     call s:error('update/install is disabled in sudo session.')
     return
   endif
@@ -162,7 +162,7 @@ function! dein#install#_rollback(date, plugins) abort
 endfunction
 
 function! dein#install#_recache_runtimepath() abort
-  if g:dein#_is_sudo
+  if luaeval('dein_is_sudo')
     return
   endif
 
@@ -223,7 +223,7 @@ function! s:clear_runtimepath() abort
   endif
 endfunction
 function! s:helptags() abort
-  if luaeval('dein_runtime_path') ==# '' || g:dein#_is_sudo
+  if luaeval('dein_runtime_path') ==# '' || luaeval('dein_is_sudo')
     return ''
   endif
 

@@ -222,7 +222,7 @@ function _dict(plug)
     plugin.rtp = vim.fn['dein#util#_expand'](plugin.rtp)
   end
   plugin.rtp = _chomp(plugin.rtp)
-  if vim.g['dein#_is_sudo']==1 and not (plugin.trusted==1) then
+  if dein_is_sudo==1 and not (plugin.trusted==1) then
     plugin.rtp = ''
   end
 

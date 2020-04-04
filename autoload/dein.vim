@@ -22,11 +22,16 @@ function! dein#_init() abort
   lua dein_vimrcs = {}
   lua dein_block_level = 0
   lua dein_event_plugins = {}
-  let g:dein#_is_sudo = $SUDO_USER !=# '' && $USER !=# $SUDO_USER
-        \ && $HOME !=# expand('~'.$USER)
-        \ && $HOME ==# expand('~'.$SUDO_USER)
   lua dein_progname = vim.fn.fnamemodify(vim.v.progname, ':r')
   lua dein_init_runtimepath = vim.o.rtp
+lua << EOF
+local SUDO_USER = vim.env['SUDO_USER']
+local USER = vim.env['USER']
+local HOME = vim.env['HOME']
+dein_is_sudo = (SUDO_USER~=nil and USER ~= SUDO_USER
+  and HOME ~= vim.fn.expand('~'..USER)
+  and HOME == vim.fn.expand('~'..SUDO_USER))
+EOF
 
   augroup dein
     autocmd!
