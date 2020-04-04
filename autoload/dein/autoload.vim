@@ -5,33 +5,6 @@
 "=============================================================================
 lua require 'dein/autoload'
 
-function! dein#autoload#_on_default_event(event) abort
-  lua require 'dein/util'
-  let lazy_plugins = v:lua._get_lazy_plugins()
-  let plugins = []
-
-  let path = expand('<afile>')
-  " For ":edit ~".
-  if fnamemodify(path, ':t') ==# '~'
-    let path = '~'
-  endif
-  let path = dein#util#_expand(path)
-
-  for filetype in split(&l:filetype, '\.')
-    let plugins += filter(copy(lazy_plugins),
-          \ "index(get(v:val, 'on_ft', []), filetype) >= 0")
-  endfor
-
-  let plugins += filter(copy(lazy_plugins),
-        \ "!empty(filter(copy(get(v:val, 'on_path', [])),
-        \                'path =~? v:val'))")
-  let plugins += filter(copy(lazy_plugins),
-        \ "!has_key(v:val, 'on_event')
-        \  && has_key(v:val, 'on_if') && eval(v:val.on_if)")
-
-  call v:lua.source_events(a:event, plugins)
-endfunction
-
 function! dein#autoload#_on_pre_cmd(name) abort
   lua require 'dein/util'
   call v:lua._source(

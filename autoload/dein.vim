@@ -31,10 +31,10 @@ function! dein#_init() abort
   augroup dein
     autocmd!
     autocmd FuncUndefined * call luaeval("require'dein/autoload'._on_func(_A)", expand('<afile>'))
-    autocmd BufRead *? call dein#autoload#_on_default_event('BufRead')
-    autocmd BufNew,BufNewFile *? call dein#autoload#_on_default_event('BufNew')
-    autocmd VimEnter *? call dein#autoload#_on_default_event('VimEnter')
-    autocmd FileType *? call dein#autoload#_on_default_event('FileType')
+    autocmd BufRead *? lua _on_default_event('BufRead')
+    autocmd BufNew,BufNewFile *? lua _on_default_event('BufNew')
+    autocmd VimEnter *? lua _on_default_event('VimEnter')
+    autocmd FileType *? lua _on_default_event('FileType')
     autocmd BufWritePost *.vim,*.toml,vimrc,.vimrc
           \ call dein#util#_check_vimrcs()
   augroup END

@@ -3,6 +3,51 @@ require 'dein/util'
 local a = vim.api
 local M = {}
 
+function _on_default_event(event)
+  require 'dein/util'
+  local lazy_plugins = _get_lazy_plugins()
+  local plugins = {}
+
+  local path = vim.fn.expand('<afile>')
+  -- For ":edit ~".
+  if vim.fn.fnamemodify(path, ':t') == '~' then
+    path = '~'
+  end
+  path = vim.fn['dein#util#_expand'](path)
+
+  for _, ft in ipairs(vim.split(vim.bo.filetype, '.')) do
+    local t = vim.tbl_filter(
+      function(v)
+        return vim.tbl_contains(v.on_ft or {}, ft)
+      end,
+      vim.deepcopy(lazy_plugins)
+    )
+    vim.list_extend(plugins, t)
+  end
+
+  local t = vim.tbl_filter(
+    function(v)
+      local t = vim.tbl_filter(
+        function(val)
+          return path == val
+        end,
+        vim.deepcopy(v.on_path or {})
+      )
+      return not vim.tbl_isempty(t)
+    end,
+    vim.deepcopy(lazy_plugins)
+  )
+  vim.list_extend(plugins, t)
+  local t = vim.tbl_filter(
+    function(v)
+      return v.on_event==nil and v.on_if~=nil and a.nvim_eval(tostring(v.on_if))==1
+    end,
+    vim.deepcopy(lazy_plugins)
+  )
+  vim.list_extend(plugins, t)
+
+  source_events(event, plugins)
+end
 --@param ... the plugin name list or plugin dict list.
 --If you omit it, it will source all plugins.
 function _source(...)
