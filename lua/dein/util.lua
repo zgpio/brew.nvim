@@ -280,7 +280,7 @@ function _writefile(path, list)
 end
 
 function skipempty(string)
-  return vim.tbl_filter(function(x) return x~='' end, vim.split(string, '\n'))
+  return vim.tbl_filter(function(v) return v~='' end, vim.split(string, '\n'))
 end
 
 function _get_plugins(plugins)

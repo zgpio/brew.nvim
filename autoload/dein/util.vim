@@ -142,9 +142,6 @@ endfunction
 function! s:msg2list(expr) abort
   return type(a:expr) ==# v:t_list ? a:expr : split(a:expr, '\n')
 endfunction
-function! s:skipempty(string) abort
-  return filter(split(a:string, '\n'), "v:val !=# ''")
-endfunction
 
 function! s:sort(list, expr) abort
   if type(a:expr) == v:t_func
