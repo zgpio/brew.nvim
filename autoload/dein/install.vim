@@ -126,7 +126,7 @@ function! dein#install#_reinstall(plugins) abort
     endif
   endfor
 
-  call dein#install#_update(dein#util#_convert2list(a:plugins),
+  call dein#install#_update(v:lua._convert2list(a:plugins),
         \ 'install', 0)
 endfunction
 function! dein#install#_direct_install(repo, options) abort
@@ -1250,7 +1250,7 @@ function! s:iconv(expr, from, to) abort
   endif
 endfunction
 function! s:print_progress_message(msg) abort
-  let msg = dein#util#_convert2list(a:msg)
+  let msg = v:lua._convert2list(a:msg)
   let context = s:global_context
   if empty(msg) || empty(context)
     return
@@ -1272,7 +1272,7 @@ function! s:print_progress_message(msg) abort
   let s:progress = join(msg, "\n")
 endfunction
 function! s:error(msg) abort
-  let msg = dein#util#_convert2list(a:msg)
+  let msg = v:lua._convert2list(a:msg)
   if empty(msg)
     return
   endif
@@ -1282,7 +1282,7 @@ function! s:error(msg) abort
   call s:updates_log(msg)
 endfunction
 function! s:notify(msg) abort
-  let msg = dein#util#_convert2list(a:msg)
+  let msg = v:lua._convert2list(a:msg)
   let context = s:global_context
   if empty(msg) || empty(context)
     return
@@ -1297,13 +1297,13 @@ function! s:notify(msg) abort
   let s:progress = join(msg, "\n")
 endfunction
 function! s:updates_log(msg) abort
-  let msg = dein#util#_convert2list(a:msg)
+  let msg = v:lua._convert2list(a:msg)
 
   let s:updates_log += msg
   call s:log(msg)
 endfunction
 function! s:log(msg) abort
-  let msg = dein#util#_convert2list(a:msg)
+  let msg = v:lua._convert2list(a:msg)
   let s:log += msg
   call s:append_log_file(msg)
 endfunction
@@ -1328,7 +1328,7 @@ endfunction
 
 
 function! s:echo(expr, mode) abort
-  let msg = map(filter(dein#util#_convert2list(a:expr), "v:val !=# ''"),
+  let msg = map(filter(v:lua._convert2list(a:expr), "v:val !=# ''"),
         \ "'[dein] ' .  v:val")
   if empty(msg)
     return

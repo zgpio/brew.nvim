@@ -18,7 +18,7 @@ endfunction
 
 function! dein#util#_get_vimrcs(vimrcs) abort
   return !empty(a:vimrcs) ?
-        \ map(dein#util#_convert2list(a:vimrcs), 'expand(v:val)') :
+        \ map(v:lua._convert2list(a:vimrcs), 'expand(v:val)') :
         \ [dein#util#_get_myvimrc()]
 endfunction
 function! dein#util#_get_myvimrc() abort
@@ -133,12 +133,6 @@ function! dein#util#_globlist(path) abort
   return split(glob(a:path), '\n')
 endfunction
 
-function! dein#util#_convert2list(expr) abort
-  return type(a:expr) ==# v:t_list ? copy(a:expr) :
-        \ type(a:expr) ==# v:t_string ?
-        \   (a:expr ==# '' ? [] : split(a:expr, '\r\?\n', 1))
-        \ : [a:expr]
-endfunction
 function! dein#util#_split(expr) abort
   return type(a:expr) ==# v:t_list ? copy(a:expr) :
         \ split(a:expr, '\r\?\n')
@@ -153,7 +147,7 @@ endfunction
 function! dein#util#_get_plugins(plugins) abort
   return empty(a:plugins) ?
         \ values(dein#get()) :
-        \ filter(map(dein#util#_convert2list(a:plugins),
+        \ filter(map(v:lua._convert2list(a:plugins),
         \   'type(v:val) == v:t_dict ? v:val : dein#get(v:val)'),
         \   '!empty(v:val)')
 endfunction
