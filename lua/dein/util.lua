@@ -13,23 +13,20 @@ function _is_mac()
   return is_mac
 end
 function _get_runtime_path()
-  local rtp = dein_runtime_path
+  local rtp = dein._runtime_path
   if rtp ~= '' then
     return rtp
   end
   rtp = _get_cache_path() .. '/.dein'
-  dein_runtime_path = rtp
+  dein._runtime_path = rtp
   if vim.fn.isdirectory(rtp)==0 then
     vim.fn.mkdir(rtp, 'p')
   end
   return rtp
 end
 
-function _get_base_path()
-  return dein_base_path
-end
 function _clear_state()
-  local base = vim.g['dein#cache_directory'] or dein_base_path
+  local base = vim.g['dein#cache_directory'] or dein._base_path
   local caches = _globlist(base..'/state_*.vim')
   vim.list_extend(caches, _globlist(base..'/cache_*'))
   caches = vim.tbl_filter(function(v) return v~='' end, caches)
@@ -48,7 +45,7 @@ function _check_vimrcs()
       function(v)
         return vim.fn.getftime(vim.fn.expand(v))
       end,
-      vim.deepcopy(dein_vimrcs)
+      vim.deepcopy(dein._vimrcs)
     )))
   if ret then
     return 0
@@ -93,14 +90,14 @@ function _save_cache(vimrcs, is_state, is_starting)
     end
   end
 
-  local base_path = dein_base_path
+  local base_path = dein._base_path
   if vim.fn.isdirectory(base_path) == 0 then
     vim.fn.mkdir(base_path, 'p')
   end
 
-  local ftplugin = dein_ftplugin
+  local ftplugin = dein._ftplugin
   vim.fn.writefile({vim.fn.string(vimrcs), vim.fn.json_encode(plugins), vim.fn.json_encode(ftplugin)},
-    (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. dein_progname)
+    (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. dein._progname)
 end
 
 --@param ... {{{}, {}, ...}}
@@ -138,7 +135,7 @@ function _add_after(rtps, path)
 end
 --@returns [{}, {}]
 function _get_lazy_plugins()
-  local plugins = vim.tbl_values(dein_plugins)
+  local plugins = vim.tbl_values(dein._plugins)
   -- table.filter  https://gist.github.com/FGRibreau/3790217
   local rv = {}
   for _, t in ipairs(plugins) do
@@ -165,14 +162,14 @@ function _check_lazy_plugins()
 end
 
 function _get_cache_path()
-  local cache_path = dein_cache_path
+  local cache_path = dein._cache_path
   if cache_path ~= '' then
     return cache_path
   end
 
-  cache_path = (vim.g['dein#cache_directory'] or dein_base_path)
+  cache_path = (vim.g['dein#cache_directory'] or dein._base_path)
     ..'/.cache/'..vim.fn.fnamemodify(vim.fn['dein#util#_get_myvimrc'](), ':t')
-  dein_cache_path = cache_path
+  dein._cache_path = cache_path
   if vim.fn.isdirectory(cache_path) == 0 then
     vim.fn.mkdir(cache_path, 'p')
   end
@@ -188,7 +185,7 @@ function _substitute_path(path)
 end
 
 function _save_state(is_starting)
-  if dein_block_level ~= 0 then
+  if dein._block_level ~= 0 then
     _error('Invalid dein#save_state() usage.')
     return 1
   end
@@ -198,34 +195,34 @@ function _save_state(is_starting)
     return 1
   end
 
-  dein_vimrcs = _uniq(dein_vimrcs)
+  dein._vimrcs = _uniq(dein._vimrcs)
   vim.o.rtp = _join_rtp(_uniq(_split_rtp(vim.o.rtp)), vim.o.rtp, '')
 
-  _save_cache(dein_vimrcs, 1, is_starting)
+  _save_cache(dein._vimrcs, 1, is_starting)
 
   -- Version check
 
   local lines = {
     'lua require "dein/autoload"',
-    'if luaeval("dein_cache_version") !=# ' .. dein_cache_version .. ' || ' ..
-    'luaeval("dein_init_runtimepath") !=# ' .. vim.fn.string(dein_init_runtimepath) ..
+    'if luaeval("dein._cache_version") !=# ' .. dein._cache_version .. ' || ' ..
+    'luaeval("dein._init_runtimepath") !=# ' .. vim.fn.string(dein._init_runtimepath) ..
          ' | throw "Cache loading error" | endif',
     'let [plugins, ftplugin] = v:lua.load_cache_raw('..
-         vim.fn.string(dein_vimrcs) ..')',
+         vim.fn.string(dein._vimrcs) ..')',
     "if empty(plugins) | throw 'Cache loading error' | endif",
     'call luaeval("set_dein_plugins(_A)", plugins)',
     'call luaeval("set_dein_ftplugin(_A)", ftplugin)',
-    'lua dein_base_path = ' .. vim.fn.string(dein_base_path),
-    'lua dein_runtime_path = ' .. vim.fn.string(dein_runtime_path),
-    'lua dein_cache_path = ' .. vim.fn.string(dein_cache_path),
+    'lua dein._base_path = ' .. vim.fn.string(dein._base_path),
+    'lua dein._runtime_path = ' .. vim.fn.string(dein._runtime_path),
+    'lua dein._cache_path = ' .. vim.fn.string(dein._cache_path),
     'let &runtimepath = ' .. vim.fn.string(vim.o.rtp),
   }
 
-  if dein_off1 ~= '' then
-    table.insert(lines, dein_off1)
+  if dein._off1 ~= '' then
+    table.insert(lines, dein._off1)
   end
-  if dein_off2 ~= '' then
-    table.insert(lines, dein_off2)
+  if dein._off2 ~= '' then
+    table.insert(lines, dein._off2)
   end
 
   -- Add dummy mappings/commands
@@ -239,8 +236,8 @@ function _save_state(is_starting)
   end
 
   -- Add hooks
-  if vim.fn.empty(dein_hook_add)==0 then
-    vim.list_extend(lines, skipempty(dein_hook_add))
+  if vim.fn.empty(dein._hook_add)==0 then
+    vim.list_extend(lines, skipempty(dein._hook_add))
   end
   for _, plugin in ipairs(vim.fn['dein#util#_tsort'](vim.fn.values(vim.fn['dein#get']()))) do
     if plugin.hook_add~=nil and type(plugin.hook_add) == 'string' then
@@ -249,7 +246,7 @@ function _save_state(is_starting)
   end
 
   -- Add events
-  for event, plugins in pairs(dein_event_plugins) do
+  for event, plugins in pairs(dein._event_plugins) do
     if vim.fn.exists('##' .. event)==1 then
       local e
       if vim.fn.exists('##' .. event)==1 then
@@ -263,10 +260,10 @@ function _save_state(is_starting)
   end
 
   vim.fn.writefile(lines,
-    (vim.g['dein#cache_directory'] or dein_base_path) ..'/state_' .. dein_progname .. '.vim')
+    (vim.g['dein#cache_directory'] or dein._base_path) ..'/state_' .. dein._progname .. '.vim')
 end
 function _writefile(path, list)
-  if dein_is_sudo == 1 or (vim.fn.filewritable(_get_cache_path())==0) then
+  if dein._is_sudo == 1 or (vim.fn.filewritable(_get_cache_path())==0) then
     return 1
   end
 
@@ -444,45 +441,45 @@ end
 
 function _begin(path, vimrcs)
   if vim.fn.exists('#dein')==0 then
-    _init()
+    dein._init()
   end
 
   -- Reset variables
   vim.api.nvim_exec([[
-    lua dein_plugins = {}
-    lua dein_event_plugins = {}
-    lua dein_ftplugin = {}
-    lua dein_hook_add = ''
+    lua dein._plugins = {}
+    lua dein._event_plugins = {}
+    lua dein._ftplugin = {}
+    lua dein._hook_add = ''
   ]], true)
 
-  if path == '' or dein_block_level ~= 0 then
+  if path == '' or dein._block_level ~= 0 then
     M._error('Invalid begin/end block usage.')
     return 1
   end
 
-  dein_block_level = dein_block_level + 1
-  dein_base_path = vim.fn['dein#util#_expand'](path)
-  if dein_base_path:sub(-1) == '/' then
-    dein_base_path = dein_base_path:sub(1, -2)
+  dein._block_level = dein._block_level + 1
+  dein._base_path = vim.fn['dein#util#_expand'](path)
+  if dein._base_path:sub(-1) == '/' then
+    dein._base_path = dein._base_path:sub(1, -2)
   end
   _get_runtime_path()
   _get_cache_path()
-  dein_vimrcs = _get_vimrcs(vimrcs)
-  dein_hook_add = ''
+  dein._vimrcs = _get_vimrcs(vimrcs)
+  dein._hook_add = ''
 
   -- Filetype off
   if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
-    dein_off1 = 'filetype off'
-    vim.api.nvim_command(dein_off1)
+    dein._off1 = 'filetype off'
+    vim.api.nvim_command(dein._off1)
   end
   if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
-    dein_off2 = 'filetype plugin indent off'
-    vim.api.nvim_command(dein_off2)
+    dein._off2 = 'filetype plugin indent off'
+    vim.api.nvim_command(dein._off2)
   end
 
   if vim.fn.has('vim_starting')==0 then
-    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein_runtime_path))
-    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein_runtime_path..'/after'))
+    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path))
+    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path..'/after'))
   end
 
   -- Insert dein runtimepath to the head in 'runtimepath'.
@@ -496,9 +493,9 @@ function _begin(path, vimrcs)
     M._error('You must not set the installation directory under "&runtimepath/plugin"')
     return 1
   end
-  rtps = vim.fn.insert(rtps, dein_runtime_path, idx)
-  rtps = _add_after(rtps, dein_runtime_path..'/after')
-  vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, dein_runtime_path)
+  rtps = vim.fn.insert(rtps, dein._runtime_path, idx)
+  rtps = _add_after(rtps, dein._runtime_path..'/after')
+  vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, dein._runtime_path)
 end
 
 -- TODO: duplicate
@@ -511,8 +508,8 @@ function slice(tbl, first, last, step)
 end
 function _save_merged_plugins()
   local merged = _get_merged_plugins()
-  local h = slice(merged, 1, dein_merged_length - 1)
-  local t = slice(merged, dein_merged_length)
+  local h = slice(merged, 1, dein._merged_length - 1)
+  local t = slice(merged, dein._merged_length)
   vim.list_extend(h, {vim.fn.string(t)})
   vim.fn.writefile(h, _get_cache_path() .. '/merged')
 end
@@ -522,24 +519,24 @@ function _load_merged_plugins()
     return {}
   end
   local merged = vim.fn.readfile(path)
-  if #merged ~= dein_merged_length then
+  if #merged ~= dein._merged_length then
     return {}
   end
   -- TODO sandbox
-  local h = slice(merged, 1, dein_merged_length - 1)
+  local h = slice(merged, 1, dein._merged_length - 1)
   local t = a.nvim_eval(merged[#merged])
   vim.list_extend(h, t)
   return h
 end
 function _get_merged_plugins()
   local ftplugin_len = 0
-  local _ftplugin = dein_ftplugin
+  local _ftplugin = dein._ftplugin
   for _, ftplugin in ipairs(vim.tbl_values(_ftplugin)) do
     ftplugin_len = ftplugin_len + #ftplugin
   end
-  local _plugins = dein_plugins
-  local r1 = {dein_merged_format, vim.fn.string(ftplugin_len)}
-  local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), dein_merged_format))
+  local _plugins = dein._plugins
+  local r1 = {dein._merged_format, vim.fn.string(ftplugin_len)}
+  local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), dein._merged_format))
   vim.list_extend(r1, r2)
   return r1
 end
@@ -552,12 +549,12 @@ function _chomp(str)
   end
 end
 function _end()
-  if dein_block_level ~= 1 then
+  if dein._block_level ~= 1 then
     M._error('Invalid begin/end block usage.')
     return 1
   end
 
-  dein_block_level = dein_block_level - 1
+  dein._block_level = dein._block_level - 1
 
   if vim.fn.has('vim_starting')==0 then
     require 'dein/autoload'
@@ -565,14 +562,14 @@ function _end()
       function(v)
         return v.lazy==0 and v.sourced==0 and v.rtp ~= ''
       end,
-      vim.tbl_values(dein_plugins)
+      vim.tbl_values(dein._plugins)
     )
     _source(plugins)
   end
 
   -- Add runtimepath
   rtps = _split_rtp(vim.o.rtp)
-  local index = vim.fn.index(rtps, dein_runtime_path)
+  local index = vim.fn.index(rtps, dein._runtime_path)
   if index < 0 then
     M._error('Invalid runtimepath.')
     return 1
@@ -580,7 +577,7 @@ function _end()
 
   local depends = {}
   local sourced = vim.fn.has('vim_starting')==1 and (vim.fn.exists('&loadplugins')==0 or vim.o.loadplugins)
-  local _plugins = dein_plugins
+  local _plugins = dein._plugins
   for _, plugin in ipairs(
     vim.tbl_filter(function (x) return x.lazy==0 and x.sourced==0 and x.rtp~='' end,
       vim.tbl_values(_plugins))) do
@@ -598,18 +595,18 @@ function _end()
 
     plugin.sourced = sourced
   end
-  dein_plugins = _plugins
+  dein._plugins = _plugins
   vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
 
   if vim.fn.empty(depends)==0 then
     vim.fn['dein#source'](depends)
   end
 
-  if dein_hook_add ~= '' then
-    vim.fn['dein#util#_execute_hook']({}, dein_hook_add)
+  if dein._hook_add ~= '' then
+    vim.fn['dein#util#_execute_hook']({}, dein._hook_add)
   end
 
-  local _event_plugins = dein_event_plugins
+  local _event_plugins = dein._event_plugins
   -- TODO
   _event_plugins[true] = nil
   for event, plugins in pairs(_event_plugins) do

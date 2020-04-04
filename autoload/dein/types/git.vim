@@ -50,7 +50,7 @@ function! s:type.init(repo, options) abort
 
   lua require 'dein/util'
   return { 'type': 'git',
-        \  'path': v:lua._get_base_path().'/repos/'.directory }
+        \  'path': luaeval('dein._base_path').'/repos/'.directory }
 endfunction
 function! s:type.get_uri(repo, options) abort
   if a:repo =~# '^/\|^\a:[/\\]'

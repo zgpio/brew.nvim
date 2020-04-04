@@ -27,29 +27,29 @@ end
 --     end
 --   }
 -- }
-function _init()
-  dein_cache_version = 150
-  dein_merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
-  dein_merged_length = 3
+function M._init()
+  M._cache_version = 150
+  M._merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
+  M._merged_length = 3
   vim.g['dein#name'] = ''
   vim.g['dein#plugin'] = {}
-  dein_plugins = {}
-  dein_cache_path = ''
-  dein_base_path = ''
-  dein_runtime_path = ''
-  dein_hook_add = ''
-  dein_ftplugin = {}
-  dein_off1 = ''
-  dein_off2 = ''
-  dein_vimrcs = {}
-  dein_block_level = 0
-  dein_event_plugins = {}
-  dein_progname = vim.fn.fnamemodify(vim.v.progname, ':r')
-  dein_init_runtimepath = vim.o.rtp
+  M._plugins = {}
+  M._cache_path = ''
+  M._base_path = ''
+  M._runtime_path = ''
+  M._hook_add = ''
+  M._ftplugin = {}
+  M._off1 = ''
+  M._off2 = ''
+  M._vimrcs = {}
+  M._block_level = 0
+  M._event_plugins = {}
+  M._progname = vim.fn.fnamemodify(vim.v.progname, ':r')
+  M._init_runtimepath = vim.o.rtp
   local SUDO_USER = vim.env['SUDO_USER']
   local USER = vim.env['USER']
   local HOME = vim.env['HOME']
-  dein_is_sudo = (SUDO_USER~=nil and USER ~= SUDO_USER
+  M._is_sudo = (SUDO_USER~=nil and USER ~= SUDO_USER
     and HOME ~= vim.fn.expand('~'..USER)
     and HOME == vim.fn.expand('~'..SUDO_USER))
 
@@ -71,7 +71,7 @@ function _init()
 end
 function load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then
-    _init()
+    M._init()
   end
   local args = ...
   local sourced
@@ -80,11 +80,11 @@ function load_state(path, ...)
   else
     sourced = vim.fn.has('vim_starting')==1 and vim.o.loadplugins
   end
-  if (dein_is_sudo==1 or not sourced) then return 1 end
-  dein_base_path = vim.fn.expand(path)
+  if (dein._is_sudo==1 or not sourced) then return 1 end
+  dein._base_path = vim.fn.expand(path)
 
-  local state = (vim.g['dein#cache_directory'] or dein_base_path)
-    .. '/state_' .. dein_progname .. '.vim'
+  local state = (vim.g['dein#cache_directory'] or dein._base_path)
+    .. '/state_' .. dein._progname .. '.vim'
   if vim.fn.filereadable(state)==0 then return 1 end
   try {
     function()
@@ -103,8 +103,8 @@ function load_state(path, ...)
   }
 end
 function load_cache_raw(vimrcs)
-  dein_vimrcs = vimrcs
-  local cache = (vim.g['dein#cache_directory'] or dein_base_path) ..'/cache_' .. dein_progname
+  dein._vimrcs = vimrcs
+  local cache = (vim.g['dein#cache_directory'] or dein._base_path) ..'/cache_' .. dein._progname
   local time = vim.fn.getftime(cache)
   local t = vim.tbl_filter(
     function(v)
@@ -114,21 +114,21 @@ function load_cache_raw(vimrcs)
       function(v)
        return vim.fn.getftime(vim.fn.expand(v))
       end,
-      vim.deepcopy(dein_vimrcs)
+      vim.deepcopy(dein._vimrcs)
     )
   )
   if #t~=0 then
     return {{}, {}}
   end
   local list = vim.fn.readfile(cache)
-  if #list ~= 3 or vim.fn.string(dein_vimrcs) ~= list[1] then
+  if #list ~= 3 or vim.fn.string(dein._vimrcs) ~= list[1] then
     return {{}, {}}
   end
   return {vim.fn.json_decode(list[2]), vim.fn.json_decode(list[3])}
 end
 
 function tap(name)
-  local _plugins = dein_plugins
+  local _plugins = dein._plugins
   if _plugins.name==nil or vim.fn.isdirectory(_plugins[name].path)==0 then
     return 0
   end
@@ -137,7 +137,7 @@ function tap(name)
   return 1
 end
 function is_sourced(name)
-  local _plugins = dein_plugins
+  local _plugins = dein._plugins
   return _plugins.name~=nil
     and vim.fn.isdirectory(_plugins[name].path)==1
     and _plugins[name].sourced==1

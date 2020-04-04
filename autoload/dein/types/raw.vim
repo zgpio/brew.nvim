@@ -24,7 +24,7 @@ function! s:type.init(repo, options) abort
 
   lua require 'dein/util'
   return { 'name': dein#parse#_name_conversion(a:repo), 'type' : 'raw',
-        \  'path': v:lua._get_base_path().'/repos/'.directory }
+        \  'path': luaeval('dein._base_path').'/repos/'.directory }
 endfunction
 
 function! s:type.get_sync_command(plugin) abort

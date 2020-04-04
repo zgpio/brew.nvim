@@ -31,7 +31,7 @@ function! s:get_job() abort
 endfunction
 
 function! dein#install#_update(plugins, update_type, async) abort
-  if luaeval('dein_is_sudo')
+  if luaeval('dein._is_sudo')
     call s:error('update/install is disabled in sudo session.')
     return
   endif
@@ -162,7 +162,7 @@ function! dein#install#_rollback(date, plugins) abort
 endfunction
 
 function! dein#install#_recache_runtimepath() abort
-  if luaeval('dein_is_sudo')
+  if luaeval('dein._is_sudo')
     return
   endif
 
@@ -223,7 +223,7 @@ function! s:clear_runtimepath() abort
   endif
 endfunction
 function! s:helptags() abort
-  if luaeval('dein_runtime_path') ==# '' || luaeval('dein_is_sudo')
+  if luaeval('dein._runtime_path') ==# '' || luaeval('dein._is_sudo')
     return ''
   endif
 
@@ -309,7 +309,7 @@ function! dein#install#_load_rollback(rollbackfile, plugins) abort
 endfunction
 function! s:get_rollback_directory() abort
   let parent = printf('%s/rollbacks/%s',
-        \ v:lua._get_cache_path(), luaeval('dein_progname'))
+        \ v:lua._get_cache_path(), luaeval('dein._progname'))
   if !isdirectory(parent)
     call mkdir(parent, 'p')
   endif
@@ -362,9 +362,9 @@ function! s:generate_ftplugin() abort
     call mkdir(after, 'p')
   endif
 
-  " Merge dein_ftplugin
+  " Merge dein._ftplugin
   let ftplugin = {}
-  for [key, string] in items(luaeval('dein_ftplugin'))
+  for [key, string] in items(luaeval('dein._ftplugin'))
     for ft in (key ==# '_' ? ['_'] : split(key, '_'))
       if !has_key(ftplugin, ft)
         let ftplugin[ft] = (ft ==# '_') ? [] : [

@@ -12,7 +12,7 @@ function unique(items)
 end
 
 function _add(repo, options)
-  local _plugins = dein_plugins
+  local _plugins = dein._plugins
   local plugin = _dict(vim.fn['dein#parse#_init'](repo, options))
   if (_plugins[plugin.name]~=nil
         and _plugins[plugin.name].sourced==1)
@@ -35,7 +35,7 @@ function _add(repo, options)
   if plugin['ftplugin']~=nil then
     merge_ftplugin(plugin.ftplugin)
   end
-  dein_plugins = _plugins
+  dein._plugins = _plugins
   return plugin
 end
 function parse_lazy(plugin)
@@ -53,7 +53,7 @@ function parse_lazy(plugin)
   if plugin['on_idle'] ~= nil and plugin['on_idle'] ~= 0 then
     plugin.on_event = {'FocusLost', 'CursorHold'}
   end
-  local event_plugins = dein_event_plugins
+  local event_plugins = dein._event_plugins
   -- TODO: https://github.com/neovim/neovim/issues/12048
   event_plugins[true] = nil
   if plugin['on_event'] ~= nil then
@@ -66,7 +66,7 @@ function parse_lazy(plugin)
       end
     end
   end
-  dein_event_plugins = event_plugins
+  dein._event_plugins = event_plugins
 
   if plugin['on_cmd'] ~= nil then
     generate_dummy_commands(plugin)
@@ -153,14 +153,14 @@ function generate_dummy_mappings(plugin)
 end
 -- TODO: 临时的
 function set_dein_hook_add(s)
-  dein_hook_add = s
+  dein._hook_add = s
 end
 function add_dein_vimrcs(s)
-  table.insert(dein_vimrcs, s)
+  table.insert(dein._vimrcs, s)
 end
 
 function merge_ftplugin(ftplugin)
-  local _ftplugin = dein_ftplugin
+  local _ftplugin = dein._ftplugin
   -- TODO
   _ftplugin[true]=nil
   for ft, val in pairs(ftplugin) do
@@ -176,7 +176,7 @@ function merge_ftplugin(ftplugin)
     end,
     _ftplugin
   )
-  dein_ftplugin = _ftplugin
+  dein._ftplugin = _ftplugin
 end
 
 function _dict(plug)
@@ -201,7 +201,7 @@ function _dict(plug)
     if plugin.path:find('^%a:[/\\]') or plugin.path:find('^/') then
       plugin.path = plugin.repo
     else
-      plugin.path = _get_base_path()..'/repos/'..plugin.name
+      plugin.path = dein._base_path..'/repos/'..plugin.name
     end
   end
 
@@ -222,7 +222,7 @@ function _dict(plug)
     plugin.rtp = vim.fn['dein#util#_expand'](plugin.rtp)
   end
   plugin.rtp = _chomp(plugin.rtp)
-  if dein_is_sudo==1 and not (plugin.trusted==1) then
+  if dein._is_sudo==1 and not (plugin.trusted==1) then
     plugin.rtp = ''
   end
 
@@ -263,7 +263,7 @@ function _dict(plug)
       and plugin['local']==nil
       and plugin['build']==nil
       and plugin['if']==nil
-      and vim.fn.stridx(plugin.rtp, _get_base_path()) == 0
+      and vim.fn.stridx(plugin.rtp, dein._base_path) == 0
     if plugin.merged then plugin.merged = 1 else plugin.merged = 0 end
   end
 

@@ -4,7 +4,7 @@
 " License: MIT license
 "=============================================================================
 
-lua require 'dein'
+lua dein = require 'dein'
 function! dein#load_state(path, ...) abort
   return v:lua.load_state(a:path, a:000)
 endfunction
@@ -25,7 +25,7 @@ function! dein#local(dir, ...) abort
   return dein#parse#_local(a:dir, get(a:000, 0, {}), get(a:000, 1, ['*']))
 endfunction
 function! dein#get(...) abort
-  return empty(a:000) ? copy(luaeval('dein_plugins')) : get(luaeval('dein_plugins'), a:1, {})
+  return empty(a:000) ? copy(luaeval('dein._plugins')) : get(luaeval('dein._plugins'), a:1, {})
 endfunction
 function! dein#source(...) abort
   return v:lua._source(a:000)
@@ -53,7 +53,7 @@ function! dein#direct_install(repo, ...) abort
   call dein#install#_direct_install(a:repo, (a:0 ? a:1 : {}))
 endfunction
 function! dein#get_direct_plugins_path() abort
-  return get(g:, 'dein#cache_directory', luaeval('dein_base_path'))
+  return get(g:, 'dein#cache_directory', luaeval('dein._base_path'))
         \ .'/direct_install.vim'
 endfunction
 function! dein#reinstall(plugins) abort

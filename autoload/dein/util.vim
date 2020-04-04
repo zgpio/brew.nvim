@@ -39,7 +39,7 @@ endfunction
 function! dein#util#_check_clean() abort
   let plugins_directories = map(values(dein#get()), 'v:val.path')
   let path = v:lua._substitute_path(
-        \ globpath(v:lua._get_base_path(), 'repos/*/*/*'))
+        \ globpath(luaeval('dein._base_path'), 'repos/*/*/*'))
   return filter(split(path, "\n"),
         \ "isdirectory(v:val) && fnamemodify(v:val, ':t') !=# 'dein.vim'
         \  && index(plugins_directories, v:val) < 0")
@@ -51,7 +51,7 @@ endfunction
 
 function! dein#util#_check_vimrcs() abort
   let time = getftime(v:lua._get_runtime_path())
-  let ret = !empty(filter(map(copy(luaeval('dein_vimrcs')), 'getftime(expand(v:val))'),
+  let ret = !empty(filter(map(copy(luaeval('dein._vimrcs')), 'getftime(expand(v:val))'),
         \ 'time < v:val'))
   if !ret
     return 0

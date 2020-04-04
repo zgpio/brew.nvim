@@ -43,7 +43,7 @@ function! dein#parse#_load_toml(filename, default) abort
   " Parse.
   if has_key(toml, 'hook_add')
     let pattern = '\n\s*\\\|\%(^\|\n\)\s*"[^\n]*'
-    call v:lua.set_dein_hook_add(luaeval('dein_hook_add')."\n" . substitute(
+    call v:lua.set_dein_hook_add(luaeval('dein._hook_add')."\n" . substitute(
           \ toml.hook_add, pattern, '', 'g'))
   endif
   if has_key(toml, 'ftplugin')
@@ -62,7 +62,7 @@ function! dein#parse#_load_toml(filename, default) abort
     endfor
   endif
 
-  " Add to dein_vimrcs
+  " Add to dein._vimrcs
   call v:lua.add_dein_vimrcs(dein#util#_expand(a:filename))
 endfunction
 function! dein#parse#_load_dict(dict, default) abort
@@ -88,7 +88,7 @@ function! dein#parse#_local(localdir, options, includes) abort
           \ 'name': fnamemodify(dir, ':t')
           \ }, a:options)
 
-    if has_key(luaeval('dein_plugins'), options.name)
+    if has_key(luaeval('dein._plugins'), options.name)
       call dein#config(options.name, options)
     else
       call dein#add(dir, options)
