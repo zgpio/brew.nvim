@@ -105,17 +105,17 @@ function _call_hook(hook_name, ...)
   local args = ...
   local hook = 'hook_' .. hook_name
   local t
-  if #args > 0 then t = args[1] else t = {} end
+  if args and #args > 0 then t = args[1] else t = {} end
   local plugins = vim.tbl_filter(
     function(x)
       return ((hook_name ~= 'source' and hook_name ~= 'post_source')
-        or x.sourced==1) and x.hook ~= nil and vim.fn.isdirectory(x.path)==1
+        or x.sourced==1) and x[hook] ~= nil and vim.fn.isdirectory(x.path)==1
     end,
     _get_plugins(t)
   )
 
   for _, plugin in ipairs(
-    vim.tbl_filter(function(x) return x.hook ~= nil end, vim.fn['dein#util#_tsort'](plugins))) do
+    vim.tbl_filter(function(x) return x[hook] ~= nil end, vim.fn['dein#util#_tsort'](plugins))) do
     vim.fn['dein#util#_execute_hook'](plugin, plugin[hook])
   end
 end
@@ -620,9 +620,9 @@ function _end()
   end
 
   if vim.fn.has('vim_starting')==0 then
-    vim.fn['dein#call_hook']('add')
-    vim.fn['dein#call_hook']('source')
-    vim.fn['dein#call_hook']('post_source')
+    _call_hook('add')
+    _call_hook('source')
+    _call_hook('post_source')
   end
 end
 

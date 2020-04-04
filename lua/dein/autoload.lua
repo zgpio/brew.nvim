@@ -110,7 +110,7 @@ function _source(...)
   local filetype_before = vim.fn.execute('autocmd FileType')
   vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
 
-  vim.fn['dein#call_hook']('source', sourced)
+  _call_hook('source', {sourced})
 
   -- Reload script files.
   for _, plugin in ipairs(sourced) do
@@ -152,7 +152,7 @@ function _source(...)
   end
 
   if vim.fn.has('vim_starting')==0 then
-    vim.fn['dein#call_hook']('post_source', sourced)
+    _call_hook('post_source', {sourced})
   end
   dein._plugins = _plugins
 end
