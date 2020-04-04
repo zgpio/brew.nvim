@@ -80,6 +80,19 @@ function _source(...)
   end
   dein_plugins = _plugins
 end
+--@param plugins plugin name list
+function _on_event(event, plugins)
+  require 'dein/util'
+  local lazy_plugins = vim.fn.filter(_get_plugins(plugins), '!v:val.sourced')
+  if vim.tbl_isempty(lazy_plugins) then
+    a.nvim_command('autocmd! dein-events ' ..event)
+    return
+  end
+
+  local plugins = vim.fn.filter(vim.deepcopy(lazy_plugins),
+        "!has_key(v:val, 'on_if') || eval(v:val.on_if)")
+  source_events(event, plugins)
+end
 function source_events(event, plugins)
   if vim.tbl_isempty(plugins) then
     return

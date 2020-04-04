@@ -31,19 +31,6 @@ function! dein#autoload#_on_default_event(event) abort
 
   call v:lua.source_events(a:event, plugins)
 endfunction
-function! dein#autoload#_on_event(event, plugins) abort
-  lua require 'dein/util'
-  let lazy_plugins = filter(v:lua._get_plugins(a:plugins),
-        \ '!v:val.sourced')
-  if empty(lazy_plugins)
-    execute 'autocmd! dein-events' a:event
-    return
-  endif
-
-  let plugins = filter(copy(lazy_plugins),
-        \ "!has_key(v:val, 'on_if') || eval(v:val.on_if)")
-  call v:lua.source_events(a:event, plugins)
-endfunction
 
 function! dein#autoload#_on_func(name) abort
   let function_prefix = substitute(a:name, '[^#]*$', '', '')
