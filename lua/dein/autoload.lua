@@ -3,6 +3,19 @@ require 'dein/util'
 local a = vim.api
 local M = {}
 
+function _on_pre_cmd(name)
+  require 'dein/util'
+  local t = vim.tbl_filter(
+    function(v)
+      local s = string.gsub(v.normalized_name:lower(), '[_-]', '')
+      return vim.tbl_contains(
+        vim.tbl_map(function(v) return v:lower() end, vim.deepcopy(v.on_cmd or {})), name)
+        or vim.fn.stridx(name:lower(), s) == 0
+    end,
+    _get_lazy_plugins()
+  )
+  _source(t)
+end
 function _on_default_event(event)
   require 'dein/util'
   local lazy_plugins = _get_lazy_plugins()

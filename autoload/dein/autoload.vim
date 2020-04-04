@@ -5,17 +5,6 @@
 "=============================================================================
 lua require 'dein/autoload'
 
-function! dein#autoload#_on_pre_cmd(name) abort
-  lua require 'dein/util'
-  call v:lua._source(
-        \ filter(v:lua._get_lazy_plugins(),
-        \ "index(map(copy(get(v:val, 'on_cmd', [])),
-        \            'tolower(v:val)'), a:name) >= 0
-        \  || stridx(tolower(a:name),
-        \            substitute(tolower(v:val.normalized_name),
-        \                       '[_-]', '', 'g')) == 0"))
-endfunction
-
 function! dein#autoload#_on_cmd(command, name, args, bang, line1, line2) abort
   call dein#source(a:name)
 
@@ -44,7 +33,7 @@ function! dein#autoload#_dummy_complete(arglead, cmdline, cursorpos) abort
   endif
 
   " Load plugins
-  call dein#autoload#_on_pre_cmd(tolower(command))
+  call v:lua._on_pre_cmd(tolower(command))
 
   if exists(':'.command) == 2
     " Print the candidates

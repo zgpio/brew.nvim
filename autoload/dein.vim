@@ -42,7 +42,7 @@ function! dein#_init() abort
 
   if !exists('##CmdUndefined') | return | endif
   autocmd dein CmdUndefined *
-        \ call dein#autoload#_on_pre_cmd(expand('<afile>'))
+        \ call v:lua._on_pre_cmd(expand('<afile>'))
 endfunction
 function! dein#load_state(path, ...) abort
   return v:lua.load_state(a:path, a:000)
