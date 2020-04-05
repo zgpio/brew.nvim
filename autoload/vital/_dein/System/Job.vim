@@ -4,7 +4,7 @@
 function! s:_SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
 endfunction
-execute join(['function! vital#_dein#System#Job#import() abort', printf("return map({'_vital_depends': '', '_vital_healthcheck': '', 'is_available': '', 'start': '', '_vital_loaded': ''}, \"vital#_dein#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
+execute join(['function! vital#_dein#System#Job#import() abort', printf("return map({'start': '', '_vital_loaded': ''}, \"vital#_dein#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
 delfunction s:_SID
 " ___vital___
 let s:t_string = type('')
@@ -13,25 +13,8 @@ let s:t_list = type([])
 function! s:_vital_loaded(V) abort
   if has('nvim')
     let s:Job = a:V.import('System.Job.Neovim')
-  else
-    let s:Job = a:V.import('System.Job.Vim')
   endif
 endfunction
-
-function! s:_vital_depends() abort
-  return [
-        \ 'System.Job.Vim',
-        \ 'System.Job.Neovim',
-        \]
-endfunction
-
-function! s:_vital_healthcheck() abort
-  if has('patch-8.0.0027') || has('nvim-0.2.0')
-    return
-  endif
-  return 'This module requires Vim 8.0.0027 or Neovim 0.2.0'
-endfunction
-
 
 " Note:
 " Vim does not raise E902 on Unix system even the prog is not found so use a
@@ -49,10 +32,6 @@ function! s:_validate_args(args) abort
   if !executable(prog)
     throw printf('vital: System.Job: "%s" is not an executable', prog)
   endif
-endfunction
-
-function! s:is_available() abort
-  return s:Job.is_available()
 endfunction
 
 function! s:start(args, ...) abort

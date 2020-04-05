@@ -4,13 +4,9 @@
 function! s:_SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
 endfunction
-execute join(['function! vital#_dein#System#Job#Neovim#import() abort', printf("return map({'is_available': '', 'start': ''}, \"vital#_dein#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
+execute join(['function! vital#_dein#System#Job#Neovim#import() abort', printf("return map({'start': ''}, \"vital#_dein#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
 delfunction s:_SID
 " ___vital___
-" http://vim-jp.org/blog/2016/03/23/take-care-of-patch-1577.html
-function! s:is_available() abort
-  return has('nvim') && has('nvim-0.2.0')
-endfunction
 
 function! s:start(args, options) abort
   let job = extend(copy(s:job), a:options)

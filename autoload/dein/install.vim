@@ -675,13 +675,7 @@ function! dein#install#_system(command) abort
   " let job = s:Job.start()
   " let exitval = job.wait()
 
-  if !has('nvim') && type(a:command) == v:t_list
-    " system() does not support List arguments in Vim.
-    let command = s:args2string(a:command)
-  else
-    let command = a:command
-  endif
-
+  let command = a:command
   let command = s:iconv(command, &encoding, 'char')
   let output = s:iconv(system(command), 'char', &encoding)
   return substitute(output, '\n$', '', '')
@@ -1415,26 +1409,4 @@ function! s:strwidthpart_reverse(str, width) abort
   endwhile
 
   return ret
-endfunction
-
-function! s:args2string(args) abort
-  return type(a:args) == v:t_string ? a:args :
-        \ v:lua._is_windows() ?
-        \   dein#install#_args2string_windows(a:args) :
-        \   dein#install#_args2string_unix(a:args)
-endfunction
-
-function! dein#install#_args2string_windows(args) abort
-  if empty(a:args)
-    return ''
-  endif
-  let str = (a:args[0] =~# ' ') ? '"' . a:args[0] . '"' : a:args[0]
-  if len(a:args) > 1
-    let str .= ' '
-    let str .= join(map(copy(a:args[1:]), '''"'' . v:val . ''"'''))
-  endif
-  return str
-endfunction
-function! dein#install#_args2string_unix(args) abort
-  return join(map(copy(a:args), 'string(v:val)'))
 endfunction
