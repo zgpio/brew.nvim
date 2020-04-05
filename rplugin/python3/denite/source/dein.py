@@ -25,7 +25,7 @@ class Source(Base):
     def gather_candidates(self, context):
         return [
             _build_candidate(plugin_context)
-            for plugin_context in self.vim.eval('values(dein#get())')
+            for plugin_context in self.vim.eval('values(v:lua.dein.get())')
         ]
 
 

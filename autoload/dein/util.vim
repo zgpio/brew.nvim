@@ -37,7 +37,7 @@ function! dein#util#_is_powershell() abort
 endfunction
 
 function! dein#util#_check_clean() abort
-  let plugins_directories = map(values(dein#get()), 'v:val.path')
+  let plugins_directories = map(values(v:lua.dein.get()), 'v:val.path')
   let path = v:lua._substitute_path(
         \ globpath(luaeval('dein._base_path'), 'repos/*/*/*'))
   return filter(split(path, "\n"),
@@ -126,7 +126,7 @@ function! s:tsort_impl(target, mark, sorted) abort
   let a:mark[a:target.name] = 1
   if has_key(a:target, 'depends')
     for depend in a:target.depends
-      call s:tsort_impl(dein#get(depend), a:mark, a:sorted)
+      call s:tsort_impl(v:lua.dein.get(depend), a:mark, a:sorted)
     endfor
   endif
 

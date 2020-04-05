@@ -71,7 +71,7 @@ function _save_cache(vimrcs, is_state, is_starting)
   end
 
   -- TODO: deepcopy
-  local plugins = vim.fn['dein#get']()
+  local plugins = dein.get()
 
   for _, plugin in ipairs(vim.tbl_values(plugins)) do
     if is_state == 0 then
@@ -239,7 +239,7 @@ function _save_state(is_starting)
   if vim.fn.empty(dein._hook_add)==0 then
     vim.list_extend(lines, skipempty(dein._hook_add))
   end
-  for _, plugin in ipairs(vim.fn['dein#util#_tsort'](vim.fn.values(vim.fn['dein#get']()))) do
+  for _, plugin in ipairs(vim.fn['dein#util#_tsort'](vim.tbl_values(dein.get()))) do
     if plugin.hook_add~=nil and type(plugin.hook_add) == 'string' then
       vim.list_extend(lines, skipempty(plugin.hook_add))
     end
@@ -283,14 +283,14 @@ end
 function _get_plugins(plugins)
   local rv = {}
   if vim.tbl_isempty(plugins) then
-    return vim.tbl_values(vim.fn['dein#get']())
+    return vim.tbl_values(dein.get())
   else
     plugins = vim.tbl_map(
       function(v)
         if type(v)=='table' and not vim.tbl_islist(v) then
           return v
         else
-          return vim.fn['dein#get'](v)
+          return dein.get(v)
         end
       end,
       _convert2list(plugins)
@@ -357,7 +357,7 @@ function escape(path)
 end
 function _check_install(plugins)
   if not vim.tbl_isempty(plugins) then
-    local invalids = vim.tbl_filter(function(x) return vim.tbl_isempty(vim.fn['dein#get'](x)) end,
+    local invalids = vim.tbl_filter(function(x) return vim.tbl_isempty(dein.get(x)) end,
       _convert2list(plugins))
     if not vim.tbl_isempty(invalids) then
       M._error('Invalid plugins: ' .. vim.fn.string(vim.fn.map(invalids, 'v:val')))
@@ -365,9 +365,9 @@ function _check_install(plugins)
     end
   end
   if vim.tbl_isempty(plugins) then
-    plugins = vim.tbl_values(vim.fn['dein#get']())
+    plugins = vim.tbl_values(dein.get())
   else
-    plugins = vim.fn.map(_convert2list(plugins), 'dein#get(v:val)')
+    plugins = vim.tbl_map(function(v) return dein.get(v) end, _convert2list(plugins))
   end
   plugins = vim.tbl_filter(function(x) return vim.fn.isdirectory(x.path)==0 end, plugins)
   if vim.tbl_isempty(plugins) then return 0 end

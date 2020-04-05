@@ -24,9 +24,6 @@ endfunction
 function! dein#local(dir, ...) abort
   return dein#parse#_local(a:dir, get(a:000, 0, {}), get(a:000, 1, ['*']))
 endfunction
-function! dein#get(...) abort
-  return empty(a:000) ? copy(luaeval('dein._plugins')) : get(luaeval('dein._plugins'), a:1, {})
-endfunction
 function! dein#source(...) abort
   return v:lua._source(a:000)
 endfunction

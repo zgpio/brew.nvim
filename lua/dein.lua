@@ -69,6 +69,14 @@ function M._init()
   if vim.fn.exists('##CmdUndefined')==0 then return end
   a.nvim_command([[autocmd dein CmdUndefined *  call v:lua._on_pre_cmd(expand('<afile>'))]])
 end
+function M.get(...)
+  local args = {...}
+  if vim.tbl_isempty(args) then
+    return vim.deepcopy(M._plugins)
+  else
+    return (M._plugins[args[1]] or {})
+  end
+end
 function load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then
     M._init()
@@ -80,11 +88,11 @@ function load_state(path, ...)
   else
     sourced = vim.fn.has('vim_starting')==1 and vim.o.loadplugins
   end
-  if (dein._is_sudo==1 or not sourced) then return 1 end
-  dein._base_path = vim.fn.expand(path)
+  if (M._is_sudo==1 or not sourced) then return 1 end
+  M._base_path = vim.fn.expand(path)
 
-  local state = (vim.g['dein#cache_directory'] or dein._base_path)
-    .. '/state_' .. dein._progname .. '.vim'
+  local state = (vim.g['dein#cache_directory'] or M._base_path)
+    .. '/state_' .. M._progname .. '.vim'
   if vim.fn.filereadable(state)==0 then return 1 end
   try {
     function()
@@ -103,8 +111,8 @@ function load_state(path, ...)
   }
 end
 function load_cache_raw(vimrcs)
-  dein._vimrcs = vimrcs
-  local cache = (vim.g['dein#cache_directory'] or dein._base_path) ..'/cache_' .. dein._progname
+  M._vimrcs = vimrcs
+  local cache = (vim.g['dein#cache_directory'] or M._base_path) ..'/cache_' .. M._progname
   local time = vim.fn.getftime(cache)
   local t = vim.tbl_filter(
     function(v)
@@ -114,21 +122,21 @@ function load_cache_raw(vimrcs)
       function(v)
        return vim.fn.getftime(vim.fn.expand(v))
       end,
-      vim.deepcopy(dein._vimrcs)
+      vim.deepcopy(M._vimrcs)
     )
   )
   if #t~=0 then
     return {{}, {}}
   end
   local list = vim.fn.readfile(cache)
-  if #list ~= 3 or vim.fn.string(dein._vimrcs) ~= list[1] then
+  if #list ~= 3 or vim.fn.string(M._vimrcs) ~= list[1] then
     return {{}, {}}
   end
   return {vim.fn.json_decode(list[2]), vim.fn.json_decode(list[3])}
 end
 
 function tap(name)
-  local _plugins = dein._plugins
+  local _plugins = M._plugins
   if _plugins.name==nil or vim.fn.isdirectory(_plugins[name].path)==0 then
     return 0
   end
@@ -137,7 +145,7 @@ function tap(name)
   return 1
 end
 function is_sourced(name)
-  local _plugins = dein._plugins
+  local _plugins = M._plugins
   return _plugins.name~=nil
     and vim.fn.isdirectory(_plugins[name].path)==1
     and _plugins[name].sourced==1

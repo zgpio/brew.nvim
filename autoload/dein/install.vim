@@ -169,7 +169,7 @@ function! dein#install#_recache_runtimepath() abort
   " Clear runtime path.
   call s:clear_runtimepath()
 
-  let plugins = values(dein#get())
+  let plugins = values(v:lua.dein.get())
 
   let merged_plugins = filter(copy(plugins), 'v:val.merged')
 
@@ -233,7 +233,7 @@ function! s:helptags() abort
       call mkdir(tags, 'p')
     endif
     call s:copy_files(filter(
-          \ values(dein#get()), '!v:val.merged'), 'doc')
+          \ values(v:lua.dein.get()), '!v:val.merged'), 'doc')
     silent execute 'helptags' fnameescape(tags)
   catch /^Vim(helptags):E151:/
     " Ignore an error that occurs when there is no help file
@@ -425,7 +425,7 @@ function! dein#install#_remote_plugins() abort
   endif
 
   " Load not loaded neovim remote plugins
-  let remote_plugins = filter(values(dein#get()),
+  let remote_plugins = filter(values(v:lua.dein.get()),
         \ "isdirectory(v:val.rtp . '/rplugin') && !v:val.sourced")
 
   lua require 'dein/autoload'
