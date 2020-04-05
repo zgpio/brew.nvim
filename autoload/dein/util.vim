@@ -94,15 +94,6 @@ function! dein#util#_sort_by(list, expr) abort
   return map(s:sort(pairs,
   \      'a:a[1] ==# a:b[1] ? 0 : a:a[1] ># a:b[1] ? 1 : -1'), 'v:val[0]')
 endfunction
-function! dein#util#_tsort(plugins) abort
-  let sorted = []
-  let mark = {}
-  for target in a:plugins
-    call s:tsort_impl(target, mark, sorted)
-  endfor
-
-  return sorted
-endfunction
 
 function! dein#util#_expand(path) abort
   let path = (a:path =~# '^\~') ? fnamemodify(a:path, ':p') :
@@ -116,21 +107,6 @@ endfunction
 function! dein#util#_split(expr) abort
   return type(a:expr) ==# v:t_list ? copy(a:expr) :
         \ split(a:expr, '\r\?\n')
-endfunction
-
-function! s:tsort_impl(target, mark, sorted) abort
-  if empty(a:target) || has_key(a:mark, a:target.name)
-    return
-  endif
-
-  let a:mark[a:target.name] = 1
-  if has_key(a:target, 'depends')
-    for depend in a:target.depends
-      call s:tsort_impl(v:lua.dein.get(depend), a:mark, a:sorted)
-    endfor
-  endif
-
-  call add(a:sorted, a:target)
 endfunction
 
 function! s:msg2list(expr) abort

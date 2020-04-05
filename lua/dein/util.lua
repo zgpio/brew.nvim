@@ -115,7 +115,7 @@ function _call_hook(hook_name, ...)
   )
 
   for _, plugin in ipairs(
-    vim.tbl_filter(function(x) return x[hook] ~= nil end, vim.fn['dein#util#_tsort'](plugins))) do
+    vim.tbl_filter(function(x) return x[hook] ~= nil end, _tsort(plugins))) do
     vim.fn['dein#util#_execute_hook'](plugin, plugin[hook])
   end
 end
@@ -239,7 +239,7 @@ function _save_state(is_starting)
   if vim.fn.empty(dein._hook_add)==0 then
     vim.list_extend(lines, skipempty(dein._hook_add))
   end
-  for _, plugin in ipairs(vim.fn['dein#util#_tsort'](vim.tbl_values(dein.get()))) do
+  for _, plugin in ipairs(_tsort(vim.tbl_values(dein.get()))) do
     if plugin.hook_add~=nil and type(plugin.hook_add) == 'string' then
       vim.list_extend(lines, skipempty(plugin.hook_add))
     end
@@ -337,6 +337,30 @@ function _join_rtp(list, runtimepath, rtp)
   else
     return vim.fn.join(vim.tbl_map(escape, list), ',')
   end
+end
+local function tsort_impl(target, mark, sorted)
+  if vim.tbl_isempty(target) or mark[target.name]~=nil then
+    return
+  end
+
+  mark[target.name] = 1
+  if target.depends~=nil then
+    for _, depend in ipairs(target.depends) do
+      tsort_impl(dein.get(depend), mark, sorted)
+    end
+  end
+
+  table.insert(sorted, target)
+end
+--@param plugins plugin list
+function _tsort(plugins)
+  local sorted = {}
+  local mark = {}
+  for _, target in ipairs(plugins) do
+    tsort_impl(target, mark, sorted)
+  end
+
+  return sorted
 end
 function _convert2list(expr)
   if type(expr) == 'table' then
