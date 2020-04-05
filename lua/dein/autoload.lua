@@ -158,7 +158,7 @@ end
 --@param plugins plugin name list
 function _on_event(event, plugins)
   require 'dein/util'
-  local lazy_plugins = vim.fn.filter(_get_plugins(plugins), '!v:val.sourced')
+  local lazy_plugins = vim.tbl_filter(function(v) return v.sourced==0 end, _get_plugins(plugins))
   if vim.tbl_isempty(lazy_plugins) then
     a.nvim_command('autocmd! dein-events ' ..event)
     return
