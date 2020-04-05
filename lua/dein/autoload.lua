@@ -46,12 +46,12 @@ function _on_default_event(event)
   end
   path = vim.fn['dein#util#_expand'](path)
 
-  for _, ft in ipairs(vim.split(vim.bo.filetype, '.')) do
+  for _, ft in ipairs(vim.split(vim.bo.filetype, '.', true)) do
     local t = vim.tbl_filter(
       function(v)
         return vim.tbl_contains(v.on_ft or {}, ft)
       end,
-      vim.deepcopy(lazy_plugins)
+      lazy_plugins
     )
     vim.list_extend(plugins, t)
   end
@@ -66,14 +66,14 @@ function _on_default_event(event)
       )
       return not vim.tbl_isempty(t)
     end,
-    vim.deepcopy(lazy_plugins)
+    lazy_plugins
   )
   vim.list_extend(plugins, t)
   local t = vim.tbl_filter(
     function(v)
       return v.on_event==nil and v.on_if~=nil and a.nvim_eval(tostring(v.on_if))==1
     end,
-    vim.deepcopy(lazy_plugins)
+    lazy_plugins
   )
   vim.list_extend(plugins, t)
 
@@ -117,7 +117,7 @@ function _source(...)
     for _, directory in ipairs({'plugin', 'after/plugin'}) do
       if vim.fn.isdirectory(plugin.rtp..'/'..directory)==1 then
         for _, file in ipairs(_globlist(plugin.rtp..'/'..directory..'/**/*.vim')) do
-          vim.api.nvim_command('source ' .. vim.fn.fnameescape(file))
+          a.nvim_command('source ' .. vim.fn.fnameescape(file))
         end
       end
     end
@@ -126,15 +126,15 @@ function _source(...)
       local augroup = (plugin.augroup or plugin.normalized_name)
       if vim.fn.exists('#'..augroup..'#VimEnter')==1 then
         local c = 'silent doautocmd '.. augroup.. ' VimEnter'
-        vim.api.nvim_command(c)
+        a.nvim_command(c)
       end
       if vim.fn.has('gui_running')==1 and vim.o.term == 'builtin_gui' and vim.fn.exists('#'..augroup..'#GUIEnter') then
         local c = 'silent doautocmd '.. augroup.. ' GUIEnter'
-        vim.api.nvim_command(c)
+        a.nvim_command(c)
       end
       if vim.fn.exists('#'..augroup..'#BufRead')==1 then
         local c = 'silent doautocmd '.. augroup.. ' BufRead'
-        vim.api.nvim_command(c)
+        a.nvim_command(c)
       end
     end
   end
@@ -148,13 +148,12 @@ function _source(...)
 
   if (is_reset==1 or filetype_before ~= filetype_after) and vim.o.ft ~= '' then
     -- Recall FileType autocmd
-    vim.api.nvim_command('let &filetype = &filetype')
+    a.nvim_command('let &filetype = &filetype')
   end
 
   if vim.fn.has('vim_starting')==0 then
     _call_hook('post_source', {sourced})
   end
-  dein._plugins = _plugins
 end
 --@param plugins plugin name list
 function _on_event(event, plugins)
@@ -165,8 +164,13 @@ function _on_event(event, plugins)
     return
   end
 
-  local plugins = vim.fn.filter(vim.deepcopy(lazy_plugins),
-        "!has_key(v:val, 'on_if') || eval(v:val.on_if)")
+  local plugins = vim.tbl_filter(
+    function(v)
+      return v.on_if==nil or vim.fn.eval(v.on_if)==1
+    end,
+    lazy_plugins
+  )
+
   source_events(event, plugins)
 end
 function M._on_func(name)
@@ -214,15 +218,15 @@ function reset_ftplugin()
   local filetype_state = vim.fn.execute('filetype')
 
   if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
-    vim.api.nvim_command('filetype plugin indent off')
+    a.nvim_command('filetype plugin indent off')
   end
 
   if string.find(filetype_state, 'plugins:ON') then
-    vim.api.nvim_command('silent! filetype plugin on')
+    a.nvim_command('silent! filetype plugin on')
   end
 
   if string.find(filetype_state, 'indent:ON') then
-    vim.api.nvim_command('silent! filetype indent on')
+    a.nvim_command('silent! filetype indent on')
   end
 end
 
@@ -290,14 +294,14 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
 
   if plugin['dummy_commands'] ~= nil then
     for _, command in ipairs(plugin.dummy_commands) do
-      vim.api.nvim_command('silent! delcommand '..command[1])
+      a.nvim_command('silent! delcommand '..command[1])
     end
     plugin.dummy_commands = {}
   end
 
   if plugin['dummy_mappings'] ~= nil then
     for _, map in ipairs(plugin.dummy_mappings) do
-      vim.api.nvim_command('silent! '..map[1]..'unmap '..map[2])
+      a.nvim_command('silent! '..map[1]..'unmap '..map[2])
     end
     plugin.dummy_mappings = {}
   end
@@ -358,7 +362,7 @@ function _on_map(mapping, name, mode)
 
   if mode == 'o' and vim.v.operator == 'c' then
     -- Note: This is the dirty hack.
-    vim.api.nvim_command(mapargrec(mapping .. input, mode):match(':<C%-U>(.*)<CR>'))
+    a.nvim_command(mapargrec(mapping .. input, mode):match(':<C%-U>(.*)<CR>'))
   else
     while mapping:find('<[%a%d_-]+>') do
       -- ('<LeaDer>'):gsub('<[lL][eE][aA][dD][eE][rR]>', vim.g.mapleader)
@@ -366,7 +370,7 @@ function _on_map(mapping, name, mode)
       mapping = vim.fn.substitute(mapping, [[\c<LocalLeader>]], (vim.g.maplocalleader or [[\]]), 'g')
       local ctrl = vim.fn.matchstr(mapping, [=[<\zs[[:alnum:]_-]\+\ze>]=])
       local s = ("<%s>"):format(ctrl)
-      mapping = vim.fn.substitute(mapping, s, vim.api.nvim_replace_termcodes(s, true, true, true), '')
+      mapping = vim.fn.substitute(mapping, s, a.nvim_replace_termcodes(s, true, true, true), '')
     end
     vim.fn.feedkeys(mapping .. input, 'm')
   end
