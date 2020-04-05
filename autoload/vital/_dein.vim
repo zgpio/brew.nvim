@@ -1,9 +1,7 @@
-let s:_plugin_name = expand('<sfile>:t:r')
-
-function! vital#{s:_plugin_name}#new() abort
-  return vital#{s:_plugin_name[1:]}#new()
+function! vital#_dein#new() abort
+  return vital#dein#new()
 endfunction
 
-function! vital#{s:_plugin_name}#function(funcname) abort
+function! vital#_dein#function(funcname) abort
   silent! return function(a:funcname)
 endfunction
