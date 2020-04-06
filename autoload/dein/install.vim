@@ -191,8 +191,8 @@ function! dein#install#_recache_runtimepath() abort
   call dein#install#_rm(
         \ v:lua._get_runtime_path().'/after/ftdetect')
 
-  call s:merge_files(plugins, 'ftdetect')
-  call s:merge_files(plugins, 'after/ftdetect')
+  call v:lua.merge_files(plugins, 'ftdetect')
+  call v:lua.merge_files(plugins, 'after/ftdetect')
 
   silent call dein#remote_plugins()
 
@@ -253,21 +253,6 @@ function! s:copy_files(plugins, directory) abort
     call dein#install#_copy_directories(srcs[start : start + stride-1],
           \ v:lua._get_runtime_path() . directory)
   endfor
-endfunction
-function! s:merge_files(plugins, directory) abort
-  let files = []
-  for plugin in a:plugins
-    for file in filter(split(globpath(
-          \ plugin.rtp, a:directory.'/**', 1), '\n'),
-          \ '!isdirectory(v:val)')
-      let files += readfile(file, ':t')
-    endfor
-  endfor
-
-  if !empty(files)
-    call v:lua._writefile(printf('.dein/%s/%s.vim',
-          \ a:directory, a:directory), files)
-  endif
 endfunction
 function! s:list_directory(directory) abort
   lua require 'dein/util'
