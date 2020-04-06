@@ -5,6 +5,7 @@
 "=============================================================================
 
 lua require 'dein/util'
+lua require 'dein/install'
 " Variables
 let s:global_context = {}
 let s:log = []
@@ -322,39 +323,6 @@ function! s:check_rollback(plugin) abort
         \ && get(a:plugin, 'rev', '') ==# ''
 endfunction
 
-function! dein#install#_get_default_ftplugin() abort
-  return [
-        \ 'if exists("g:did_load_ftplugin")',
-        \ '  finish',
-        \ 'endif',
-        \ 'let g:did_load_ftplugin = 1',
-        \ '',
-        \ 'augroup filetypeplugin',
-        \ '  autocmd FileType * call s:ftplugin()',
-        \ 'augroup END',
-        \ '',
-        \ 'function! s:ftplugin()',
-        \ '  if exists("b:undo_ftplugin")',
-        \ '    silent! execute b:undo_ftplugin',
-        \ '    unlet! b:undo_ftplugin b:did_ftplugin',
-        \ '  endif',
-        \ '',
-        \ '  let filetype = expand("<amatch>")',
-        \ '  if filetype !=# ""',
-        \ '    if &cpoptions =~# "S" && exists("b:did_ftplugin")',
-        \ '      unlet b:did_ftplugin',
-        \ '    endif',
-        \ '    for ft in split(filetype, ''\.'')',
-        \ '      execute "runtime! ftplugin/" . ft . ".vim"',
-        \ '      \ "ftplugin/" . ft . "_*.vim"',
-        \ '      \ "ftplugin/" . ft . "/*.vim"',
-        \ '    endfor',
-        \ '  endif',
-        \ '  call s:after_ftplugin()',
-        \ 'endfunction',
-        \ '',
-        \]
-endfunction
 function! s:generate_ftplugin() abort
   " Create after/ftplugin
   let after = v:lua._get_runtime_path() . '/after/ftplugin'
@@ -380,7 +348,7 @@ function! s:generate_ftplugin() abort
   endfor
 
   " Generate ftplugin.vim
-  call writefile(dein#install#_get_default_ftplugin() + [
+  call writefile(v:lua._get_default_ftplugin() + [
         \ 'function! s:after_ftplugin()',
         \ ] + get(ftplugin, '_', []) + ['endfunction'],
         \ v:lua._get_runtime_path() . '/ftplugin.vim')
