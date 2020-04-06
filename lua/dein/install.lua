@@ -1,6 +1,22 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
-require 'dein/util'
+local util = require 'dein/util'
 
+function clear_runtimepath()
+  if _get_cache_path() == '' then
+    util._error('Invalid base path.')
+    return
+  end
+
+  local runtimepath = _get_runtime_path()
+
+  -- Remove runtime path
+  vim.fn['dein#install#_rm'](runtimepath)
+
+  if vim.fn.isdirectory(runtimepath)==0 then
+    -- Create runtime path
+    vim.fn.mkdir(runtimepath, 'p')
+  end
+end
 function append_log_file(msg)
   local logfile = vim.fn['dein#util#_expand'](vim.g['dein#install_log_filename'])
   if logfile == '' then

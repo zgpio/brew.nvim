@@ -168,7 +168,7 @@ function! dein#install#_recache_runtimepath() abort
   endif
 
   " Clear runtime path.
-  call s:clear_runtimepath()
+  call v:lua.clear_runtimepath()
 
   let plugins = values(v:lua.dein.get())
 
@@ -206,22 +206,6 @@ function! dein#install#_recache_runtimepath() abort
   lua _clear_state()
 
   call s:log(strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
-endfunction
-function! s:clear_runtimepath() abort
-  if v:lua._get_cache_path() ==# ''
-    call dein#util#_error('Invalid base path.')
-    return
-  endif
-
-  let runtimepath = v:lua._get_runtime_path()
-
-  " Remove runtime path
-  call dein#install#_rm(runtimepath)
-
-  if !isdirectory(runtimepath)
-    " Create runtime path
-    call mkdir(runtimepath, 'p')
-  endif
 endfunction
 function! s:helptags() abort
   if luaeval('dein._runtime_path') ==# '' || luaeval('dein._is_sudo')
