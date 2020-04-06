@@ -1253,27 +1253,8 @@ endfunction
 function! s:log(msg) abort
   let msg = v:lua._convert2list(a:msg)
   let s:log += msg
-  call s:append_log_file(msg)
+  call v:lua.append_log_file(msg)
 endfunction
-function! s:append_log_file(msg) abort
-  let logfile = dein#util#_expand(g:dein#install_log_filename)
-  if logfile ==# ''
-    return
-  endif
-
-  let msg = a:msg
-  " Appends to log file.
-  if filereadable(logfile)
-    let msg = readfile(logfile) + msg
-  endif
-
-  let dir = fnamemodify(logfile, ':h')
-  if !isdirectory(dir)
-    call mkdir(dir, 'p')
-  endif
-  call writefile(msg, logfile)
-endfunction
-
 
 function! s:echo(expr, mode) abort
   let msg = map(filter(v:lua._convert2list(a:expr), "v:val !=# ''"),

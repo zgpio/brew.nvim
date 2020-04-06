@@ -1,6 +1,24 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 require 'dein/util'
 
+function append_log_file(msg)
+  local logfile = vim.fn['dein#util#_expand'](vim.g['dein#install_log_filename'])
+  if logfile == '' then
+    return
+  end
+
+  -- Appends to log file.
+  if vim.fn.filereadable(logfile)==1 then
+    vim.fn.writefile(msg, logfile, 'a')
+    return
+  end
+
+  local dir = vim.fn.fnamemodify(logfile, ':h')
+  if vim.fn.isdirectory(dir)==0 then
+    vim.fn.mkdir(dir, 'p')
+  end
+  vim.fn.writefile(msg, logfile)
+end
 function merge_files(plugins, directory)
   local files = {}
   for _, plugin in ipairs(plugins) do
