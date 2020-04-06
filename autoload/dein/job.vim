@@ -4,7 +4,9 @@
 function! s:_SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
 endfunction
-execute join(['function! vital#_dein#System#Job#Neovim#import() abort', printf("return map({'start': ''}, \"vital#_dein#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
+function! dein#job#import() abort
+  return {'start': function('s:start')}
+endfunction
 delfunction s:_SID
 " ___vital___
 
@@ -72,25 +74,13 @@ function! s:_job_status() abort dict
   endtry
 endfunction
 
-if exists('*chansend') " Neovim 0.2.3
-  function! s:_job_send(data) abort dict
-    return chansend(self.__job, a:data)
-  endfunction
-else
-  function! s:_job_send(data) abort dict
-    return jobsend(self.__job, a:data)
-  endfunction
-endif
+function! s:_job_send(data) abort dict
+  return chansend(self.__job, a:data)
+endfunction
 
-if exists('*chanclose') " Neovim 0.2.3
-  function! s:_job_close() abort dict
-    call chanclose(self.__job, 'stdin')
-  endfunction
-else
-  function! s:_job_close() abort dict
-    call jobclose(self.__job, 'stdin')
-  endfunction
-endif
+function! s:_job_close() abort dict
+  call chanclose(self.__job, 'stdin')
+endfunction
 
 function! s:_job_stop() abort dict
   try

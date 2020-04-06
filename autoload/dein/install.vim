@@ -25,7 +25,7 @@ let g:dein#install_log_filename =
 
 function! s:get_job() abort
   if !exists('s:Job')
-    let s:Job = vital#dein#import('System.Job')
+    let s:Job = dein#job#import()
   endif
   return s:Job
 endfunction
