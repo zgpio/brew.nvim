@@ -18,7 +18,7 @@ function clear_runtimepath()
   end
 end
 function append_log_file(msg)
-  local logfile = vim.fn['dein#util#_expand'](vim.g['dein#install_log_filename'])
+  local logfile = _expand(vim.g['dein#install_log_filename'])
   if logfile == '' then
     return
   end

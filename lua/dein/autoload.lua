@@ -44,7 +44,7 @@ function _on_default_event(event)
   if vim.fn.fnamemodify(path, ':t') == '~' then
     path = '~'
   end
-  path = vim.fn['dein#util#_expand'](path)
+  path = _expand(path)
 
   for _, ft in ipairs(vim.split(vim.bo.filetype, '.', true)) do
     local t = vim.tbl_filter(

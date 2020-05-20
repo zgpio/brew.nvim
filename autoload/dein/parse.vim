@@ -5,6 +5,7 @@
 "=============================================================================
 
 lua require 'dein/parse'
+lua require 'dein/util'
 " Global options definition."
 let g:dein#enable_name_conversion =
       \ get(g:, 'dein#enable_name_conversion', 0)
@@ -13,7 +14,7 @@ let g:dein#enable_name_conversion =
 let s:git = dein#types#git#define()
 
 function! dein#parse#_init(repo, options) abort
-  let repo = dein#util#_expand(a:repo)
+  let repo = v:lua._expand(a:repo)
   let plugin = has_key(a:options, 'type') ?
         \ dein#util#_get_type(a:options.type).init(repo, a:options) :
         \ s:git.init(repo, a:options)
@@ -29,7 +30,7 @@ function! dein#parse#_init(repo, options) abort
 endfunction
 function! dein#parse#_load_toml(filename, default) abort
   try
-    let toml = dein#toml#parse_file(dein#util#_expand(a:filename))
+    let toml = dein#toml#parse_file(v:lua._expand(a:filename))
   catch /Text.TOML:/
     call dein#util#_error('Invalid toml format: ' . a:filename)
     call dein#util#_error(v:exception)
@@ -63,7 +64,7 @@ function! dein#parse#_load_toml(filename, default) abort
   endif
 
   " Add to dein._vimrcs
-  call v:lua.add_dein_vimrcs(dein#util#_expand(a:filename))
+  call v:lua.add_dein_vimrcs(v:lua._expand(a:filename))
 endfunction
 function! dein#parse#_load_dict(dict, default) abort
   for [repo, options] in items(a:dict)
@@ -72,7 +73,7 @@ function! dein#parse#_load_dict(dict, default) abort
 endfunction
 function! dein#parse#_local(localdir, options, includes) abort
   lua require 'dein/util'
-  let base = fnamemodify(dein#util#_expand(a:localdir), ':p')
+  let base = fnamemodify(v:lua._expand(a:localdir), ':p')
   let directories = []
   for glob in a:includes
     let directories += map(filter(v:lua._globlist(base . glob),

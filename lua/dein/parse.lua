@@ -206,7 +206,7 @@ function _dict(plug)
   end
 
   require 'dein/util'
-  plugin.path = _chomp(vim.fn['dein#util#_expand'](plugin.path))
+  plugin.path = _chomp(_expand(plugin.path))
   if (plugin.rev or '') ~= '' then
     -- Add revision path
     plugin.path = plugin.path ..'_'.. vim.fn.substitute(plugin.rev, '[^[:alnum:].-]', '_', 'g')
@@ -219,7 +219,7 @@ function _dict(plug)
   end
   -- TODO ?_? dein use [0:]
   if plugin.rtp == '~' then
-    plugin.rtp = vim.fn['dein#util#_expand'](plugin.rtp)
+    plugin.rtp = _expand(plugin.rtp)
   end
   plugin.rtp = _chomp(plugin.rtp)
   if dein._is_sudo==1 and not (plugin.trusted==1) then

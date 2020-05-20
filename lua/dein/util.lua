@@ -43,6 +43,24 @@ function _clear_state()
   end
 end
 
+-- test cases: '~/Desktop/', '$HOME/Desktop/', 'C:\Users'
+function _expand(path)
+  local p
+  if path:find('^~') then
+    p = vim.fn.fnamemodify(path, ':p')
+  elseif path:find('^%$%w*') then
+    p = vim.fn.expand(path)  -- :h expr-env-expand
+  else
+    p = path
+  end
+
+  if (is_windows and p:find([[\]])) then
+    return _substitute_path(p)
+  else
+    return p
+  end
+end
+
 function _check_vimrcs()
   local time = vim.fn.getftime(_get_runtime_path())
   local ret = vim.tbl_isempty(vim.tbl_filter(
@@ -417,7 +435,7 @@ function _notify(msg)
     return
   end
 
-  local icon = vim.fn['dein#util#_expand'](vim.g['dein#notification_icon'])
+  local icon = _expand(vim.g['dein#notification_icon'])
 
   local title = '[dein]'
   local cmd = ''
@@ -490,7 +508,7 @@ function _begin(path, vimrcs)
   end
 
   dein._block_level = dein._block_level + 1
-  dein._base_path = vim.fn['dein#util#_expand'](path)
+  dein._base_path = _expand(path)
   if dein._base_path:sub(-1) == '/' then
     dein._base_path = dein._base_path:sub(1, -2)
   end

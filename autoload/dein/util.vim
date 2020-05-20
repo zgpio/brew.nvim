@@ -65,15 +65,6 @@ function! dein#util#_sort_by(list, expr) abort
   \      'a:a[1] ==# a:b[1] ? 0 : a:a[1] ># a:b[1] ? 1 : -1'), 'v:val[0]')
 endfunction
 
-function! dein#util#_expand(path) abort
-  let path = (a:path =~# '^\~') ? fnamemodify(a:path, ':p') :
-        \ (a:path =~# '^\$\h\w*') ? substitute(a:path,
-        \               '^\$\h\w*', '\=eval(submatch(0))', '') :
-        \ a:path
-  return (s:is_windows && path =~# '\\') ?
-        \ v:lua._substitute_path(path) : path
-endfunction
-
 function! dein#util#_split(expr) abort
   return type(a:expr) ==# v:t_list ? copy(a:expr) :
         \ split(a:expr, '\r\?\n')
