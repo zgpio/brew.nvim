@@ -183,7 +183,7 @@ function _dict(plug)
   plugin = vim.tbl_extend('force', { rtp='', sourced=0 }, plug)
 
   if plugin.name == nil then
-    plugin.name = vim.fn['dein#parse#_name_conversion'](plugin.repo)
+    plugin.name = _name_conversion(plugin.repo)
   end
 
   if plugin.normalized_name == nil then
@@ -284,17 +284,17 @@ function _dict(plug)
   return plugin
 end
 
--- local types
--- function get_types()
---   if types == nil then
---     -- Load types.
---     local types = {}
---     vim.fn.split(vim.fn.globpath(vim.o.runtimepath, 'autoload/dein/types/*.vim', 1), '\n')
---     for type in filter(map(split(globpath(&runtimepath, 'autoload/dein/types/*.vim', 1), '\n'),
---           "dein#types#{fnamemodify(v:val, ':t:r')}#define()"),
---           '!empty(v:val)')
---       types[type.name] = type
---     end
---   end
---   return types
--- end
+--function _get_types()
+--  if types == nil then
+--    -- Load types.
+--    types = {}
+--    local fl = vim.fn.split(vim.fn.globpath(vim.o.runtimepath, 'autoload/dein/types/*.vim', 1), '\n')
+--    for type in vim.fn.filter(vim.fn.map(fl, "dein#types#{fnamemodify(v:val, ':t:r')}#define()"), '!empty(v:val)') do
+--      types[type.name] = type
+--    end
+--  end
+--  return types
+--end
+function _name_conversion(path)
+  return vim.fn.fnamemodify(vim.fn.get(vim.fn.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
+end

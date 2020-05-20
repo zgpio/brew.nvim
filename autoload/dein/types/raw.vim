@@ -23,7 +23,7 @@ function! s:type.init(repo, options) abort
   let directory = substitute(directory, ':', '/', 'g')
 
   lua require 'dein/util'
-  return { 'name': dein#parse#_name_conversion(a:repo), 'type' : 'raw',
+  return { 'name': v:lua._name_conversion(a:repo), 'type' : 'raw',
         \  'path': luaeval('dein._base_path').'/repos/'.directory }
 endfunction
 

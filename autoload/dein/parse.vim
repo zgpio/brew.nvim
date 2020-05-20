@@ -126,8 +126,3 @@ function! s:check_type(repo, options) abort
 
   return plugin
 endfunction
-
-function! dein#parse#_name_conversion(path) abort
-  return fnamemodify(get(split(a:path, ':'), -1, ''),
-        \ ':s?/$??:t:s?\c\.git\s*$??')
-endfunction
