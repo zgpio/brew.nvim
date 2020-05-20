@@ -16,13 +16,6 @@ function! dein#util#_set_default(var, val, ...) abort
   endif
 endfunction
 
-function! dein#util#_get_myvimrc() abort
-  let vimrc = $MYVIMRC !=# '' ? $MYVIMRC :
-        \ matchstr(split(execute('scriptnames'), '\n')[0],
-        \  '^\s*\d\+:\s\zs.*')
-  return v:lua._substitute_path(vimrc)
-endfunction
-
 function! dein#util#_error(msg) abort
   for mes in s:msg2list(a:msg)
     echohl WarningMsg | echomsg '[dein] ' . mes | echohl None

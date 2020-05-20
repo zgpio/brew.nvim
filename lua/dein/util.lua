@@ -25,6 +25,14 @@ function _get_runtime_path()
   return rtp
 end
 
+function _get_myvimrc()
+  local vimrc = vim.env['MYVIMRC']
+  if vimrc == '' then
+    vimrc = vim.fn.matchstr(vim.fn.split(vim.fn.execute('scriptnames'), '\n')[0], [[^\s*\d\+:\s\zs.*]])
+  end
+  return _substitute_path(vimrc)
+end
+
 function _clear_state()
   local base = vim.g['dein#cache_directory'] or dein._base_path
   local caches = _globlist(base..'/state_*.vim')
@@ -54,7 +62,7 @@ function _check_vimrcs()
   _clear_state()
 
   if (vim.g['dein#auto_recache'] or 0)==1 then
-    a.nvim_command('silent source '.. vim.fn['dein#util#_get_myvimrc']())
+    a.nvim_command('silent source '.. _get_myvimrc())
 
     if _get_merged_plugins() ~= _load_merged_plugins() then
       _notify('auto recached')
@@ -168,7 +176,7 @@ function _get_cache_path()
   end
 
   cache_path = (vim.g['dein#cache_directory'] or dein._base_path)
-    ..'/.cache/'..vim.fn.fnamemodify(vim.fn['dein#util#_get_myvimrc'](), ':t')
+    ..'/.cache/'..vim.fn.fnamemodify(_get_myvimrc(), ':t')
   dein._cache_path = cache_path
   if vim.fn.isdirectory(cache_path) == 0 then
     vim.fn.mkdir(cache_path, 'p')
@@ -452,7 +460,7 @@ function msg2list(expr)
 end
 function _get_vimrcs(vimrcs)
   if vim.fn.empty(vimrcs)==1 then
-    return {vim.fn['dein#util#_get_myvimrc']()}
+    return {_get_myvimrc()}
   else
     return vim.tbl_map(
       function(v)
