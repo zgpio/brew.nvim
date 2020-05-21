@@ -33,27 +33,6 @@ function! dein#util#_get_type(name) abort
   return get(dein#parse#_get_types(), a:name, {})
 endfunction
 
-function! dein#util#_execute_hook(plugin, hook) abort
-  try
-    let g:dein#plugin = a:plugin
-
-    if type(a:hook) == v:t_string
-      call s:execute(a:hook)
-    else
-      call call(a:hook, [])
-    endif
-  catch
-    call dein#util#_error(
-          \ 'Error occurred while executing hook: ' .
-          \ get(a:plugin, 'name', ''))
-    call dein#util#_error(v:exception)
-  endtry
-endfunction
-
 function! s:msg2list(expr) abort
   return type(a:expr) ==# v:t_list ? a:expr : split(a:expr, '\n')
-endfunction
-
-function! s:execute(expr) abort
-  return execute(split(a:expr, '\n'))
 endfunction

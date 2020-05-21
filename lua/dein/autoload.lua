@@ -3,6 +3,7 @@ require 'dein/util'
 local a = vim.api
 local M = {}
 
+dein_log = io.open(vim.fn.expand('~/pmlog.txt'), 'a+')
 function _dummy_complete(arglead, cmdline, cursorpos)
   local command = vim.fn.matchstr(cmdline, [[\h\w*]])
   local exists = vim.fn.exists(':'..command)

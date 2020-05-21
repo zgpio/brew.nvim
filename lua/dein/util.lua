@@ -61,6 +61,31 @@ function _expand(path)
   end
 end
 
+function _execute_hook(plugin, hook)
+  -- dein_log:write(vim.inspect({"_execute_hook", plugin.name, hook}), "\n")
+  -- dein_log:flush()
+  try {
+    function()
+      -- TODO 恢复 g:dein#plugin 提供的功能
+      dein.plugin = plugin
+      if type(hook) == 'string' then
+        vim.fn.execute(vim.fn.split(hook, '\n'))
+      else
+        vim.fn.call(hook, {})
+      end
+    end,
+    catch {
+      function(error)
+        vim.fn['dein#util#_error'](
+               'Error occurred while executing hook: ' ..
+               vim.fn.get(plugin, 'name', ''))
+        vim.fn['dein#util#_error'](vim.v.exception)
+
+        print('caught error: ' .. error)
+      end
+    }
+  }
+end
 function _check_clean()
   local dein = require 'dein'
   local plugins_directories = vim.tbl_map(function(v) return v.path end, vim.tbl_values(dein.get()))
@@ -154,7 +179,7 @@ function _call_hook(hook_name, ...)
 
   for _, plugin in ipairs(
     vim.tbl_filter(function(x) return x[hook] ~= nil end, _tsort(plugins))) do
-    vim.fn['dein#util#_execute_hook'](plugin, plugin[hook])
+    _execute_hook(plugin, plugin[hook])
   end
 end
 function _globlist(path)
@@ -665,7 +690,7 @@ function _end()
   end
 
   if dein._hook_add ~= '' then
-    vim.fn['dein#util#_execute_hook']({}, dein._hook_add)
+    _execute_hook({}, dein._hook_add)
   end
 
   local _event_plugins = dein._event_plugins

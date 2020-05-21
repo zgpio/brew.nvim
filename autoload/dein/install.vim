@@ -28,6 +28,8 @@ function! s:get_job() abort
   if !exists('s:Job')
     let s:Job = dein#job#import()
   endif
+  " call luaeval('dein_log:write(vim.inspect(_A), "\n")', [string(s:Job)])
+  " lua dein_log:flush()
   return s:Job
 endfunction
 

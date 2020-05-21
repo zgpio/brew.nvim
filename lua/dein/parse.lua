@@ -30,7 +30,7 @@ function _add(repo, options)
   end
   _plugins[plugin.name] = plugin
   if plugin['hook_add']~=nil then
-    vim.fn['dein#util#_execute_hook'](plugin, plugin.hook_add)
+    _execute_hook(plugin, plugin.hook_add)
   end
   if plugin['ftplugin']~=nil then
     merge_ftplugin(plugin.ftplugin)
