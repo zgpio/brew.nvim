@@ -86,6 +86,21 @@ function _get_default_ftplugin()
 end
 
 -- TODO local
+function __strwidthpart(str, width)
+  if width <= 0 then
+    return ''
+  end
+  local ret = str
+  local w = vim.fn.strwidth(str)
+  while w > width do
+    local char = vim.fn.matchstr(ret, '.$')
+    ret = ret:sub(1, vim.fn.len(ret)-vim.fn.len(char))
+    w = w - vim.fn.strwidth(char)
+  end
+
+  return ret
+end
+-- TODO local
 function __strwidthpart_reverse(str, width)
   if width <= 0 then
     return ''
