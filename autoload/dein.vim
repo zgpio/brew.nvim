@@ -32,7 +32,7 @@ function! dein#check_install(...) abort
   return v:lua._check_install(get(a:000, 0, []))
 endfunction
 function! dein#check_clean() abort
-  return dein#util#_check_clean()
+  return v:lua._check_clean()
 endfunction
 function! dein#install(...) abort
   return dein#install#_update(get(a:000, 0, []),

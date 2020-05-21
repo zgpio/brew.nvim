@@ -61,6 +61,18 @@ function _expand(path)
   end
 end
 
+function _check_clean()
+  local dein = require 'dein'
+  local plugins_directories = vim.tbl_map(function(v) return v.path end, vim.tbl_values(dein.get()))
+  local path = _substitute_path(vim.fn.globpath(dein._base_path, 'repos/*/*/*'))
+  return vim.tbl_filter(
+    function(v)
+      return vim.fn.isdirectory(v) and vim.fn.fnamemodify(v, ':t') ~= 'dein.vim' and vim.fn.index(plugins_directories, v) < 0
+    end,
+    vim.fn.split(path, "\n")
+  )
+end
+
 function _check_vimrcs()
   local time = vim.fn.getftime(_get_runtime_path())
   local ret = vim.tbl_isempty(vim.tbl_filter(
