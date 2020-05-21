@@ -25,6 +25,12 @@ function _get_runtime_path()
   return rtp
 end
 
+function _set_default(var, val)
+  if vim.g[var]==nil or type(vim.g[var]) ~= type(val) then
+    vim.g[var] = val
+  end
+end
+
 function _get_myvimrc()
   local vimrc = vim.env['MYVIMRC']
   if vimrc == '' then
@@ -463,9 +469,9 @@ function _check_install(plugins)
 end
 
 function _notify(msg)
-  vim.fn['dein#util#_set_default']('g:dein#enable_notification', 0)
-  vim.fn['dein#util#_set_default']('g:dein#notification_icon', '')
-  vim.fn['dein#util#_set_default']('g:dein#notification_time', 2)
+  _set_default('dein#enable_notification', 0)
+  _set_default('dein#notification_icon', '')
+  _set_default('dein#notification_time', 2)
 
   if vim.g['dein#enable_notification']==0 or msg == '' or vim.fn.has('vim_starting')==1 then
     M._error(msg)

@@ -6,14 +6,10 @@
 "=============================================================================
 
 " Global options definition.
-call dein#util#_set_default(
-      \ 'g:dein#types#git#command_path', 'git')
-call dein#util#_set_default(
-      \ 'g:dein#types#git#default_protocol', 'https')
-call dein#util#_set_default(
-      \ 'g:dein#types#git#clone_depth', 0)
-call dein#util#_set_default(
-      \ 'g:dein#types#git#pull_command', 'pull --ff --ff-only')
+let g:dein#types#git#command_path = 'git'
+let g:dein#types#git#default_protocol = 'https'
+let g:dein#types#git#clone_depth = 0
+let g:dein#types#git#pull_command = 'pull --ff --ff-only'
 
 
 function! dein#types#git#define() abort
