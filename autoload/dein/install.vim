@@ -1277,7 +1277,7 @@ endfunction
 function! s:echo_mode(m, mode) abort
   for m in split(a:m, '\r\?\n', 1)
     if !has('vim_starting') && a:mode !=# 'error'
-      let m = s:truncate_skipping(m, &columns - 1, &columns/3, '...')
+      let m = v:lua.__truncate_skipping(m, &columns - 1, &columns/3, '...')
     endif
 
     if a:mode ==# 'error'
@@ -1288,17 +1288,4 @@ function! s:echo_mode(m, mode) abort
       echo m
     endif
   endfor
-endfunction
-
-function! s:truncate_skipping(str, max, footer_width, separator) abort
-  let width = strwidth(a:str)
-  if width <= a:max
-    let ret = a:str
-  else
-    let header_width = a:max - strwidth(a:separator) - a:footer_width
-    let ret = v:lua.__strwidthpart(a:str, header_width) . a:separator
-          \ . v:lua.__strwidthpart_reverse(a:str, a:footer_width)
-  endif
-
-  return ret
 endfunction

@@ -85,6 +85,20 @@ function _get_default_ftplugin()
   }
 end
 
+function __truncate_skipping(str, max, footer_width, separator)
+  local width = vim.fn.strwidth(str)
+  local ret
+  if width <= max then
+    ret = str
+  else
+    local header_width = max - vim.fn.strwidth(separator) - footer_width
+    ret = __strwidthpart(str, header_width) .. separator
+           .. __strwidthpart_reverse(str, footer_width)
+  end
+
+  return ret
+end
+
 -- TODO local
 function __strwidthpart(str, width)
   if width <= 0 then
