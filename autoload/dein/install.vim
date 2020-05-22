@@ -7,10 +7,10 @@
 lua require 'dein/util'
 lua require 'dein/install'
 " Variables
-let s:global_context = {}
-let s:log = []
-let s:updates_log = []
-let s:progress = ''
+let g:__global_context = {}
+let g:__log = []
+let g:__updates_log = []
+let g:__progress = ''
 
 " Global options definition.
 let g:dein#install_max_processes =
@@ -47,7 +47,7 @@ function! dein#install#_update(plugins, update_type, async) abort
     let plugins = filter(plugins, 'isdirectory(v:val.path)')
   endif
 
-  if a:async && !empty(s:global_context) &&
+  if a:async && !empty(g:__global_context) &&
         \ confirm('The installation has not finished. Cancel now?',
         \         "yes\nNo", 2) != 1
     return
@@ -64,7 +64,7 @@ function! dein#install#_update(plugins, update_type, async) abort
       call s:notify('You may have used the wrong plugin name,'.
             \ ' or all of the plugins are already installed.')
     endif
-    let s:global_context = {}
+    let g:__global_context = {}
     return
   endif
 
@@ -90,7 +90,7 @@ function! s:update_loop(context) abort
   let errored = 0
   try
     if has('vim_starting')
-      while !empty(s:global_context)
+      while !empty(g:__global_context)
         let errored = s:install_async(a:context)
         sleep 50ms
         redraw
@@ -341,7 +341,7 @@ function! dein#install#_polling() abort
     set guioptions-=!
   endif
 
-  call s:install_async(s:global_context)
+  call s:install_async(g:__global_context)
 
   if exists('+guioptions')
     let &guioptions = save_guioptions
@@ -385,7 +385,7 @@ function! dein#install#_each(cmd, plugins) abort
   let plugins = filter(v:lua._get_plugins(a:plugins),
         \ 'isdirectory(v:val.path)')
 
-  let global_context_save = s:global_context
+  let global_context_save = g:__global_context
 
   let context = s:init_context(plugins, 'each', 0)
   call s:init_variables(context)
@@ -404,7 +404,7 @@ function! dein#install#_each(cmd, plugins) abort
     call s:error(v:exception . ' ' . v:throwpoint)
     return 1
   finally
-    let s:global_context = global_context_save
+    let g:__global_context = global_context_save
     call dein#install#_cd(cwd)
   endtry
 
@@ -423,16 +423,16 @@ function! dein#install#_build(plugins) abort
 endfunction
 
 function! dein#install#_get_log() abort
-  return s:log
+  return g:__log
 endfunction
 function! dein#install#_get_updates_log() abort
-  return s:updates_log
+  return g:__updates_log
 endfunction
 function! dein#install#_get_context() abort
-  return s:global_context
+  return g:__global_context
 endfunction
 function! dein#install#_get_progress() abort
-  return s:progress
+  return g:__progress
 endfunction
 
 function! s:get_progress_message(plugin, number, max) abort
@@ -866,10 +866,10 @@ function! s:init_context(plugins, update_type, async) abort
   return context
 endfunction
 function! s:init_variables(context) abort
-  let s:progress = ''
-  let s:global_context = a:context
-  let s:log = []
-  let s:updates_log = []
+  let g:__progress = ''
+  let g:__global_context = a:context
+  let g:__log = []
+  let g:__updates_log = []
 endfunction
 function! s:convert_args(args) abort
   let args = s:iconv(a:args, &encoding, 'char')
@@ -901,8 +901,8 @@ function! s:done(context) abort
   call s:notify(strftime('Done: (%Y/%m/%d %H:%M:%S)'))
 
   " Disable installation handler
-  let s:global_context = {}
-  let s:progress = ''
+  let g:__global_context = {}
+  let g:__progress = ''
   augroup dein-install
     autocmd!
   augroup END
@@ -1185,7 +1185,7 @@ function! s:iconv(expr, from, to) abort
 endfunction
 function! s:print_progress_message(msg) abort
   let msg = v:lua._convert2list(a:msg)
-  let context = s:global_context
+  let context = g:__global_context
   if empty(msg) || empty(context)
     return
   endif
@@ -1203,7 +1203,7 @@ function! s:print_progress_message(msg) abort
 
   call s:log(msg)
 
-  let s:progress = join(msg, "\n")
+  let g:__progress = join(msg, "\n")
 endfunction
 function! s:error(msg) abort
   let msg = v:lua._convert2list(a:msg)
@@ -1217,7 +1217,7 @@ function! s:error(msg) abort
 endfunction
 function! s:notify(msg) abort
   let msg = v:lua._convert2list(a:msg)
-  let context = s:global_context
+  let context = g:__global_context
   if empty(msg) || empty(context)
     return
   endif
@@ -1228,17 +1228,17 @@ function! s:notify(msg) abort
   endif
 
   call s:updates_log(msg)
-  let s:progress = join(msg, "\n")
+  let g:__progress = join(msg, "\n")
 endfunction
 function! s:updates_log(msg) abort
   let msg = v:lua._convert2list(a:msg)
 
-  let s:updates_log += msg
+  let g:__updates_log += msg
   call s:log(msg)
 endfunction
 function! s:log(msg) abort
   let msg = v:lua._convert2list(a:msg)
-  let s:log += msg
+  let g:__log += msg
   call v:lua.append_log_file(msg)
 endfunction
 
