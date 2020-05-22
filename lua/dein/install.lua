@@ -85,6 +85,16 @@ function _get_default_ftplugin()
   }
 end
 
+function __error(msg)
+  local msg = _convert2list(msg)
+  if vim.fn.empty(msg)==1 then
+    return
+  end
+
+  __echo(msg, 'error')
+  __updates_log(msg)
+end
+
 function __echo(expr, mode)
   local msg = vim.tbl_map(
     function(v)

@@ -35,7 +35,7 @@ endfunction
 
 function! dein#install#_update(plugins, update_type, async) abort
   if luaeval('dein._is_sudo')
-    call s:error('update/install is disabled in sudo session.')
+    call v:lua.__error('update/install is disabled in sudo session.')
     return
   endif
 
@@ -99,8 +99,8 @@ function! s:update_loop(context) abort
       let errored = s:install_blocking(a:context)
     endif
   catch
-    call s:error(v:exception)
-    call s:error(v:throwpoint)
+    call v:lua.__error(v:exception)
+    call v:lua.__error(v:throwpoint)
     return 1
   endtry
 
@@ -225,9 +225,9 @@ function! s:helptags() abort
   catch /^Vim(helptags):E151:/
     " Ignore an error that occurs when there is no help file
   catch
-    call s:error('Error generating helptags:')
-    call s:error(v:exception)
-    call s:error(v:throwpoint)
+    call v:lua.__error('Error generating helptags:')
+    call v:lua.__error(v:exception)
+    call v:lua.__error(v:throwpoint)
   endtry
 endfunction
 function! s:copy_files(plugins, directory) abort
@@ -277,7 +277,7 @@ function! dein#install#_load_rollback(rollbackfile, plugins) abort
   endfor
 
   call dein#recache_runtimepath()
-  call s:error('Rollback to '.fnamemodify(a:rollbackfile, ':t').' version.')
+  call v:lua.__error('Rollback to '.fnamemodify(a:rollbackfile, ':t').' version.')
 endfunction
 function! s:get_rollback_directory() abort
   let parent = printf('%s/rollbacks/%s',
@@ -401,7 +401,7 @@ function! dein#install#_each(cmd, plugins) abort
       endif
     endfor
   catch
-    call s:error(v:exception . ' ' . v:throwpoint)
+    call v:lua.__error(v:exception . ' ' . v:throwpoint)
     return 1
   finally
     let g:__global_context = global_context_save
@@ -486,12 +486,12 @@ function! s:get_revision_number(plugin) abort
 
   " If rev contains spaces, it is error message
   if rev =~# '\s'
-    call s:error(a:plugin.name)
-    call s:error('Error revision number: ' . rev)
+    call v:lua.__error(a:plugin.name)
+    call v:lua.__error('Error revision number: ' . rev)
     return ''
   elseif rev ==# ''
-    call s:error(a:plugin.name)
-    call s:error('Empty revision number: ' . rev)
+    call v:lua.__error(a:plugin.name)
+    call v:lua.__error('Empty revision number: ' . rev)
     return ''
   endif
   return rev
@@ -542,8 +542,8 @@ function! s:lock_revision(process, context) abort
     return 0
   elseif type(cmd) == v:t_string && cmd =~# '^E: '
     " Errored.
-    call s:error(plugin.path)
-    call s:error(cmd[3:])
+    call v:lua.__error(plugin.path)
+    call v:lua.__error(cmd[3:])
     return -1
   endif
 
@@ -555,8 +555,8 @@ function! s:lock_revision(process, context) abort
   let status = dein#install#_status()
 
   if status
-    call s:error(plugin.path)
-    call s:error(result)
+    call v:lua.__error(plugin.path)
+    call v:lua.__error(result)
     return -1
   endif
 endfunction
@@ -603,10 +603,10 @@ function! dein#install#_cd(path) abort
   try
     noautocmd execute (haslocaldir() ? 'lcd' : 'cd') fnameescape(a:path)
   catch
-    call s:error('Error cd to: ' . a:path)
-    call s:error('Current directory: ' . getcwd())
-    call s:error(v:exception)
-    call s:error(v:throwpoint)
+    call v:lua.__error('Error cd to: ' . a:path)
+    call v:lua.__error('Current directory: ' . getcwd())
+    call v:lua.__error(v:exception)
+    call v:lua.__error(v:throwpoint)
   endtry
 endfunction
 function! dein#install#_system(command) abort
@@ -672,9 +672,9 @@ function! dein#install#_rm(path) abort
   "   try
   "     call delete(a:path, 'rf')
   "   catch
-  "     call s:error('Error deleting directory: ' . a:path)
-  "     call s:error(v:exception)
-  "     call s:error(v:throwpoint)
+  "     call v:lua.__error('Error deleting directory: ' . a:path)
+  "     call v:lua.__error(v:exception)
+  "     call v:lua.__error(v:throwpoint)
   "   endtry
   "   return
   " endif
@@ -939,7 +939,7 @@ function! s:sync(plugin, context) abort
 
     call s:print_progress_message(s:get_plugin_message(
           \ a:plugin, num, max, 'Error'))
-    call s:error(cmd[3:])
+    call v:lua.__error(cmd[3:])
     call add(a:context.errored_plugins,
           \ a:plugin)
     return
@@ -1106,17 +1106,17 @@ function! s:check_output(context, process) abort
 
   if is_timeout || status
     call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Error'))
-    call s:error(plugin.path)
+    call v:lua.__error(plugin.path)
     if !a:process.installed
       if !isdirectory(plugin.path)
-        call s:error('Maybe wrong username or repository.')
+        call v:lua.__error('Maybe wrong username or repository.')
       elseif isdirectory(plugin.path)
-        call s:error('Remove the installed directory:' . plugin.path)
+        call v:lua.__error('Remove the installed directory:' . plugin.path)
         call dein#install#_rm(plugin.path)
       endif
     endif
 
-    call s:error((is_timeout ?
+    call v:lua.__error((is_timeout ?
           \    strftime('Process timeout: (%Y/%m/%d %H:%M:%S)') :
           \    split(a:process.output, '\n')
           \ ))
@@ -1160,7 +1160,7 @@ function! s:check_output(context, process) abort
 
     if dein#install#_build([plugin.name])
       call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Build failed'))
-      call s:error(plugin.path)
+      call v:lua.__error(plugin.path)
       " Remove.
       call add(a:context.errored_plugins, plugin)
     else
@@ -1204,14 +1204,4 @@ function! s:print_progress_message(msg) abort
   call v:lua.__log(msg)
 
   let g:__progress = join(msg, "\n")
-endfunction
-function! s:error(msg) abort
-  let msg = v:lua._convert2list(a:msg)
-  if empty(msg)
-    return
-  endif
-
-  call v:lua.__echo(msg, 'error')
-
-  call v:lua.__updates_log(msg)
 endfunction
