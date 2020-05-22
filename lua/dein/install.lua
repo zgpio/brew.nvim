@@ -85,6 +85,12 @@ function _get_default_ftplugin()
   }
 end
 
+function __init_variables(context)
+  vim.g.__progress = ''
+  vim.g.__global_context = context
+  vim.g.__log = {}
+  vim.g.__updates_log = {}
+end
 function __restore_view(context)
   if context.progress_type == 'tabline' then
     vim.o.showtabline = context.showtabline

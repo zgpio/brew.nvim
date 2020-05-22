@@ -56,7 +56,7 @@ function! dein#install#_update(plugins, update_type, async) abort
   " Set context.
   let context = v:lua.__init_context(plugins, a:update_type, a:async)
 
-  call s:init_variables(context)
+  call v:lua.__init_variables(context)
 
   if empty(plugins)
     if a:update_type !=# 'check_update'
@@ -388,7 +388,7 @@ function! dein#install#_each(cmd, plugins) abort
   let global_context_save = g:__global_context
 
   let context = v:lua.__init_context(plugins, 'each', 0)
-  call s:init_variables(context)
+  call v:lua.__init_variables(context)
 
   let cwd = getcwd()
   let error = 0
@@ -828,12 +828,6 @@ function! s:check_loop(context) abort
 
   " Filter eof processes.
   call filter(a:context.processes, '!v:val.eof')
-endfunction
-function! s:init_variables(context) abort
-  let g:__progress = ''
-  let g:__global_context = a:context
-  let g:__log = []
-  let g:__updates_log = []
 endfunction
 function! s:convert_args(args) abort
   let args = s:iconv(a:args, &encoding, 'char')
