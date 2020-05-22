@@ -85,6 +85,15 @@ function _get_default_ftplugin()
   }
 end
 
+function __restore_view(context)
+  if context.progress_type == 'tabline' then
+    vim.o.showtabline = context.showtabline
+    vim.o.tabline = context.tabline
+  elseif context.progress_type == 'title' then
+    vim.o.title = context.title
+    vim.o.titlestring = context.titlestring
+  end
+end
 function __init_context(plugins, update_type, async)
   local context = {}
   context.update_type = update_type

@@ -829,15 +829,6 @@ function! s:check_loop(context) abort
   " Filter eof processes.
   call filter(a:context.processes, '!v:val.eof')
 endfunction
-function! s:restore_view(context) abort
-  if a:context.progress_type ==# 'tabline'
-    let &g:showtabline = a:context.showtabline
-    let &g:tabline = a:context.tabline
-  elseif a:context.progress_type ==# 'title'
-    let &g:title = a:context.title
-    let &g:titlestring = a:context.titlestring
-  endif
-endfunction
 function! s:init_variables(context) abort
   let g:__progress = ''
   let g:__global_context = a:context
@@ -855,7 +846,7 @@ function! s:start() abort
   call v:lua.__notify(strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 endfunction
 function! s:done(context) abort
-  call s:restore_view(a:context)
+  call v:lua.__restore_view(a:context)
 
   if !has('vim_starting')
     call v:lua.__notify(s:get_updated_message(a:context, a:context.synced_plugins))
