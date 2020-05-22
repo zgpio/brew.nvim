@@ -122,7 +122,7 @@ function! dein#install#_reinstall(plugins) abort
     endif
 
     " Reinstall.
-    call s:print_progress_message(printf('|%s| Reinstalling...', plugin.name))
+    call v:lua.__print_progress_message(printf('|%s| Reinstalling...', plugin.name))
 
     if isdirectory(plugin.path)
       call dein#install#_rm(plugin.path)
@@ -414,7 +414,7 @@ function! dein#install#_build(plugins) abort
   let error = 0
   for plugin in filter(v:lua._get_plugins(a:plugins),
         \ "isdirectory(v:val.path) && has_key(v:val, 'build')")
-    call s:print_progress_message('Building: ' . plugin.name)
+    call v:lua.__print_progress_message('Building: ' . plugin.name)
     if dein#install#_each(plugin.build, plugin)
       let error = 1
     endif
@@ -800,7 +800,7 @@ function! s:install_async(context) abort
   elseif a:context.number != a:context.prev_number
         \ && a:context.number < len(a:context.plugins)
     let plugin = a:context.plugins[a:context.number]
-    call s:print_progress_message(
+    call v:lua.__print_progress_message(
           \ s:get_progress_message(plugin,
           \   a:context.number, a:context.max_plugins))
     let a:context.prev_number = a:context.number
@@ -816,7 +816,7 @@ function! s:check_loop(context) abort
     call s:sync(plugin, a:context)
 
     if !a:context.async
-      call s:print_progress_message(
+      call v:lua.__print_progress_message(
             \ s:get_progress_message(plugin,
             \   a:context.number, a:context.max_plugins))
     endif
@@ -937,7 +937,7 @@ function! s:sync(plugin, context) abort
   if type(cmd) == v:t_string && cmd =~# '^E: '
     " Errored.
 
-    call s:print_progress_message(s:get_plugin_message(
+    call v:lua.__print_progress_message(s:get_plugin_message(
           \ a:plugin, num, max, 'Error'))
     call v:lua.__error(cmd[3:])
     call add(a:context.errored_plugins,
@@ -946,7 +946,7 @@ function! s:sync(plugin, context) abort
   endif
 
   if !a:context.async
-    call s:print_progress_message(message)
+    call v:lua.__print_progress_message(message)
   endif
 
   let process = s:init_process(a:plugin, a:context, cmd)
@@ -1182,26 +1182,4 @@ function! s:iconv(expr, from, to) abort
     let result = iconv(a:expr, a:from, a:to)
     return result !=# '' ? result : a:expr
   endif
-endfunction
-function! s:print_progress_message(msg) abort
-  let msg = v:lua._convert2list(a:msg)
-  let context = g:__global_context
-  if empty(msg) || empty(context)
-    return
-  endif
-
-  let progress_type = context.progress_type
-  if progress_type ==# 'tabline'
-    set showtabline=2
-    let &g:tabline = join(msg, "\n")
-  elseif progress_type ==# 'title'
-    set title
-    let &g:titlestring = join(msg, "\n")
-  elseif progress_type ==# 'echo'
-    call v:lua.__echo(msg, 'echo')
-  endif
-
-  call v:lua.__log(msg)
-
-  let g:__progress = join(msg, "\n")
 endfunction

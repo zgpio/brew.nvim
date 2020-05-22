@@ -85,6 +85,29 @@ function _get_default_ftplugin()
   }
 end
 
+function __print_progress_message(msg)
+  local msg = _convert2list(msg)
+  local context = vim.g.__global_context
+  if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
+    return
+  end
+
+  local progress_type = context.progress_type
+  if progress_type == 'tabline' then
+    vim.o.showtabline=2
+    vim.o.tabline = vim.fn.join(msg, "\n")
+  elseif progress_type == 'title' then
+    vim.o.title=true
+    vim.o.titlestring = vim.fn.join(msg, "\n")
+  elseif progress_type == 'echo' then
+    __echo(msg, 'echo')
+  end
+
+  __log(msg)
+
+  vim.g.__progress = vim.fn.join(msg, "\n")
+end
+
 function __error(msg)
   local msg = _convert2list(msg)
   if vim.fn.empty(msg)==1 then
