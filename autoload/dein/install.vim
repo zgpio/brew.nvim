@@ -1263,7 +1263,7 @@ function! s:echo(expr, mode) abort
       redraw
 
       let m = join(msg[i : i+height-1], "\n")
-      call s:echo_mode(m, a:mode)
+      call v:lua.__echo_mode(m, a:mode)
       if has('vim_starting')
         echo ''
       endif
@@ -1273,19 +1273,4 @@ function! s:echo(expr, mode) abort
     let &showcmd = showcmd_save
     let &ruler = ruler_save
   endtry
-endfunction
-function! s:echo_mode(m, mode) abort
-  for m in split(a:m, '\r\?\n', 1)
-    if !has('vim_starting') && a:mode !=# 'error'
-      let m = v:lua.__truncate_skipping(m, &columns - 1, &columns/3, '...')
-    endif
-
-    if a:mode ==# 'error'
-      echohl WarningMsg | echomsg m | echohl None
-    elseif a:mode ==# 'echomsg'
-      echomsg m
-    else
-      echo m
-    endif
-  endfor
 endfunction

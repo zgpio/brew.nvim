@@ -85,6 +85,22 @@ function _get_default_ftplugin()
   }
 end
 
+function __echo_mode(m, mode)
+  for _, m in ipairs(vim.fn.split(m, [[\r\?\n]], 1)) do
+    if vim.fn.has('vim_starting')==0 and mode~='error' then
+      m = __truncate_skipping(m, vim.o.columns - 1, vim.o.columns/3, '...')
+    end
+
+    if mode == 'error' then
+      vim.api.nvim_command(string.format("echohl WarningMsg | echomsg %s | echohl None", vim.fn.string(m)))
+    elseif mode == 'echomsg' then
+      vim.api.nvim_command(string.format("echomsg %s", vim.fn.string(m)))
+    else
+      vim.api.nvim_command(string.format("echo %s", vim.fn.string(m)))
+    end
+  end
+end
+
 function __truncate_skipping(str, max, footer_width, separator)
   local width = vim.fn.strwidth(str)
   local ret
