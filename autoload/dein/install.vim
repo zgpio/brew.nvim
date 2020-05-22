@@ -560,26 +560,6 @@ function! s:lock_revision(process, context) abort
     return -1
   endif
 endfunction
-function! s:get_updated_message(context, plugins) abort
-  if empty(a:plugins)
-    return ''
-  endif
-
-  return "Updated plugins:\n".
-        \ join(map(copy(a:plugins),
-        \ "'  ' . v:val.name . (v:val.commit_count == 0 ? ''
-        \                     : printf('(%d change%s)',
-        \                              v:val.commit_count,
-        \                              (v:val.commit_count == 1 ? '' : 's')))
-        \    . ((a:context.update_type !=# 'check_update'
-        \        && v:val.old_rev !=# ''
-        \        && v:val.uri =~# '^\\h\\w*://github.com/') ? \"\\n\"
-        \      . printf('    %s/compare/%s...%s',
-        \        substitute(substitute(v:val.uri, '\\.git$', '', ''),
-        \          '^\\h\\w*:', 'https:', ''),
-        \        v:val.old_rev, v:val.new_rev) : '')")
-        \ , "\n")
-endfunction
 function! s:get_errored_message(plugins) abort
   if empty(a:plugins)
     return ''
@@ -843,7 +823,7 @@ function! s:done(context) abort
   call v:lua.__restore_view(a:context)
 
   if !has('vim_starting')
-    call v:lua.__notify(s:get_updated_message(a:context, a:context.synced_plugins))
+    call v:lua.__notify(v:lua.__get_updated_message(a:context, a:context.synced_plugins))
     call v:lua.__notify(s:get_errored_message(a:context.errored_plugins))
   endif
 

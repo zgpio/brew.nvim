@@ -85,6 +85,27 @@ function _get_default_ftplugin()
   }
 end
 
+function __get_updated_message(context, plugins)
+  if vim.fn.empty(plugins)==1 then
+    return ''
+  end
+  function t(v)
+    local changes = ''
+    if v.commit_count==1 then
+      changes = '(1 change)'
+    else
+      changes = string.format('(%d changes)', v.commit_count)
+    end
+    local updated = ''
+    if context.update_type ~= 'check_update' and v.old_rev ~= '' and v.uri:find('^%a%w*://github.com/') then
+      updated = "\n" .. string.format('    %s/compare/%s...%s',
+        vim.fn.substitute(vim.fn.substitute(v.uri, [[\.git$]], '', ''), [[^\h\w*:]], 'https:', ''), v.old_rev, v.new_rev)
+    end
+    return '  ' .. v.name .. changes .. updated
+  end
+
+  return "Updated plugins:\n" .. vim.fn.join(vim.tbl_map(t, vim.fn.copy(plugins)), "\n")
+end
 function __init_variables(context)
   vim.g.__progress = ''
   vim.g.__global_context = context
