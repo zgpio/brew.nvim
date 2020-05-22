@@ -85,6 +85,21 @@ function _get_default_ftplugin()
   }
 end
 
+function __notify(msg)
+  local msg = _convert2list(msg)
+  local context = vim.g.__global_context
+  if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
+    return
+  end
+
+  if context.message_type == 'echo' then
+    _notify(msg)
+  end
+
+  __updates_log(msg)
+  vim.g.__progress = vim.fn.join(msg, "\n")
+end
+
 function __updates_log(msg)
   local msg = _convert2list(msg)
 

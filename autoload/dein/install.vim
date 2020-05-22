@@ -60,8 +60,8 @@ function! dein#install#_update(plugins, update_type, async) abort
 
   if empty(plugins)
     if a:update_type !=# 'check_update'
-      call s:notify('Target plugins are not found.')
-      call s:notify('You may have used the wrong plugin name,'.
+      call v:lua.__notify('Target plugins are not found.')
+      call v:lua.__notify('You may have used the wrong plugin name,'.
             \ ' or all of the plugins are already installed.')
     endif
     let g:__global_context = {}
@@ -879,14 +879,14 @@ function! s:convert_args(args) abort
   return args
 endfunction
 function! s:start() abort
-  call s:notify(strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
+  call v:lua.__notify(strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 endfunction
 function! s:done(context) abort
   call s:restore_view(a:context)
 
   if !has('vim_starting')
-    call s:notify(s:get_updated_message(a:context, a:context.synced_plugins))
-    call s:notify(s:get_errored_message(a:context.errored_plugins))
+    call v:lua.__notify(s:get_updated_message(a:context, a:context.synced_plugins))
+    call v:lua.__notify(s:get_errored_message(a:context.errored_plugins))
   endif
 
   if a:context.update_type !=# 'check_update'
@@ -898,7 +898,7 @@ function! s:done(context) abort
     call dein#source(map(copy(a:context.synced_plugins), 'v:val.name'))
   endif
 
-  call s:notify(strftime('Done: (%Y/%m/%d %H:%M:%S)'))
+  call v:lua.__notify(strftime('Done: (%Y/%m/%d %H:%M:%S)'))
 
   " Disable installation handler
   let g:__global_context = {}
@@ -1214,21 +1214,6 @@ function! s:error(msg) abort
   call s:echo(msg, 'error')
 
   call v:lua.__updates_log(msg)
-endfunction
-function! s:notify(msg) abort
-  let msg = v:lua._convert2list(a:msg)
-  let context = g:__global_context
-  if empty(msg) || empty(context)
-    return
-  endif
-
-  if context.message_type ==# 'echo'
-    lua require 'dein/util'
-    call v:lua._notify(a:msg)
-  endif
-
-  call v:lua.__updates_log(msg)
-  let g:__progress = join(msg, "\n")
 endfunction
 
 function! s:echo(expr, mode) abort
