@@ -207,7 +207,7 @@ function! dein#install#_recache_runtimepath() abort
 
   lua _clear_state()
 
-  call s:log(strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
+  call v:lua.__log(strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 endfunction
 function! s:helptags() abort
   if luaeval('dein._runtime_path') ==# '' || luaeval('dein._is_sudo')
@@ -370,7 +370,7 @@ function! dein#install#_remote_plugins() abort
   lua require 'dein/autoload'
   call v:lua._source(remote_plugins)
 
-  call s:log('loaded remote plugins: ' .
+  call v:lua.__log('loaded remote plugins: ' .
         \ string(map(copy(remote_plugins), 'v:val.name')))
 
   lua require 'dein/util'
@@ -378,7 +378,7 @@ function! dein#install#_remote_plugins() abort
         \ v:lua._split_rtp(&runtimepath)), &runtimepath, '')
 
   let result = execute('UpdateRemotePlugins', '')
-  call s:log(result)
+  call v:lua.__log(result)
 endfunction
 
 function! dein#install#_each(cmd, plugins) abort
@@ -548,7 +548,7 @@ function! s:lock_revision(process, context) abort
   endif
 
   if get(plugin, 'rev', '') !=# ''
-    call s:log(s:get_plugin_message(plugin, num, max, 'Locked'))
+    call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Locked'))
   endif
 
   let result = s:system_cd(cmd, plugin.path)
@@ -920,7 +920,7 @@ function! s:sync(plugin, context) abort
 
   if isdirectory(a:plugin.path) && get(a:plugin, 'frozen', 0)
     " Skip frozen plugin
-    call s:log(s:get_plugin_message(a:plugin, num, max, 'is frozen.'))
+    call v:lua.__log(s:get_plugin_message(a:plugin, num, max, 'is frozen.'))
     return
   endif
 
@@ -930,7 +930,7 @@ function! s:sync(plugin, context) abort
 
   if empty(cmd)
     " Skip
-    call s:log(s:get_plugin_message(a:plugin, num, max, message))
+    call v:lua.__log(s:get_plugin_message(a:plugin, num, max, message))
     return
   endif
 
@@ -1044,7 +1044,7 @@ function! s:init_job(process, context, cmd) abort
     if output !=# ''
       let a:process.output .= output
       let a:process.start_time = localtime()
-      call s:log(s:get_short_message(
+      call v:lua.__log(s:get_short_message(
             \ a:process.plugin, a:process.number,
             \ a:process.max_plugins, output))
     endif
@@ -1105,7 +1105,7 @@ function! s:check_output(context, process) abort
         \ s:get_revision_number(plugin)
 
   if is_timeout || status
-    call s:log(s:get_plugin_message(plugin, num, max, 'Error'))
+    call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Error'))
     call s:error(plugin.path)
     if !a:process.installed
       if !isdirectory(plugin.path)
@@ -1126,17 +1126,17 @@ function! s:check_output(context, process) abort
   elseif a:process.rev ==# new_rev
         \ || (a:context.update_type ==# 'check_update' && new_rev ==# '')
     if a:context.update_type !=# 'check_update'
-      call s:log(s:get_plugin_message(
+      call v:lua.__log(s:get_plugin_message(
             \ plugin, num, max, 'Same revision'))
     endif
   else
-    call s:log(s:get_plugin_message(plugin, num, max, 'Updated'))
+    call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Updated'))
 
     if a:context.update_type !=# 'check_update'
       let log_messages = split(s:get_updated_log_message(
             \   plugin, new_rev, a:process.rev), '\n')
       let plugin.commit_count = len(log_messages)
-      call s:log(map(log_messages,
+      call v:lua.__log(map(log_messages,
             \   's:get_short_message(plugin, num, max, v:val)'))
     else
       let plugin.commit_count = 0
@@ -1159,7 +1159,7 @@ function! s:check_output(context, process) abort
     endtry
 
     if dein#install#_build([plugin.name])
-      call s:log(s:get_plugin_message(plugin, num, max, 'Build failed'))
+      call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Build failed'))
       call s:error(plugin.path)
       " Remove.
       call add(a:context.errored_plugins, plugin)
@@ -1201,7 +1201,7 @@ function! s:print_progress_message(msg) abort
     call s:echo(msg, 'echo')
   endif
 
-  call s:log(msg)
+  call v:lua.__log(msg)
 
   let g:__progress = join(msg, "\n")
 endfunction
@@ -1213,7 +1213,7 @@ function! s:error(msg) abort
 
   call s:echo(msg, 'error')
 
-  call s:updates_log(msg)
+  call v:lua.__updates_log(msg)
 endfunction
 function! s:notify(msg) abort
   let msg = v:lua._convert2list(a:msg)
@@ -1227,19 +1227,8 @@ function! s:notify(msg) abort
     call v:lua._notify(a:msg)
   endif
 
-  call s:updates_log(msg)
+  call v:lua.__updates_log(msg)
   let g:__progress = join(msg, "\n")
-endfunction
-function! s:updates_log(msg) abort
-  let msg = v:lua._convert2list(a:msg)
-
-  let g:__updates_log += msg
-  call s:log(msg)
-endfunction
-function! s:log(msg) abort
-  let msg = v:lua._convert2list(a:msg)
-  let g:__log += msg
-  call v:lua.append_log_file(msg)
 endfunction
 
 function! s:echo(expr, mode) abort

@@ -85,6 +85,19 @@ function _get_default_ftplugin()
   }
 end
 
+function __updates_log(msg)
+  local msg = _convert2list(msg)
+
+  table.insert(vim.g['__updates_log'], msg)
+  __log(msg)
+end
+
+function __log(msg)
+  local msg = _convert2list(msg)
+  table.insert(vim.g['__log'], msg)
+  append_log_file(msg)
+end
+
 function __echo_mode(m, mode)
   for _, m in ipairs(vim.fn.split(m, [[\r\?\n]], 1)) do
     if vim.fn.has('vim_starting')==0 and mode~='error' then
