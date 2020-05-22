@@ -85,6 +85,35 @@ function _get_default_ftplugin()
   }
 end
 
+function __init_context(plugins, update_type, async)
+  local context = {}
+  context.update_type = update_type
+  context.async = async
+  context.synced_plugins = {}
+  context.errored_plugins = {}
+  context.processes = {}
+  context.number = 0
+  context.prev_number = -1
+  context.plugins = plugins
+  context.max_plugins = vim.fn.len(context.plugins)
+  if vim.fn.has('vim_starting')==1 and vim.g['dein#install_progress_type'] ~= 'none' then
+    context.progress_type = 'echo'
+  else
+    context.progress_type = vim.g['dein#install_progress_type']
+  end
+  if vim.fn.has('vim_starting')==1 and vim.g['dein#install_message_type'] ~= 'none' then
+    context.message_type = 'echo'
+  else
+    context.message_type = vim.g['dein#install_message_type']
+  end
+  context.laststatus = vim.o.laststatus
+  context.showtabline = vim.o.showtabline
+  context.tabline = vim.o.tabline
+  context.title = vim.o.title
+  context.titlestring = vim.o.titlestring
+  return context
+end
+
 function __print_progress_message(msg)
   local msg = _convert2list(msg)
   local context = vim.g.__global_context

@@ -54,7 +54,7 @@ function! dein#install#_update(plugins, update_type, async) abort
   endif
 
   " Set context.
-  let context = s:init_context(plugins, a:update_type, a:async)
+  let context = v:lua.__init_context(plugins, a:update_type, a:async)
 
   call s:init_variables(context)
 
@@ -387,7 +387,7 @@ function! dein#install#_each(cmd, plugins) abort
 
   let global_context_save = g:__global_context
 
-  let context = s:init_context(plugins, 'each', 0)
+  let context = v:lua.__init_context(plugins, 'each', 0)
   call s:init_variables(context)
 
   let cwd = getcwd()
@@ -837,33 +837,6 @@ function! s:restore_view(context) abort
     let &g:title = a:context.title
     let &g:titlestring = a:context.titlestring
   endif
-endfunction
-function! s:init_context(plugins, update_type, async) abort
-  let context = {}
-  let context.update_type = a:update_type
-  let context.async = a:async
-  let context.synced_plugins = []
-  let context.errored_plugins = []
-  let context.processes = []
-  let context.number = 0
-  let context.prev_number = -1
-  let context.plugins = a:plugins
-  let context.max_plugins = len(context.plugins)
-  let context.progress_type = (has('vim_starting')
-        \ && g:dein#install_progress_type !=# 'none') ?
-        \ 'echo' : g:dein#install_progress_type
-  if !has('nvim') && context.progress_type ==# 'title'
-    let context.progress_type = 'echo'
-  endif
-  let context.message_type = (has('vim_starting')
-        \ && g:dein#install_message_type !=# 'none') ?
-        \ 'echo' : g:dein#install_message_type
-  let context.laststatus = &g:laststatus
-  let context.showtabline = &g:showtabline
-  let context.tabline = &g:tabline
-  let context.title = &g:title
-  let context.titlestring = &g:titlestring
-  return context
 endfunction
 function! s:init_variables(context) abort
   let g:__progress = ''
