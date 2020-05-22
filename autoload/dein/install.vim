@@ -1198,7 +1198,7 @@ function! s:print_progress_message(msg) abort
     set title
     let &g:titlestring = join(msg, "\n")
   elseif progress_type ==# 'echo'
-    call s:echo(msg, 'echo')
+    call v:lua.__echo(msg, 'echo')
   endif
 
   call v:lua.__log(msg)
@@ -1211,40 +1211,7 @@ function! s:error(msg) abort
     return
   endif
 
-  call s:echo(msg, 'error')
+  call v:lua.__echo(msg, 'error')
 
   call v:lua.__updates_log(msg)
-endfunction
-
-function! s:echo(expr, mode) abort
-  let msg = map(filter(v:lua._convert2list(a:expr), "v:val !=# ''"),
-        \ "'[dein] ' .  v:val")
-  if empty(msg)
-    return
-  endif
-
-  let more_save = &more
-  let showcmd_save = &showcmd
-  let ruler_save = &ruler
-  try
-    set nomore
-    set noshowcmd
-    set noruler
-
-    let height = max([1, &cmdheight])
-    echo ''
-    for i in range(0, len(msg)-1, height)
-      redraw
-
-      let m = join(msg[i : i+height-1], "\n")
-      call v:lua.__echo_mode(m, a:mode)
-      if has('vim_starting')
-        echo ''
-      endif
-    endfor
-  finally
-    let &more = more_save
-    let &showcmd = showcmd_save
-    let &ruler = ruler_save
-  endtry
 endfunction

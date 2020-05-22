@@ -85,6 +85,39 @@ function _get_default_ftplugin()
   }
 end
 
+function __echo(expr, mode)
+  local msg = vim.tbl_map(
+    function(v)
+      return '[dein] ' ..  v
+    end,
+    vim.tbl_filter(function(v) return v~='' end, _convert2list(expr)))
+  if vim.fn.empty(msg)==1 then
+    return
+  end
+
+  local more_save = vim.o.more
+  local showcmd_save = vim.o.showcmd
+  local ruler_save = vim.o.ruler
+  vim.o.more = false
+  vim.o.showcmd = false
+  vim.o.ruler = false
+
+  local height = math.max(1, vim.o.cmdheight)
+  vim.api.nvim_command("echo ''")
+  for i=1,vim.fn.len(msg),height do
+    vim.api.nvim_command("redraw")
+
+    local m = vim.fn.join(slice(msg, i, i+height-1), "\n")
+    __echo_mode(m, mode)
+    if vim.fn.has('vim_starting')==1 then
+      vim.api.nvim_command("echo ''")
+    end
+  end
+
+  vim.o.more = more_save
+  vim.o.showcmd = showcmd_save
+  vim.o.ruler = ruler_save
+end
 function __notify(msg)
   local msg = _convert2list(msg)
   local context = vim.g.__global_context
