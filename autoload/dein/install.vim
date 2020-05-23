@@ -304,17 +304,6 @@ function! dein#install#_each(cmd, plugins) abort
 
   return error
 endfunction
-function! dein#install#_build(plugins) abort
-  let error = 0
-  for plugin in filter(v:lua._get_plugins(a:plugins),
-        \ "isdirectory(v:val.path) && has_key(v:val, 'build')")
-    call v:lua.__print_progress_message('Building: ' . plugin.name)
-    if dein#install#_each(plugin.build, plugin)
-      let error = 1
-    endif
-  endfor
-  return error
-endfunction
 
 function! dein#install#_get_log() abort
   return g:__log
@@ -891,7 +880,7 @@ function! dein#install#__check_output(context, process) abort
       call dein#install#_cd(cwd)
     endtry
 
-    if dein#install#_build([plugin.name])
+    if v:lua._build([plugin.name])
       call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Build failed'))
       call v:lua.__error(plugin.path)
       " Remove.

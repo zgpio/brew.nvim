@@ -100,7 +100,8 @@ function! dein#each(command, ...) abort
   return dein#install#_each(a:command, (a:0 ? a:1 : []))
 endfunction
 function! dein#build(...) abort
-  return dein#install#_build(a:0 ? a:1 : [])
+  lua require 'dein/install'
+  return v:lua._build(a:0 ? a:1 : [])
 endfunction
 function! dein#save_state() abort
   lua require 'dein/util'

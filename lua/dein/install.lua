@@ -84,6 +84,20 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function _build(plugins)
+  local error = 0
+  for _, plugin in ipairs(vim.tbl_filter(
+    function(v)
+      return vim.fn.isdirectory(v.path)==1 and vim.fn.has_key(v, 'build')==1
+    end,
+    _get_plugins(plugins))) do
+    __print_progress_message('Building: ' .. plugin.name)
+    if vim.fn['dein#install#_each'](plugin.build, plugin)==1 then
+      error = 1
+    end
+  end
+  return error
+end
 function __generate_ftplugin()
   -- Create after/ftplugin
   local after = _get_runtime_path() .. '/after/ftplugin'
