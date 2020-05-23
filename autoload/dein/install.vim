@@ -68,7 +68,7 @@ function! dein#install#_update(plugins, update_type, async) abort
     return
   endif
 
-  call s:start()
+  call v:lua.__start()
 
   if !a:async || has('vim_starting')
     return s:update_loop(context)
@@ -801,9 +801,6 @@ function! s:convert_args(args) abort
     let args = split(&shell) + split(&shellcmdflag) + [args]
   endif
   return args
-endfunction
-function! s:start() abort
-  call v:lua.__notify(strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 endfunction
 function! s:done(context) abort
   call v:lua.__restore_view(a:context)

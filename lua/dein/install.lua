@@ -85,6 +85,9 @@ function _get_default_ftplugin()
   }
 end
 
+function __start()
+  __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
+end
 function __get_progress_message(plugin, number, max)
   -- FIXME 去掉math.modf外的圆括号会报错 E118: Too many arguments for function: repeat
   return vim.fn.printf('(%'..vim.fn.len(max)..'d/%'..vim.fn.len(max)..'d) [%s%s] %s',
