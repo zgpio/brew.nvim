@@ -85,6 +85,13 @@ function _get_default_ftplugin()
   }
 end
 
+function __get_rollback_directory()
+  local parent = string.format('%s/rollbacks/%s', _get_cache_path(), dein._progname)
+  if vim.fn.isdirectory(parent)==0 then
+    vim.fn.mkdir(parent, 'p')
+  end
+  return parent
+end
 function __get_errored_message(plugins)
   if vim.fn.empty(plugins)==1 then
     return ''

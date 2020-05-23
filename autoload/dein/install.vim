@@ -130,7 +130,7 @@ function! dein#install#_direct_install(repo, options) abort
   endif
 endfunction
 function! dein#install#_rollback(date, plugins) abort
-  let glob = s:get_rollback_directory() . '/' . a:date . '*'
+  let glob = v:lua.__get_rollback_directory() . '/' . a:date . '*'
   let rollbacks = reverse(sort(v:lua._globlist(glob)))
   if empty(rollbacks)
     return
@@ -178,7 +178,7 @@ function! dein#install#_recache_runtimepath() abort
   call v:lua._save_merged_plugins()
 
   call dein#install#_save_rollback(
-        \ s:get_rollback_directory() . '/' . strftime('%Y%m%d%H%M%S'), [])
+        \ v:lua.__get_rollback_directory() . '/' . strftime('%Y%m%d%H%M%S'), [])
 
   lua _clear_state()
 
@@ -253,15 +253,6 @@ function! dein#install#_load_rollback(rollbackfile, plugins) abort
 
   call dein#recache_runtimepath()
   call v:lua.__error('Rollback to '.fnamemodify(a:rollbackfile, ':t').' version.')
-endfunction
-function! s:get_rollback_directory() abort
-  let parent = printf('%s/rollbacks/%s',
-        \ v:lua._get_cache_path(), luaeval('dein._progname'))
-  if !isdirectory(parent)
-    call mkdir(parent, 'p')
-  endif
-
-  return parent
 endfunction
 function! s:check_rollback(plugin) abort
   return !has_key(a:plugin, 'local')
@@ -701,7 +692,7 @@ endfunction
 function! s:install_blocking(context) abort
   try
     while 1
-      call s:check_loop(a:context)
+      call dein#install#__check_loop(a:context)
 
       if empty(a:context.processes)
             \ && a:context.number == a:context.max_plugins
@@ -720,7 +711,7 @@ function! s:install_async(context) abort
     return
   endif
 
-  call s:check_loop(a:context)
+  call dein#install#__check_loop(a:context)
 
   if empty(a:context.processes)
         \ && a:context.number == a:context.max_plugins
@@ -736,12 +727,12 @@ function! s:install_async(context) abort
 
   return len(a:context.errored_plugins)
 endfunction
-function! s:check_loop(context) abort
+function! dein#install#__check_loop(context) abort
   while a:context.number < a:context.max_plugins
         \ && len(a:context.processes) < g:dein#install_max_processes
 
     let plugin = a:context.plugins[a:context.number]
-    call s:sync(plugin, a:context)
+    call dein#install#__sync(plugin, a:context)
 
     if !a:context.async
       call v:lua.__print_progress_message(
@@ -751,7 +742,7 @@ function! s:check_loop(context) abort
   endwhile
 
   for process in a:context.processes
-    call s:check_output(a:context, process)
+    call dein#install#__check_output(a:context, process)
   endfor
 
   " Filter eof processes.
@@ -795,7 +786,7 @@ function! s:done(context) abort
   endif
 endfunction
 
-function! s:sync(plugin, context) abort
+function! dein#install#__sync(plugin, context) abort
   let a:context.number += 1
 
   let num = a:context.number
@@ -832,12 +823,12 @@ function! s:sync(plugin, context) abort
     call v:lua.__print_progress_message(message)
   endif
 
-  let process = s:init_process(a:plugin, a:context, cmd)
+  let process = dein#install#__init_process(a:plugin, a:context, cmd)
   if !empty(process)
     call add(a:context.processes, process)
   endif
 endfunction
-function! s:init_process(plugin, context, cmd) abort
+function! dein#install#__init_process(plugin, context, cmd) abort
   let process = {}
 
   let cwd = getcwd()
@@ -961,7 +952,7 @@ function! s:init_job(process, context, cmd) abort
   let a:process.id = a:process.job.pid()
   let a:process.job.candidates = []
 endfunction
-function! s:check_output(context, process) abort
+function! dein#install#__check_output(context, process) abort
   if a:context.async
     let [is_timeout, is_skip, status] = a:process.async.get(a:process)
   else
