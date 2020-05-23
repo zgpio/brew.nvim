@@ -435,20 +435,6 @@ function! dein#install#_get_progress() abort
   return g:__progress
 endfunction
 
-function! s:get_progress_message(plugin, number, max) abort
-  return printf('(%'.len(a:max).'d/%'.len(a:max).'d) [%s%s] %s',
-        \ a:number, a:max,
-        \ repeat('+', (a:number*20/a:max)),
-        \ repeat('-', 20 - (a:number*20/a:max)),
-        \ a:plugin.name)
-endfunction
-function! s:get_plugin_message(plugin, number, max, message) abort
-  return printf('(%'.len(a:max).'d/%d) |%-20s| %s',
-        \ a:number, a:max, a:plugin.name, a:message)
-endfunction
-function! s:get_short_message(plugin, number, max, message) abort
-  return printf('(%'.len(a:max).'d/%d) %s', a:number, a:max, a:message)
-endfunction
 function! s:get_sync_command(plugin, update_type, number, max) abort "{{{i
   let type = dein#util#_get_type(a:plugin.type)
 
@@ -465,7 +451,7 @@ function! s:get_sync_command(plugin, update_type, number, max) abort "{{{i
     return ['', '']
   endif
 
-  let message = s:get_plugin_message(a:plugin, a:number, a:max, string(cmd))
+  let message = v:lua.__get_plugin_message(a:plugin, a:number, a:max, string(cmd))
 
   return [cmd, message]
 endfunction
@@ -548,7 +534,7 @@ function! s:lock_revision(process, context) abort
   endif
 
   if get(plugin, 'rev', '') !=# ''
-    call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Locked'))
+    call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Locked'))
   endif
 
   let result = s:system_cd(cmd, plugin.path)
@@ -781,7 +767,7 @@ function! s:install_async(context) abort
         \ && a:context.number < len(a:context.plugins)
     let plugin = a:context.plugins[a:context.number]
     call v:lua.__print_progress_message(
-          \ s:get_progress_message(plugin,
+          \ v:lua.__get_progress_message(plugin,
           \   a:context.number, a:context.max_plugins))
     let a:context.prev_number = a:context.number
   endif
@@ -797,7 +783,7 @@ function! s:check_loop(context) abort
 
     if !a:context.async
       call v:lua.__print_progress_message(
-            \ s:get_progress_message(plugin,
+            \ v:lua.__get_progress_message(plugin,
             \   a:context.number, a:context.max_plugins))
     endif
   endwhile
@@ -858,7 +844,7 @@ function! s:sync(plugin, context) abort
 
   if isdirectory(a:plugin.path) && get(a:plugin, 'frozen', 0)
     " Skip frozen plugin
-    call v:lua.__log(s:get_plugin_message(a:plugin, num, max, 'is frozen.'))
+    call v:lua.__log(v:lua.__get_plugin_message(a:plugin, num, max, 'is frozen.'))
     return
   endif
 
@@ -868,14 +854,14 @@ function! s:sync(plugin, context) abort
 
   if empty(cmd)
     " Skip
-    call v:lua.__log(s:get_plugin_message(a:plugin, num, max, message))
+    call v:lua.__log(v:lua.__get_plugin_message(a:plugin, num, max, message))
     return
   endif
 
   if type(cmd) == v:t_string && cmd =~# '^E: '
     " Errored.
 
-    call v:lua.__print_progress_message(s:get_plugin_message(
+    call v:lua.__print_progress_message(v:lua.__get_plugin_message(
           \ a:plugin, num, max, 'Error'))
     call v:lua.__error(cmd[3:])
     call add(a:context.errored_plugins,
@@ -982,7 +968,7 @@ function! s:init_job(process, context, cmd) abort
     if output !=# ''
       let a:process.output .= output
       let a:process.start_time = localtime()
-      call v:lua.__log(s:get_short_message(
+      call v:lua.__log(v:lua.__get_short_message(
             \ a:process.plugin, a:process.number,
             \ a:process.max_plugins, output))
     endif
@@ -1043,7 +1029,7 @@ function! s:check_output(context, process) abort
         \ s:get_revision_number(plugin)
 
   if is_timeout || status
-    call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Error'))
+    call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Error'))
     call v:lua.__error(plugin.path)
     if !a:process.installed
       if !isdirectory(plugin.path)
@@ -1064,18 +1050,18 @@ function! s:check_output(context, process) abort
   elseif a:process.rev ==# new_rev
         \ || (a:context.update_type ==# 'check_update' && new_rev ==# '')
     if a:context.update_type !=# 'check_update'
-      call v:lua.__log(s:get_plugin_message(
+      call v:lua.__log(v:lua.__get_plugin_message(
             \ plugin, num, max, 'Same revision'))
     endif
   else
-    call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Updated'))
+    call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Updated'))
 
     if a:context.update_type !=# 'check_update'
       let log_messages = split(s:get_updated_log_message(
             \   plugin, new_rev, a:process.rev), '\n')
       let plugin.commit_count = len(log_messages)
       call v:lua.__log(map(log_messages,
-            \   's:get_short_message(plugin, num, max, v:val)'))
+            \   'v:lua.__get_short_message(plugin, num, max, v:val)'))
     else
       let plugin.commit_count = 0
     endif
@@ -1097,7 +1083,7 @@ function! s:check_output(context, process) abort
     endtry
 
     if dein#install#_build([plugin.name])
-      call v:lua.__log(s:get_plugin_message(plugin, num, max, 'Build failed'))
+      call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Build failed'))
       call v:lua.__error(plugin.path)
       " Remove.
       call add(a:context.errored_plugins, plugin)

@@ -85,6 +85,22 @@ function _get_default_ftplugin()
   }
 end
 
+function __get_progress_message(plugin, number, max)
+  -- FIXME 去掉math.modf外的圆括号会报错 E118: Too many arguments for function: repeat
+  return vim.fn.printf('(%'..vim.fn.len(max)..'d/%'..vim.fn.len(max)..'d) [%s%s] %s',
+         number, max,
+         vim.fn['repeat']('+', (math.modf(number*20/max))),
+         vim.fn['repeat']('-', (20 - math.modf(number*20/max))),
+         plugin.name)
+end
+function __get_plugin_message(plugin, number, max, message)
+  return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) |%-20s| %s',
+         number, max, plugin.name, message)
+end
+function __get_short_message(plugin, number, max, message)
+  return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) %s', number, max, message)
+end
+
 function __get_updated_message(context, plugins)
   if vim.fn.empty(plugins)==1 then
     return ''
