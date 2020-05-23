@@ -47,7 +47,8 @@ function! dein#check_update(...) abort
         \ 'check_update', dein#install#_is_async())
 endfunction
 function! dein#direct_install(repo, ...) abort
-  call dein#install#_direct_install(a:repo, (a:0 ? a:1 : {}))
+  lua require 'dein/install'
+  call v:lua._direct_install(a:repo, (a:0 ? a:1 : {}))
 endfunction
 function! dein#get_direct_plugins_path() abort
   return get(g:, 'dein#cache_directory', luaeval('dein._base_path'))

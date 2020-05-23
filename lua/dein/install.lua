@@ -84,6 +84,27 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function _direct_install(repo, options)
+  local opts = vim.fn.copy(options)
+  opts.merged = 0
+
+  local plugin = vim.fn['dein#add'](repo, opts)
+  if vim.fn.empty(plugin)==1 then
+    return
+  end
+
+  vim.fn['dein#install#_update'](plugin.name, 'install', 0)
+  vim.fn['dein#source'](plugin.name)
+
+  -- Add to direct_install.vim
+  local file = vim.fn['dein#get_direct_plugins_path']()
+  local line = vim.fn.printf('call dein#add(%s, %s)', vim.fn.string(repo), vim.fn.string(opts))
+  if vim.fn.filereadable(file)==0 then
+    vim.fn.writefile({line}, file)
+  else
+    vim.fn.writefile(vim.fn.add(vim.fn.readfile(file), line), file)
+  end
+end
 
 function __copy_files(plugins, directory)
   local dir = ''

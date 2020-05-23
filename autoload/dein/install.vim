@@ -107,28 +107,6 @@ function! s:update_loop(context) abort
   return errored
 endfunction
 
-function! dein#install#_direct_install(repo, options) abort
-  let options = copy(a:options)
-  let options.merged = 0
-
-  let plugin = dein#add(a:repo, options)
-  if empty(plugin)
-    return
-  endif
-
-  call dein#install#_update(plugin.name, 'install', 0)
-  call dein#source(plugin.name)
-
-  " Add to direct_install.vim
-  let file = dein#get_direct_plugins_path()
-  let line = printf('call dein#add(%s, %s)',
-        \ string(a:repo), string(options))
-  if !filereadable(file)
-    call writefile([line], file)
-  else
-    call writefile(add(readfile(file), line), file)
-  endif
-endfunction
 function! dein#install#_rollback(date, plugins) abort
   let glob = v:lua.__get_rollback_directory() . '/' . a:date . '*'
   let rollbacks = reverse(sort(v:lua._globlist(glob)))
