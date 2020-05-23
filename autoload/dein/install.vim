@@ -521,19 +521,6 @@ function! s:lock_revision(process, context) abort
     return -1
   endif
 endfunction
-function! s:get_errored_message(plugins) abort
-  if empty(a:plugins)
-    return ''
-  endif
-
-  let msg = "Error installing plugins:\n".join(
-        \ map(copy(a:plugins), "'  ' . v:val.name"), "\n")
-  let msg .= "\n"
-  let msg .= "Please read the error message log with the :message command.\n"
-
-  return msg
-endfunction
-
 
 " Helper functions
 function! dein#install#_cd(path) abort
@@ -782,7 +769,7 @@ function! s:done(context) abort
 
   if !has('vim_starting')
     call v:lua.__notify(v:lua.__get_updated_message(a:context, a:context.synced_plugins))
-    call v:lua.__notify(s:get_errored_message(a:context.errored_plugins))
+    call v:lua.__notify(v:lua.__get_errored_message(a:context.errored_plugins))
   endif
 
   if a:context.update_type !=# 'check_update'

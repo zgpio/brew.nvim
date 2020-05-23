@@ -85,6 +85,18 @@ function _get_default_ftplugin()
   }
 end
 
+function __get_errored_message(plugins)
+  if vim.fn.empty(plugins)==1 then
+    return ''
+  end
+
+  local msg = "Error installing plugins:\n"..vim.fn.join(vim.tbl_map(function(v) return '  ' .. v.name end, vim.fn.copy(plugins)), "\n")
+  msg = msg.."\n"
+  msg = msg.."Please read the error message log with the :message command.\n"
+
+  return msg
+end
+
 function _reinstall(plugins)
   local plugins = _get_plugins(plugins)
 
