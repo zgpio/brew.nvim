@@ -84,6 +84,52 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __generate_ftplugin()
+  -- Create after/ftplugin
+  local after = _get_runtime_path() .. '/after/ftplugin'
+  if vim.fn.isdirectory(after)==0 then
+    vim.fn.mkdir(after, 'p')
+  end
+
+  -- Merge dein._ftplugin
+  local ftplugin = {}
+  for key, string in pairs(dein._ftplugin) do
+    local fts = {'_'}
+    if key ~= '_' then
+      fts = vim.fn.split(key, '_')
+    end
+    for _, ft in ipairs(fts) do
+      if not ftplugin.ft then
+        if ft == '_' then
+          ftplugin[ft] = {}
+        else
+          ftplugin[ft] = {
+               "if exists('b:undo_ftplugin')",
+               "  let b:undo_ftplugin .= '|'",
+               'else',
+               "  let b:undo_ftplugin = ''",
+               'endif',
+             }
+        end
+      end
+      for _,v in ipairs(vim.fn.split(string, '\n')) do table.insert(ftplugin[ft], v) end
+    end
+  end
+
+  -- Generate ftplugin.vim
+  local content = _get_default_ftplugin()
+  table.insert(content, 'function! s:after_ftplugin()')
+  for _,v in ipairs(ftplugin['_'] or {}) do table.insert(content, v) end
+  table.insert(content, 'endfunction')
+  vim.fn.writefile(content, _get_runtime_path() .. '/ftplugin.vim')
+
+  -- Generate after/ftplugin
+  for filetype, list in pairs(ftplugin) do
+    if filetype ~= '_' then
+      vim.fn.writefile(list, string.format('%s/%s.vim', after, filetype))
+    end
+  end
+end
 function _direct_install(repo, options)
   local opts = vim.fn.copy(options)
   opts.merged = 0

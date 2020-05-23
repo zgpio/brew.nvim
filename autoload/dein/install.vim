@@ -138,7 +138,7 @@ function! dein#install#_recache_runtimepath() abort
 
   call s:helptags()
 
-  call s:generate_ftplugin()
+  call v:lua.__generate_ftplugin()
 
   " Clear ftdetect and after/ftdetect directories.
   call dein#install#_rm(
@@ -222,42 +222,6 @@ function! s:check_rollback(plugin) abort
   return !has_key(a:plugin, 'local')
         \ && !get(a:plugin, 'frozen', 0)
         \ && get(a:plugin, 'rev', '') ==# ''
-endfunction
-
-function! s:generate_ftplugin() abort
-  " Create after/ftplugin
-  let after = v:lua._get_runtime_path() . '/after/ftplugin'
-  if !isdirectory(after)
-    call mkdir(after, 'p')
-  endif
-
-  " Merge dein._ftplugin
-  let ftplugin = {}
-  for [key, string] in items(luaeval('dein._ftplugin'))
-    for ft in (key ==# '_' ? ['_'] : split(key, '_'))
-      if !has_key(ftplugin, ft)
-        let ftplugin[ft] = (ft ==# '_') ? [] : [
-              \ "if exists('b:undo_ftplugin')",
-              \ "  let b:undo_ftplugin .= '|'",
-              \ 'else',
-              \ "  let b:undo_ftplugin = ''",
-              \ 'endif',
-              \ ]
-      endif
-      let ftplugin[ft] += split(string, '\n')
-    endfor
-  endfor
-
-  " Generate ftplugin.vim
-  call writefile(v:lua._get_default_ftplugin() + [
-        \ 'function! s:after_ftplugin()',
-        \ ] + get(ftplugin, '_', []) + ['endfunction'],
-        \ v:lua._get_runtime_path() . '/ftplugin.vim')
-
-  " Generate after/ftplugin
-  for [filetype, list] in filter(items(ftplugin), "v:val[0] !=# '_'")
-    call writefile(list, printf('%s/%s.vim', after, filetype))
-  endfor
 endfunction
 
 function! dein#install#_is_async() abort
