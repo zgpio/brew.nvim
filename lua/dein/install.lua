@@ -85,6 +85,9 @@ function _get_default_ftplugin()
   }
 end
 
+function __list_directory(directory)
+  return _globlist(directory .. '/*')
+end
 function __get_rollback_directory()
   local parent = string.format('%s/rollbacks/%s', _get_cache_path(), dein._progname)
   if vim.fn.isdirectory(parent)==0 then

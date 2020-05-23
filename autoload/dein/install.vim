@@ -215,10 +215,6 @@ function! s:copy_files(plugins, directory) abort
           \ v:lua._get_runtime_path() . directory)
   endfor
 endfunction
-function! s:list_directory(directory) abort
-  lua require 'dein/util'
-  return v:lua._globlist(a:directory . '/*')
-endfunction
 function! dein#install#_save_rollback(rollbackfile, plugins) abort
   let revisions = {}
   for plugin in filter(v:lua._get_plugins(a:plugins),
@@ -662,7 +658,7 @@ function! dein#install#_copy_directories(srcs, dest) abort
     endif
   else " Not Windows
     let srcs = map(filter(copy(a:srcs),
-          \ 'len(s:list_directory(v:val))'), 'shellescape(v:val . ''/'')')
+          \ 'len(v:lua.__list_directory(v:val))'), 'shellescape(v:val . ''/'')')
     let is_rsync = executable('rsync')
     if is_rsync
       let cmdline = printf("rsync -a -q --exclude '/.git/' %s %s",
