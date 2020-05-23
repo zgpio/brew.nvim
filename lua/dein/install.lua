@@ -85,6 +85,82 @@ function _get_default_ftplugin()
   }
 end
 
+function _copy_directories(srcs, dest)
+  if vim.fn.empty(srcs)==1 then
+    return 0
+  end
+
+  local status = 0
+  local result
+  if _is_windows() then
+    if vim.fn.executable('robocopy')==0 then
+      vim.fn['dein#util#_error']('robocopy command is needed.')
+      return 1
+    end
+
+    local temp = vim.fn.tempname() .. '.bat'
+    local exclude = vim.fn.tempname()
+
+    -- TODO try finally
+    local lines = {'@echo off'}
+    local format = 'robocopy.exe %s /E /NJH /NJS /NDL /NC /NS /MT /XO /XD ".git"'
+    for _, src in ipairs(srcs) do
+      table.insert(lines, string.format(format, vim.fn.substitute(string.format('"%s" "%s"', src, dest), '/', '\\', 'g')))
+    end
+    vim.fn.writefile(lines, temp)
+    result = vim.fn['dein#install#_system'](temp)
+    vim.fn.delete(temp)
+
+    -- For some baffling reason robocopy almost always returns between 1 and 3
+    -- upon success
+    status = vim.fn['dein#install#_status']()
+    if status <= 3 then
+      status = 0
+    end
+
+    if status~=0 then
+      vim.fn['dein#util#_error']('copy command failed.')
+      vim.fn['dein#util#_error'](vim.fn['dein#install#__iconv'](result, 'char', vim.o.encoding))
+      vim.fn['dein#util#_error']('cmdline: ' .. temp)
+      vim.fn['dein#util#_error']('tempfile: ' .. vim.fn.string(lines))
+    end
+  else -- Not Windows
+    local srcs = vim.tbl_map(
+      function(v)
+        return vim.fn.shellescape(v .. '/')
+      end,
+      vim.tbl_filter(
+        function(v)
+          return vim.fn.len(__list_directory(v))>0
+        end,
+        vim.fn.copy(srcs)
+      )
+    )
+    local is_rsync = vim.fn.executable('rsync')==1
+    local cmdline
+    if is_rsync then
+      cmdline = string.format("rsync -a -q --exclude '/.git/' %s %s", vim.fn.join(srcs), vim.fn.shellescape(dest))
+      result = vim.fn['dein#install#_system'](cmdline)
+      status = vim.fn['dein#install#_status']()
+    else
+      for _, src in ipairs(srcs) do
+        cmdline = string.format('cp -Ra %s* %s', src, vim.fn.shellescape(dest))
+        result = vim.fn['dein#install#_system'](cmdline)
+        status = vim.fn['dein#install#_status']()
+        if status~=0 then
+          break
+        end
+      end
+    end
+    if status~=0 then
+      vim.fn['dein#util#_error']('copy command failed.')
+      vim.fn['dein#util#_error'](result)
+      vim.fn['dein#util#_error']('cmdline: ' .. cmdline)
+    end
+  end
+
+  return status
+end
 function __list_directory(directory)
   return _globlist(directory .. '/*')
 end

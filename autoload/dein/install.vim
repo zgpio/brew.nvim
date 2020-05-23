@@ -211,7 +211,7 @@ function! s:copy_files(plugins, directory) abort
         \ 'isdirectory(v:val)')
   let stride = 50
   for start in range(0, len(srcs), stride)
-    call dein#install#_copy_directories(srcs[start : start + stride-1],
+    call v:lua._copy_directories(srcs[start : start + stride-1],
           \ v:lua._get_runtime_path() . directory)
   endfor
 endfunction
@@ -530,8 +530,8 @@ function! dein#install#_system(command) abort
   " let exitval = job.wait()
 
   let command = a:command
-  let command = s:iconv(command, &encoding, 'char')
-  let output = s:iconv(system(command), 'char', &encoding)
+  let command = dein#install#__iconv(command, &encoding, 'char')
+  let output = dein#install#__iconv(system(command), 'char', &encoding)
   return substitute(output, '\n$', '', '')
 endfunction
 function! dein#install#_status() abort
@@ -616,75 +616,6 @@ function! dein#install#_rm(path) abort
   endif
 endfunction
 
-function! dein#install#_copy_directories(srcs, dest) abort
-  if empty(a:srcs)
-    return 0
-  endif
-
-  let status = 0
-  if v:lua._is_windows()
-    if !executable('robocopy')
-      call dein#util#_error('robocopy command is needed.')
-      return 1
-    endif
-
-    let temp = tempname() . '.bat'
-    let exclude = tempname()
-
-    try
-      let lines = ['@echo off']
-      let format ='robocopy.exe %s /E /NJH /NJS /NDL /NC /NS /MT /XO /XD ".git"'
-      for src in a:srcs
-        call add(lines, printf(format,
-              \                substitute(printf('"%s" "%s"', src, a:dest),
-              \                           '/', '\\', 'g')))
-      endfor
-      call writefile(lines, temp)
-      let result = dein#install#_system(temp)
-    finally
-      call delete(temp)
-    endtry
-
-    " For some baffling reason robocopy almost always returns between 1 and 3
-    " upon success
-    let status = dein#install#_status()
-    let status = (status > 3) ? status : 0
-
-    if status
-      call dein#util#_error('copy command failed.')
-      call dein#util#_error(s:iconv(result, 'char', &encoding))
-      call dein#util#_error('cmdline: ' . temp)
-      call dein#util#_error('tempfile: ' . string(lines))
-    endif
-  else " Not Windows
-    let srcs = map(filter(copy(a:srcs),
-          \ 'len(v:lua.__list_directory(v:val))'), 'shellescape(v:val . ''/'')')
-    let is_rsync = executable('rsync')
-    if is_rsync
-      let cmdline = printf("rsync -a -q --exclude '/.git/' %s %s",
-            \ join(srcs), shellescape(a:dest))
-      let result = dein#install#_system(cmdline)
-      let status = dein#install#_status()
-    else
-      for src in srcs
-        let cmdline = printf('cp -Ra %s* %s', src, shellescape(a:dest))
-        let result = dein#install#_system(cmdline)
-        let status = dein#install#_status()
-        if status
-          break
-        endif
-      endfor
-    endif
-    if status
-      call dein#util#_error('copy command failed.')
-      call dein#util#_error(result)
-      call dein#util#_error('cmdline: ' . cmdline)
-    endif
-  endif
-
-  return status
-endfunction
-
 function! s:install_blocking(context) abort
   try
     while 1
@@ -745,7 +676,7 @@ function! dein#install#__check_loop(context) abort
   call filter(a:context.processes, '!v:val.eof')
 endfunction
 function! s:convert_args(args) abort
-  let args = s:iconv(a:args, &encoding, 'char')
+  let args = dein#install#__iconv(a:args, &encoding, 'char')
   if type(args) != v:t_list
     let args = split(&shell) + split(&shellcmdflag) + [args]
   endif
@@ -1041,7 +972,7 @@ function! dein#install#__check_output(context, process) abort
   let a:process.eof = 1
 endfunction
 
-function! s:iconv(expr, from, to) abort
+function! dein#install#__iconv(expr, from, to) abort
   if a:from ==# '' || a:to ==# '' || a:from ==? a:to
     return a:expr
   endif
