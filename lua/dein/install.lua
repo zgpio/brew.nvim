@@ -85,6 +85,19 @@ function _get_default_ftplugin()
   }
 end
 
+function __copy_files(plugins, directory)
+  local dir = ''
+  if directory ~= '' then
+    dir = '/' .. directory
+  end
+  local srcs = vim.tbl_filter(
+    function(v) return vim.fn.isdirectory(v)==1 end,
+    vim.tbl_map(function(v) return v.rtp .. dir end, vim.fn.copy(plugins)))
+  local stride = 50
+  for start=1, vim.fn.len(srcs), stride do
+    _copy_directories(slice(srcs, start, start+stride-1), _get_runtime_path() .. dir)
+  end
+end
 function _copy_directories(srcs, dest)
   if vim.fn.empty(srcs)==1 then
     return 0

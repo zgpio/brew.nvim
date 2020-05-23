@@ -592,6 +592,7 @@ function _begin(path, vimrcs)
 end
 
 -- TODO: duplicate
+-- [first, last]
 function slice(tbl, first, last, step)
   local sliced = {}
   for i = first or 1, last or #tbl, step or 1 do

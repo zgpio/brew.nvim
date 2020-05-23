@@ -151,12 +151,12 @@ function! dein#install#_recache_runtimepath() abort
 
   let merged_plugins = filter(copy(plugins), 'v:val.merged')
 
-  call s:copy_files(filter(copy(merged_plugins), 'v:val.lazy'), '')
+  call v:lua.__copy_files(filter(copy(merged_plugins), 'v:val.lazy'), '')
   " Remove plugin directory
   call dein#install#_rm(v:lua._get_runtime_path() . '/plugin')
   call dein#install#_rm(v:lua._get_runtime_path() . '/after/plugin')
 
-  call s:copy_files(filter(copy(merged_plugins), '!v:val.lazy'), '')
+  call v:lua.__copy_files(filter(copy(merged_plugins), '!v:val.lazy'), '')
 
   call s:helptags()
 
@@ -194,7 +194,7 @@ function! s:helptags() abort
     if !isdirectory(tags)
       call mkdir(tags, 'p')
     endif
-    call s:copy_files(filter(
+    call v:lua.__copy_files(filter(
           \ values(v:lua.dein.get()), '!v:val.merged'), 'doc')
     silent execute 'helptags' fnameescape(tags)
   catch /^Vim(helptags):E151:/
@@ -204,16 +204,6 @@ function! s:helptags() abort
     call v:lua.__error(v:exception)
     call v:lua.__error(v:throwpoint)
   endtry
-endfunction
-function! s:copy_files(plugins, directory) abort
-  let directory = (a:directory ==# '' ? '' : '/' . a:directory)
-  let srcs = filter(map(copy(a:plugins), 'v:val.rtp . directory'),
-        \ 'isdirectory(v:val)')
-  let stride = 50
-  for start in range(0, len(srcs), stride)
-    call v:lua._copy_directories(srcs[start : start + stride-1],
-          \ v:lua._get_runtime_path() . directory)
-  endfor
 endfunction
 function! dein#install#_save_rollback(rollbackfile, plugins) abort
   let revisions = {}
