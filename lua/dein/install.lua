@@ -85,6 +85,28 @@ function _get_default_ftplugin()
   }
 end
 
+function _reinstall(plugins)
+  local plugins = _get_plugins(plugins)
+
+  for _, plugin in ipairs(plugins) do
+    repeat
+      -- Remove the plugin
+      if plugin.type == 'none' or (plugin['local'] or 0)==1 or (plugin.sourced==1 and vim.fn.index({'dein'}, plugin.normalized_name) >= 0) then
+        vim.fn['dein#util#_error'](vim.fn.printf('|%s| Cannot reinstall the plugin!', plugin.name))
+        break
+      end
+
+      -- Reinstall.
+      __print_progress_message(vim.fn.printf('|%s| Reinstalling...', plugin.name))
+
+      if vim.fn.isdirectory(plugin.path)==1 then
+        vim.fn['dein#install#_rm'](plugin.path)
+      end
+    until true
+  end
+
+  vim.fn['dein#install#_update'](_convert2list(plugins), 'install', 0)
+end
 function __start()
   __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 end

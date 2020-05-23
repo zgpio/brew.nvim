@@ -54,7 +54,8 @@ function! dein#get_direct_plugins_path() abort
         \ .'/direct_install.vim'
 endfunction
 function! dein#reinstall(plugins) abort
-  call dein#install#_reinstall(a:plugins)
+  lua require 'dein/install'
+  call v:lua._reinstall(a:plugins)
 endfunction
 function! dein#rollback(date, ...) abort
   call dein#install#_rollback(a:date, (a:0 ? a:1 : []))

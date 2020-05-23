@@ -107,31 +107,6 @@ function! s:update_loop(context) abort
   return errored
 endfunction
 
-function! dein#install#_reinstall(plugins) abort
-  let plugins = v:lua._get_plugins(a:plugins)
-
-  for plugin in plugins
-    " Remove the plugin
-    if plugin.type ==# 'none'
-          \ || get(plugin, 'local', 0)
-          \ || (plugin.sourced &&
-          \     index(['dein'], plugin.normalized_name) >= 0)
-      call dein#util#_error(
-            \ printf('|%s| Cannot reinstall the plugin!', plugin.name))
-      continue
-    endif
-
-    " Reinstall.
-    call v:lua.__print_progress_message(printf('|%s| Reinstalling...', plugin.name))
-
-    if isdirectory(plugin.path)
-      call dein#install#_rm(plugin.path)
-    endif
-  endfor
-
-  call dein#install#_update(v:lua._convert2list(a:plugins),
-        \ 'install', 0)
-endfunction
 function! dein#install#_direct_install(repo, options) abort
   let options = copy(a:options)
   let options.merged = 0
