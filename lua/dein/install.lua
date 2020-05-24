@@ -10,7 +10,7 @@ function clear_runtimepath()
   local runtimepath = _get_runtime_path()
 
   -- Remove runtime path
-  vim.fn['dein#install#_rm'](runtimepath)
+  _rm(runtimepath)
 
   if vim.fn.isdirectory(runtimepath)==0 then
     -- Create runtime path
@@ -84,6 +84,52 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function _rm(path)
+  if vim.fn.isdirectory(path)==0 and vim.fn.filereadable(path)==0 then
+    return
+  end
+
+  -- Todo: use :python3 instead.
+
+  -- Note: delete rf is broken
+  -- if has('patch-7.4.1120')
+  --   try
+  --     call delete(a:path, 'rf')
+  --   catch
+  --     call v:lua.__error('Error deleting directory: ' . a:path)
+  --     call v:lua.__error(v:exception)
+  --     call v:lua.__error(v:throwpoint)
+  --   endtry
+  --   return
+  -- endif
+
+  -- Note: In Windows, ['rmdir', '/S', '/Q'] does not work.
+  -- After Vim 8.0.928, double quote escape does not work in job.  Too bad.
+  local cmdline = ' "' .. path .. '"'
+  if _is_windows() then
+    -- Note: In rm command, must use "\" instead of "/".
+    cmdline = vim.fn.substitute(cmdline, '/', '\\\\', 'g')
+  end
+
+  local rm_command
+  if _is_windows() then
+    rm_command = 'cmd /C rmdir /S /Q'
+  else
+    rm_command = 'rm -rf'
+  end
+  cmdline = rm_command .. cmdline
+  local result = vim.fn.system(cmdline)
+  if vim.v.shell_error~=0 then
+    vim.fn['dein#util#_error'](result)
+  end
+
+  -- Error check.
+  if vim.fn.getftype(path) ~= '' then
+    vim.fn['dein#util#_error'](string.format('"%s" cannot be removed.', path))
+    vim.fn['dein#util#_error'](string.format('cmdline is "%s".', cmdline))
+  end
+end
+
 function __install_blocking(context)
   try {
     function()
@@ -427,7 +473,7 @@ function _reinstall(plugins)
       __print_progress_message(vim.fn.printf('|%s| Reinstalling...', plugin.name))
 
       if vim.fn.isdirectory(plugin.path)==1 then
-        vim.fn['dein#install#_rm'](plugin.path)
+        _rm(plugin.path)
       end
     until true
   end

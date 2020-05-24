@@ -111,8 +111,8 @@ function! dein#install#_recache_runtimepath() abort
 
   call v:lua.__copy_files(filter(copy(merged_plugins), 'v:val.lazy'), '')
   " Remove plugin directory
-  call dein#install#_rm(v:lua._get_runtime_path() . '/plugin')
-  call dein#install#_rm(v:lua._get_runtime_path() . '/after/plugin')
+  call v:lua._rm(v:lua._get_runtime_path() . '/plugin')
+  call v:lua._rm(v:lua._get_runtime_path() . '/after/plugin')
 
   call v:lua.__copy_files(filter(copy(merged_plugins), '!v:val.lazy'), '')
 
@@ -121,9 +121,9 @@ function! dein#install#_recache_runtimepath() abort
   call v:lua.__generate_ftplugin()
 
   " Clear ftdetect and after/ftdetect directories.
-  call dein#install#_rm(
+  call v:lua._rm(
         \ v:lua._get_runtime_path().'/ftdetect')
-  call dein#install#_rm(
+  call v:lua._rm(
         \ v:lua._get_runtime_path().'/after/ftdetect')
 
   call v:lua.merge_files(plugins, 'ftdetect')
@@ -425,47 +425,6 @@ function! s:job_execute.execute(cmd) abort
   return job.wait(g:dein#install_process_timeout * 1000)
 endfunction
 
-function! dein#install#_rm(path) abort
-  if !isdirectory(a:path) && !filereadable(a:path)
-    return
-  endif
-
-  " Todo: use :python3 instead.
-
-  " Note: delete rf is broken
-  " if has('patch-7.4.1120')
-  "   try
-  "     call delete(a:path, 'rf')
-  "   catch
-  "     call v:lua.__error('Error deleting directory: ' . a:path)
-  "     call v:lua.__error(v:exception)
-  "     call v:lua.__error(v:throwpoint)
-  "   endtry
-  "   return
-  " endif
-
-  " Note: In Windows, ['rmdir', '/S', '/Q'] does not work.
-  " After Vim 8.0.928, double quote escape does not work in job.  Too bad.
-  let cmdline = ' "' . a:path . '"'
-  if v:lua._is_windows()
-    " Note: In rm command, must use "\" instead of "/".
-    let cmdline = substitute(cmdline, '/', '\\\\', 'g')
-  endif
-
-  let rm_command = v:lua._is_windows() ? 'cmd /C rmdir /S /Q' : 'rm -rf'
-  let cmdline = rm_command . cmdline
-  let result = system(cmdline)
-  if v:shell_error
-    call dein#util#_error(result)
-  endif
-
-  " Error check.
-  if getftype(a:path) !=# ''
-    call dein#util#_error(printf('"%s" cannot be removed.', a:path))
-    call dein#util#_error(printf('cmdline is "%s".', cmdline))
-  endif
-endfunction
-
 function! dein#install#__install_async(context) abort
   if empty(a:context)
     return
@@ -716,7 +675,7 @@ function! dein#install#__check_output(context, process) abort
         call v:lua.__error('Maybe wrong username or repository.')
       elseif isdirectory(plugin.path)
         call v:lua.__error('Remove the installed directory:' . plugin.path)
-        call dein#install#_rm(plugin.path)
+        call v:lua._rm(plugin.path)
       endif
     endif
 
