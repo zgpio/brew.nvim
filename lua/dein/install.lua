@@ -84,6 +84,32 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __helptags()
+  if dein._runtime_path == '' or dein._is_sudo then
+    return ''
+  end
+
+  try {
+    function()
+      local tags = _get_runtime_path() .. '/doc'
+      if vim.fn.isdirectory(tags)==0 then
+        vim.fn.mkdir(tags, 'p')
+      end
+      __copy_files(vim.tbl_filter(function(v) return v.merged==0 end, vim.tbl_values(dein.get())), 'doc')
+      vim.api.nvim_command('silent execute "helptags" '..vim.fn.string(vim.fn.fnameescape(tags)))
+    end,
+    catch {
+      function(error)
+        -- catch /^Vim(helptags):E151:/
+        -- Ignore an error that occurs when there is no help file
+        __error('Error generating helptags:')
+        __error(vim.v.exception)
+        __error(vim.v.throwpoint)
+        print('caught error: ' .. error)
+      end
+    }
+  }
+end
 function __update_loop(context)
   local errored = 0
   try {

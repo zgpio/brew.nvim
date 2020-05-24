@@ -116,7 +116,7 @@ function! dein#install#_recache_runtimepath() abort
 
   call v:lua.__copy_files(filter(copy(merged_plugins), '!v:val.lazy'), '')
 
-  call s:helptags()
+  call v:lua.__helptags()
 
   call v:lua.__generate_ftplugin()
 
@@ -141,27 +141,6 @@ function! dein#install#_recache_runtimepath() abort
   lua _clear_state()
 
   call v:lua.__log(strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
-endfunction
-function! s:helptags() abort
-  if luaeval('dein._runtime_path') ==# '' || luaeval('dein._is_sudo')
-    return ''
-  endif
-
-  try
-    let tags = v:lua._get_runtime_path() . '/doc'
-    if !isdirectory(tags)
-      call mkdir(tags, 'p')
-    endif
-    call v:lua.__copy_files(filter(
-          \ values(v:lua.dein.get()), '!v:val.merged'), 'doc')
-    silent execute 'helptags' fnameescape(tags)
-  catch /^Vim(helptags):E151:/
-    " Ignore an error that occurs when there is no help file
-  catch
-    call v:lua.__error('Error generating helptags:')
-    call v:lua.__error(v:exception)
-    call v:lua.__error(v:throwpoint)
-  endtry
 endfunction
 function! dein#install#_save_rollback(rollbackfile, plugins) abort
   let revisions = {}
