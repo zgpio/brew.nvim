@@ -466,23 +466,6 @@ function! dein#install#_rm(path) abort
   endif
 endfunction
 
-function! dein#install#__install_blocking(context) abort
-  try
-    while 1
-      call dein#install#__check_loop(a:context)
-
-      if empty(a:context.processes)
-            \ && a:context.number == a:context.max_plugins
-        break
-      endif
-    endwhile
-  finally
-    call v:lua.__done(a:context)
-  endtry
-
-
-  return len(a:context.errored_plugins)
-endfunction
 function! dein#install#__install_async(context) abort
   if empty(a:context)
     return

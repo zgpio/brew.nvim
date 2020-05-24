@@ -84,6 +84,22 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __install_blocking(context)
+  try {
+    function()
+      while true do
+        vim.fn['dein#install#__check_loop'](context)
+
+        if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
+          break
+        end
+      end
+    end
+  }
+  __done(context)
+
+  return vim.fn.len(context.errored_plugins)
+end
 function __done(context)
   __restore_view(context)
 
@@ -189,7 +205,7 @@ function __update_loop(context)
           vim.api.nvim_command('redraw')
         end
       else
-        errored = vim.fn['dein#install#__install_blocking'](context)
+        errored = __install_blocking(context)
       end
     end,
     catch {
