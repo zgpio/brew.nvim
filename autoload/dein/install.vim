@@ -78,12 +78,12 @@ function! dein#install#_update(plugins, update_type, async) abort
     autocmd!
   augroup END
 
-  if exists('s:timer')
-    call timer_stop(s:timer)
-    unlet s:timer
+  if exists('g:__timer')
+    call timer_stop(g:__timer)
+    unlet g:__timer
   endif
 
-  let s:timer = timer_start(1000,
+  let g:__timer = timer_start(1000,
         \ {-> dein#install#_polling()}, {'repeat': -1})
 endfunction
 
@@ -477,7 +477,7 @@ function! dein#install#__install_blocking(context) abort
       endif
     endwhile
   finally
-    call s:done(a:context)
+    call v:lua.__done(a:context)
   endtry
 
 
@@ -492,7 +492,7 @@ function! dein#install#__install_async(context) abort
 
   if empty(a:context.processes)
         \ && a:context.number == a:context.max_plugins
-    call s:done(a:context)
+    call v:lua.__done(a:context)
   elseif a:context.number != a:context.prev_number
         \ && a:context.number < len(a:context.plugins)
     let plugin = a:context.plugins[a:context.number]
@@ -531,36 +531,6 @@ function! s:convert_args(args) abort
     let args = split(&shell) + split(&shellcmdflag) + [args]
   endif
   return args
-endfunction
-function! s:done(context) abort
-  call v:lua.__restore_view(a:context)
-
-  if !has('vim_starting')
-    call v:lua.__notify(v:lua.__get_updated_message(a:context, a:context.synced_plugins))
-    call v:lua.__notify(v:lua.__get_errored_message(a:context.errored_plugins))
-  endif
-
-  if a:context.update_type !=# 'check_update'
-    call dein#install#_recache_runtimepath()
-  endif
-
-  if !empty(a:context.synced_plugins)
-    call dein#call_hook('done_update', a:context.synced_plugins)
-    call dein#source(map(copy(a:context.synced_plugins), 'v:val.name'))
-  endif
-
-  call v:lua.__notify(strftime('Done: (%Y/%m/%d %H:%M:%S)'))
-
-  " Disable installation handler
-  let g:__global_context = {}
-  let g:__progress = ''
-  augroup dein-install
-    autocmd!
-  augroup END
-  if exists('s:timer')
-    call timer_stop(s:timer)
-    unlet s:timer
-  endif
 endfunction
 
 function! dein#install#__sync(plugin, context) abort

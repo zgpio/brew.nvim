@@ -84,6 +84,39 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __done(context)
+  __restore_view(context)
+
+  if vim.fn.has('vim_starting')==0 then
+    __notify(__get_updated_message(context, context.synced_plugins))
+    __notify(__get_errored_message(context.errored_plugins))
+  end
+
+  if context.update_type ~= 'check_update' then
+    vim.fn['dein#install#_recache_runtimepath']()
+  end
+
+  if vim.fn.empty(context.synced_plugins)==0 then
+    vim.fn['dein#call_hook']('done_update', context.synced_plugins)
+    vim.fn['dein#source'](vim.tbl_map(function(v) return v.name end, vim.fn.copy(context.synced_plugins)))
+  end
+
+  __notify(vim.fn.strftime('Done: (%Y/%m/%d %H:%M:%S)'))
+
+  -- Disable installation handler
+  vim.g.__global_context = {}
+  vim.g.__progress = ''
+  vim.api.nvim_exec([[
+    augroup dein-install
+      autocmd!
+    augroup END
+  ]], false)
+  if vim.fn.exists('g:__timer')==1 then
+    vim.fn.timer_stop(vim.g.__timer)
+    vim.g.__timer = nil
+  end
+end
+
 function _each(cmd, plugins)
   local plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, _get_plugins(plugins))
 
