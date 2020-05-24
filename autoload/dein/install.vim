@@ -71,7 +71,7 @@ function! dein#install#_update(plugins, update_type, async) abort
   call v:lua.__start()
 
   if !a:async || has('vim_starting')
-    return s:update_loop(context)
+    return v:lua.__update_loop(context)
   endif
 
   augroup dein-install
@@ -85,26 +85,6 @@ function! dein#install#_update(plugins, update_type, async) abort
 
   let s:timer = timer_start(1000,
         \ {-> dein#install#_polling()}, {'repeat': -1})
-endfunction
-function! s:update_loop(context) abort
-  let errored = 0
-  try
-    if has('vim_starting')
-      while !empty(g:__global_context)
-        let errored = s:install_async(a:context)
-        sleep 50ms
-        redraw
-      endwhile
-    else
-      let errored = s:install_blocking(a:context)
-    endif
-  catch
-    call v:lua.__error(v:exception)
-    call v:lua.__error(v:throwpoint)
-    return 1
-  endtry
-
-  return errored
 endfunction
 
 function! dein#install#_rollback(date, plugins) abort
@@ -235,7 +215,7 @@ function! dein#install#_polling() abort
     set guioptions-=!
   endif
 
-  call s:install_async(g:__global_context)
+  call dein#install#__install_async(g:__global_context)
 
   if exists('+guioptions')
     let &guioptions = save_guioptions
@@ -537,7 +517,7 @@ function! dein#install#_rm(path) abort
   endif
 endfunction
 
-function! s:install_blocking(context) abort
+function! dein#install#__install_blocking(context) abort
   try
     while 1
       call dein#install#__check_loop(a:context)
@@ -554,7 +534,7 @@ function! s:install_blocking(context) abort
 
   return len(a:context.errored_plugins)
 endfunction
-function! s:install_async(context) abort
+function! dein#install#__install_async(context) abort
   if empty(a:context)
     return
   endif

@@ -84,6 +84,31 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __update_loop(context)
+  local errored = 0
+  try {
+    function()
+      if vim.fn.has('vim_starting')==1 then
+        while vim.fn.empty(vim.g.__global_context)==0 do
+          errored = vim.fn['dein#install#__install_async'](context)
+          vim.api.nvim_command('sleep 50ms')
+          vim.api.nvim_command('redraw')
+        end
+      else
+        errored = vim.fn['dein#install#__install_blocking'](context)
+      end
+    end,
+    catch {
+      function(error)
+        __error(vim.v.exception)
+        __error(vim.v.throwpoint)
+        print('caught error: ' .. error)
+        errored = 1
+      end
+    }
+  }
+  return errored
+end
 function _build(plugins)
   local error = 0
   for _, plugin in ipairs(vim.tbl_filter(
