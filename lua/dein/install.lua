@@ -84,6 +84,41 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function _each(cmd, plugins)
+  local plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, _get_plugins(plugins))
+
+  local global_context_save = vim.g.__global_context
+
+  local context = __init_context(plugins, 'each', 0)
+  __init_variables(context)
+
+  local cwd = vim.fn.getcwd()
+  local error = 0
+  try {
+    function()
+      for _, plugin in ipairs(plugins) do
+        vim.fn['dein#install#_cd'](plugin.path)
+
+        if vim.fn['dein#install#_execute'](cmd)~=0 then
+          error = 1
+        end
+      end
+    end,
+    catch {
+      function(e)
+        __error(vim.v.exception .. ' ' .. vim.v.throwpoint)
+        error = 1
+        print('caught error: ' .. e)
+      end
+    }
+  }
+
+  vim.g.__global_context = global_context_save
+  vim.fn['dein#install#_cd'](cwd)
+
+  return error
+end
+
 function __helptags()
   if dein._runtime_path == '' or dein._is_sudo then
     return ''
@@ -143,7 +178,7 @@ function _build(plugins)
     end,
     _get_plugins(plugins))) do
     __print_progress_message('Building: ' .. plugin.name)
-    if vim.fn['dein#install#_each'](plugin.build, plugin)==1 then
+    if _each(plugin.build, plugin)==1 then
       error = 1
     end
   end

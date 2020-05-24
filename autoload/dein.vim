@@ -97,7 +97,8 @@ function! dein#get_progress() abort
   return dein#install#_get_progress()
 endfunction
 function! dein#each(command, ...) abort
-  return dein#install#_each(a:command, (a:0 ? a:1 : []))
+  lua require 'dein/install'
+  return v:lua._each(a:command, (a:0 ? a:1 : []))
 endfunction
 function! dein#build(...) abort
   lua require 'dein/install'

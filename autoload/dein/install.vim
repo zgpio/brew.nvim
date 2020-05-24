@@ -171,7 +171,7 @@ function! dein#install#_load_rollback(rollbackfile, plugins) abort
     let type = dein#util#_get_type(plugin.type)
     let cmd = type.get_rollback_command(
           \ dein#util#_get_type(plugin.type), revisions[plugin.name])
-    call dein#install#_each(cmd, plugin)
+    call v:lua._each(cmd, plugin)
   endfor
 
   call dein#recache_runtimepath()
@@ -232,36 +232,6 @@ function! dein#install#_remote_plugins() abort
 
   let result = execute('UpdateRemotePlugins', '')
   call v:lua.__log(result)
-endfunction
-
-function! dein#install#_each(cmd, plugins) abort
-  let plugins = filter(v:lua._get_plugins(a:plugins),
-        \ 'isdirectory(v:val.path)')
-
-  let global_context_save = g:__global_context
-
-  let context = v:lua.__init_context(plugins, 'each', 0)
-  call v:lua.__init_variables(context)
-
-  let cwd = getcwd()
-  let error = 0
-  try
-    for plugin in plugins
-      call dein#install#_cd(plugin.path)
-
-      if dein#install#_execute(a:cmd)
-        let error = 1
-      endif
-    endfor
-  catch
-    call v:lua.__error(v:exception . ' ' . v:throwpoint)
-    return 1
-  finally
-    let g:__global_context = global_context_save
-    call dein#install#_cd(cwd)
-  endtry
-
-  return error
 endfunction
 
 function! dein#install#_get_log() abort
