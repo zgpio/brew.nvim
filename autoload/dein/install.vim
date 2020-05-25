@@ -280,7 +280,7 @@ function! s:get_revision_number(plugin) abort
     return ''
   endif
 
-  let rev = s:system_cd(cmd, a:plugin.path)
+  let rev = v:lua.__system_cd(cmd, a:plugin.path)
 
   " If rev contains spaces, it is error message
   if rev =~# '\s'
@@ -307,7 +307,7 @@ function! s:get_revision_remote(plugin) abort
     return ''
   endif
 
-  let rev = s:system_cd(cmd, a:plugin.path)
+  let rev = v:lua.__system_cd(cmd, a:plugin.path)
   " If rev contains spaces, it is error message
   return (rev !~# '\s') ? rev : ''
 endfunction
@@ -316,7 +316,7 @@ function! s:get_updated_log_message(plugin, new_rev, old_rev) abort
 
   let cmd = has_key(type, 'get_log_command') ?
         \ type.get_log_command(a:plugin, a:new_rev, a:old_rev) : ''
-  let log = empty(cmd) ? '' : s:system_cd(cmd, a:plugin.path)
+  let log = empty(cmd) ? '' : v:lua.__system_cd(cmd, a:plugin.path)
   return log !=# '' ? log :
         \            (a:old_rev  == a:new_rev) ? ''
         \            : printf('%s -> %s', a:old_rev, a:new_rev)
@@ -349,7 +349,7 @@ function! s:lock_revision(process, context) abort
     call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Locked'))
   endif
 
-  let result = s:system_cd(cmd, plugin.path)
+  let result = v:lua.__system_cd(cmd, plugin.path)
   let status = dein#install#_status()
 
   if status
@@ -371,16 +371,6 @@ function! dein#install#_system(command) abort
 endfunction
 function! dein#install#_status() abort
   return v:shell_error
-endfunction
-function! s:system_cd(command, path) abort
-  let cwd = getcwd()
-  try
-    call v:lua._cd(a:path)
-    return dein#install#_system(a:command)
-  finally
-    call v:lua._cd(cwd)
-  endtry
-  return ''
 endfunction
 
 function! dein#install#_execute(command) abort

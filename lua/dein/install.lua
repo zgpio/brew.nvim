@@ -84,6 +84,23 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __system_cd(command, path)
+  local cwd = vim.fn.getcwd()
+  local rv = ''
+  try {
+    function()
+      _cd(path)
+      rv = vim.fn['dein#install#_system'](command)
+    end,
+    catch {
+      function(e)
+        print('caught error: ' .. e)
+      end
+    }
+  }
+  _cd(cwd)
+  return rv
+end
 -- Helper functions
 function _cd(path)
   if vim.fn.isdirectory(path)==0 then
