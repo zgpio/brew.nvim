@@ -84,6 +84,33 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+-- Helper functions
+function _cd(path)
+  if vim.fn.isdirectory(path)==0 then
+    return
+  end
+
+  try {
+    function()
+      local d
+      if vim.fn.haslocaldir()==1 then
+        d = 'lcd'
+      else
+        d = 'cd'
+      end
+      vim.api.nvim_command('noautocmd execute '..vim.fn.string(d..vim.fn.fnameescape(path)))
+    end,
+    catch {
+      function(e)
+        __error('Error cd to: ' .. path)
+        __error('Current directory: ' .. vim.fn.getcwd())
+        __error(vim.v.exception)
+        __error(vim.v.throwpoint)
+        print('caught error: ' .. e)
+      end
+    }
+  }
+end
 function _rm(path)
   if vim.fn.isdirectory(path)==0 and vim.fn.filereadable(path)==0 then
     return
@@ -192,7 +219,7 @@ function _each(cmd, plugins)
   try {
     function()
       for _, plugin in ipairs(plugins) do
-        vim.fn['dein#install#_cd'](plugin.path)
+        _cd(plugin.path)
 
         if vim.fn['dein#install#_execute'](cmd)~=0 then
           error = 1
@@ -209,7 +236,7 @@ function _each(cmd, plugins)
   }
 
   vim.g.__global_context = global_context_save
-  vim.fn['dein#install#_cd'](cwd)
+  _cd(cwd)
 
   return error
 end

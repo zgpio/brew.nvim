@@ -359,21 +359,6 @@ function! s:lock_revision(process, context) abort
   endif
 endfunction
 
-" Helper functions
-function! dein#install#_cd(path) abort
-  if !isdirectory(a:path)
-    return
-  endif
-
-  try
-    noautocmd execute (haslocaldir() ? 'lcd' : 'cd') fnameescape(a:path)
-  catch
-    call v:lua.__error('Error cd to: ' . a:path)
-    call v:lua.__error('Current directory: ' . getcwd())
-    call v:lua.__error(v:exception)
-    call v:lua.__error(v:throwpoint)
-  endtry
-endfunction
 function! dein#install#_system(command) abort
   " Todo: use job API instead for Vim8/neovim only
   " let job = s:Job.start()
@@ -390,10 +375,10 @@ endfunction
 function! s:system_cd(command, path) abort
   let cwd = getcwd()
   try
-    call dein#install#_cd(a:path)
+    call v:lua._cd(a:path)
     return dein#install#_system(a:command)
   finally
-    call dein#install#_cd(cwd)
+    call v:lua._cd(cwd)
   endtry
   return ''
 endfunction
@@ -528,7 +513,7 @@ function! dein#install#__init_process(plugin, context, cmd) abort
     " Disable git prompt (git version >= 2.3.0)
     let $GIT_TERMINAL_PROMPT = 0
 
-    call dein#install#_cd(a:plugin.path)
+    call v:lua._cd(a:plugin.path)
 
     let rev = s:get_revision_number(a:plugin)
 
@@ -561,7 +546,7 @@ function! dein#install#__init_process(plugin, context, cmd) abort
   finally
     let $LANG = lang_save
     let $GIT_TERMINAL_PROMPT = prompt_save
-    call dein#install#_cd(cwd)
+    call v:lua._cd(cwd)
   endtry
 
   return process
@@ -714,11 +699,11 @@ function! dein#install#__check_output(context, process) abort
 
     let cwd = getcwd()
     try
-      call dein#install#_cd(plugin.path)
+      call v:lua._cd(plugin.path)
 
       call dein#call_hook('post_update', plugin)
     finally
-      call dein#install#_cd(cwd)
+      call v:lua._cd(cwd)
     endtry
 
     if v:lua._build([plugin.name])
