@@ -97,51 +97,6 @@ function! dein#install#_rollback(date, plugins) abort
   call dein#install#_load_rollback(rollbacks[0], a:plugins)
 endfunction
 
-function! dein#install#_recache_runtimepath() abort
-  if luaeval('dein._is_sudo')
-    return
-  endif
-
-  " Clear runtime path.
-  call v:lua.clear_runtimepath()
-
-  let plugins = values(v:lua.dein.get())
-
-  let merged_plugins = filter(copy(plugins), 'v:val.merged')
-
-  call v:lua.__copy_files(filter(copy(merged_plugins), 'v:val.lazy'), '')
-  " Remove plugin directory
-  call v:lua._rm(v:lua._get_runtime_path() . '/plugin')
-  call v:lua._rm(v:lua._get_runtime_path() . '/after/plugin')
-
-  call v:lua.__copy_files(filter(copy(merged_plugins), '!v:val.lazy'), '')
-
-  call v:lua.__helptags()
-
-  call v:lua.__generate_ftplugin()
-
-  " Clear ftdetect and after/ftdetect directories.
-  call v:lua._rm(
-        \ v:lua._get_runtime_path().'/ftdetect')
-  call v:lua._rm(
-        \ v:lua._get_runtime_path().'/after/ftdetect')
-
-  call v:lua.merge_files(plugins, 'ftdetect')
-  call v:lua.merge_files(plugins, 'after/ftdetect')
-
-  silent call dein#remote_plugins()
-
-  call dein#call_hook('post_source')
-
-  call v:lua._save_merged_plugins()
-
-  call dein#install#_save_rollback(
-        \ v:lua.__get_rollback_directory() . '/' . strftime('%Y%m%d%H%M%S'), [])
-
-  lua _clear_state()
-
-  call v:lua.__log(strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
-endfunction
 function! dein#install#_save_rollback(rollbackfile, plugins) abort
   let revisions = {}
   for plugin in filter(v:lua._get_plugins(a:plugins),

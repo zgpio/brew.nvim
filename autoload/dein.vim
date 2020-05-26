@@ -71,7 +71,8 @@ function! dein#remote_plugins() abort
   return dein#install#_remote_plugins()
 endfunction
 function! dein#recache_runtimepath() abort
-  call dein#install#_recache_runtimepath()
+  lua require 'dein/install'
+  call v:lua._recache_runtimepath()
 endfunction
 function! dein#call_hook(hook_name, ...) abort
   lua require 'dein/util'

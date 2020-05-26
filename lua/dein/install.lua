@@ -227,7 +227,7 @@ function __done(context)
   end
 
   if context.update_type ~= 'check_update' then
-    vim.fn['dein#install#_recache_runtimepath']()
+    _recache_runtimepath()
   end
 
   if vim.fn.empty(context.synced_plugins)==0 then
@@ -789,4 +789,46 @@ function __strwidthpart_reverse(str, width)
   end
 
   return ret
+end
+function _recache_runtimepath()
+  if dein._is_sudo then
+    return
+  end
+
+  -- Clear runtime path.
+  clear_runtimepath()
+
+  local plugins = vim.tbl_values(dein.get())
+
+  local merged_plugins = vim.tbl_filter(function(v) return v.merged==1 end, vim.fn.copy(plugins))
+
+  __copy_files(vim.tbl_filter(function(v) return v.lazy~=0 end, vim.fn.copy(merged_plugins)), '')
+  -- Remove plugin directory
+  _rm(_get_runtime_path() .. '/plugin')
+  _rm(_get_runtime_path() .. '/after/plugin')
+
+  __copy_files(vim.tbl_filter(function(v) return v.lazy==0 end, vim.fn.copy(merged_plugins)), '')
+
+  __helptags()
+
+  __generate_ftplugin()
+
+  -- Clear ftdetect and after/ftdetect directories.
+  _rm(_get_runtime_path()..'/ftdetect')
+  _rm(_get_runtime_path()..'/after/ftdetect')
+
+  merge_files(plugins, 'ftdetect')
+  merge_files(plugins, 'after/ftdetect')
+
+  vim.api.nvim_command('silent call dein#remote_plugins()')
+
+  vim.fn['dein#call_hook']('post_source')
+
+  _save_merged_plugins()
+
+  vim.fn['dein#install#_save_rollback'](__get_rollback_directory() .. '/' .. vim.fn.strftime('%Y%m%d%H%M%S'), {})
+
+  _clear_state()
+
+  __log(vim.fn.strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 end
