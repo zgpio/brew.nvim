@@ -330,11 +330,12 @@ function! s:lock_revision(process, context) abort
   let plugin.new_rev = s:get_revision_number(plugin)
 
   let type = dein#util#_get_type(plugin.type)
-  if !has_key(type, 'get_revision_lock_command')
+  " TODO !has_key(type, 'get_revision_lock_command')
+  if type.name != 'git'
     return 0
   endif
 
-  let cmd = type.get_revision_lock_command(plugin)
+  let cmd = v:lua.get_revision_lock_command(type, plugin)
 
   if empty(cmd) || plugin.new_rev ==# get(plugin, 'rev', '')
     " Skipped.

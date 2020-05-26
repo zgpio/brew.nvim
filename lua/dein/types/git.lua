@@ -183,3 +183,29 @@ function get_sync_command(git, plugin)
     return gcmd .. ' ' .. cmd
   end
 end
+function get_revision_lock_command(git, plugin)
+  if git.executable==0 then
+    return {}
+  end
+
+  local rev = plugin.rev or ''
+  if rev:find('*') then
+    -- Use the released tag (git 1.9.2 or above required)
+    rev = vim.fn.get(vim.fn.split(vim.fn['dein#install#_system'](
+           {git.command, 'tag', '--list', vim.fn.escape(rev, '*'), '--sort', '-version:refname'}),
+           "\n"), 0, '')
+  end
+  if rev == '' then
+    -- Fix detach HEAD.
+    -- Use symbolic-ref feature (git 1.8.7 or above required)
+    rev = vim.fn['dein#install#_system']({
+           git.command, 'symbolic-ref', '--short', 'HEAD'
+           })
+    if rev:find('fatal: ') then
+      -- Fix "fatal: ref HEAD is not a symbolic ref" error
+      rev = 'master'
+    end
+  end
+
+  return {git.command, 'checkout', rev, '--'}
+end
