@@ -146,7 +146,7 @@ function! dein#install#_save_rollback(rollbackfile, plugins) abort
   let revisions = {}
   for plugin in filter(v:lua._get_plugins(a:plugins),
         \ 's:check_rollback(v:val)')
-    let rev = s:get_revision_number(plugin)
+    let rev = v:lua.__get_revision_number(plugin)
     if rev !=# ''
       let revisions[plugin.name] = rev
     endif
@@ -162,7 +162,7 @@ function! dein#install#_load_rollback(rollbackfile, plugins) abort
   call filter(plugins, "has_key(revisions, v:val.name)
         \ && dein#util#_get_type(v:val.type).name == 'git'
         \ && s:check_rollback(v:val)
-        \ && s:get_revision_number(v:val) !=# revisions[v:val.name]")
+        \ && v:lua.__get_revision_number(v:val) !=# revisions[v:val.name]")
   if empty(plugins)
     return
   endif
@@ -268,34 +268,6 @@ function! s:get_sync_command(plugin, update_type, number, max) abort "{{{i
 
   return [cmd, message]
 endfunction
-function! s:get_revision_number(plugin) abort
-  let type = dein#util#_get_type(a:plugin.type)
-
-  " TODO !has_key(type, 'get_revision_number_command')
-  if !isdirectory(a:plugin.path)
-        \ || type.name != 'git'
-    return ''
-  endif
-
-  let cmd = v:lua.get_revision_number_command(type, a:plugin)
-  if empty(cmd)
-    return ''
-  endif
-
-  let rev = v:lua.__system_cd(cmd, a:plugin.path)
-
-  " If rev contains spaces, it is error message
-  if rev =~# '\s'
-    call v:lua.__error(a:plugin.name)
-    call v:lua.__error('Error revision number: ' . rev)
-    return ''
-  elseif rev ==# ''
-    call v:lua.__error(a:plugin.name)
-    call v:lua.__error('Empty revision number: ' . rev)
-    return ''
-  endif
-  return rev
-endfunction
 function! s:get_revision_remote(plugin) abort
   let type = dein#util#_get_type(a:plugin.type)
 
@@ -330,7 +302,7 @@ function! s:lock_revision(process, context) abort
   let max = a:context.max_plugins
   let plugin = a:process.plugin
 
-  let plugin.new_rev = s:get_revision_number(plugin)
+  let plugin.new_rev = v:lua.__get_revision_number(plugin)
 
   let type = dein#util#_get_type(plugin.type)
   " TODO !has_key(type, 'get_revision_lock_command')
@@ -510,7 +482,7 @@ function! dein#install#__init_process(plugin, context, cmd) abort
 
     call v:lua._cd(a:plugin.path)
 
-    let rev = s:get_revision_number(a:plugin)
+    let rev = v:lua.__get_revision_number(a:plugin)
 
     let process = {
           \ 'number': a:context.number,
@@ -645,7 +617,7 @@ function! dein#install#__check_output(context, process) abort
 
   let new_rev = (a:context.update_type ==# 'check_update') ?
         \ s:get_revision_remote(plugin) :
-        \ s:get_revision_number(plugin)
+        \ v:lua.__get_revision_number(plugin)
 
   if is_timeout || status
     call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Error'))

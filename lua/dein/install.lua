@@ -85,6 +85,33 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __get_revision_number(plugin)
+  local type = vim.fn['dein#util#_get_type'](plugin.type)
+
+  -- TODO !has_key(type, 'get_revision_number_command')
+  if vim.fn.isdirectory(plugin.path)==0 or type.name ~= 'git' then
+    return ''
+  end
+
+  local cmd = get_revision_number_command(type, plugin)
+  if vim.fn.empty(cmd)==1 then
+    return ''
+  end
+
+  local rev = __system_cd(cmd, plugin.path)
+
+  -- If rev contains spaces, it is error message
+  if rev:find('%s') then
+    __error(plugin.name)
+    __error('Error revision number: ' .. rev)
+    return ''
+  elseif rev == '' then
+    __error(plugin.name)
+    __error('Empty revision number: ' .. rev)
+    return ''
+  end
+  return rev
+end
 function __system_cd(command, path)
   local cwd = vim.fn.getcwd()
   local rv = ''
