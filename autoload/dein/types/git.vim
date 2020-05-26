@@ -136,13 +136,6 @@ function! s:type.get_sync_command(plugin) abort
   endif
 endfunction
 
-function! s:type.get_revision_number_command(plugin) abort
-  if !self.executable
-    return []
-  endif
-
-  return [self.command, 'rev-parse', 'HEAD']
-endfunction
 function! s:type.get_log_command(plugin, new_rev, old_rev) abort
   if !self.executable || a:new_rev ==# '' || a:old_rev ==# ''
     return []

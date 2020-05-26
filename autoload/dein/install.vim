@@ -270,12 +270,13 @@ endfunction
 function! s:get_revision_number(plugin) abort
   let type = dein#util#_get_type(a:plugin.type)
 
+  " TODO !has_key(type, 'get_revision_number_command')
   if !isdirectory(a:plugin.path)
-        \ || !has_key(type, 'get_revision_number_command')
+        \ || type.name != 'git'
     return ''
   endif
 
-  let cmd = type.get_revision_number_command(a:plugin)
+  let cmd = v:lua.get_revision_number_command(type, a:plugin)
   if empty(cmd)
     return ''
   endif

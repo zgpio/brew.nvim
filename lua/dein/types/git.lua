@@ -90,3 +90,10 @@ function __is_git_dir(path)
   -- those edge cases.
   return 1
 end
+function get_revision_number_command(git, plugin)
+  if git.executable==0 then
+    return {}
+  end
+
+  return {git.command, 'rev-parse', 'HEAD'}
+end
