@@ -16,8 +16,8 @@ let s:git = dein#types#git#define()
 function! dein#parse#_init(repo, options) abort
   let repo = v:lua._expand(a:repo)
   let plugin = has_key(a:options, 'type') ?
-        \ dein#util#_get_type(a:options.type).init(repo, a:options) :
-        \ s:git.init(repo, a:options)
+        \ v:lua.init(dein#util#_get_type(a:options.type), repo, a:options) :
+        \ v:lua.init(s:git, repo, a:options)
   if empty(plugin)
     let plugin = s:check_type(repo, a:options)
   endif
@@ -113,7 +113,7 @@ endfunction
 function! s:check_type(repo, options) abort
   let plugin = {}
   for type in values(dein#parse#_get_types())
-    let plugin = type.init(a:repo, a:options)
+    let plugin = v:lua.init(type, a:repo, a:options)
     if !empty(plugin)
       break
     endif

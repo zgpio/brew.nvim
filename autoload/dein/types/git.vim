@@ -23,30 +23,3 @@ let s:type = {
       \ 'command': g:dein#types#git#command_path,
       \ 'executable': executable(g:dein#types#git#command_path),
       \ }
-
-function! s:type.init(repo, options) abort
-  if !self.executable
-    return {}
-  endif
-
-  if a:repo =~# '^/\|^\a:[/\\]' && v:lua.__is_git_dir(a:repo.'/.git')
-    " Local repository.
-    return { 'type': 'git', 'local': 1 }
-  elseif a:repo =~#
-        \ '//\%(raw\|gist\)\.githubusercontent\.com/\|/archive/[^/]\+\.zip$'
-    return {}
-  endif
-
-  let uri = v:lua.get_uri(a:repo, a:options)
-  if uri ==# ''
-    return {}
-  endif
-
-  let directory = substitute(uri, '\.git$', '', '')
-  let directory = substitute(directory, '^https:/\+\|^git@', '', '')
-  let directory = substitute(directory, ':', '/', 'g')
-
-  lua require 'dein/util'
-  return { 'type': 'git',
-        \  'path': luaeval('dein._base_path').'/repos/'.directory }
-endfunction

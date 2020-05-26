@@ -253,3 +253,26 @@ function get_log_command(git, plugin, new_rev, old_rev)
          ' --pretty=format:"%%h [%%cr] %%s"',
          old_rev, t, new_rev)
 end
+function init(git, repo, options)
+  if git.executable==0 then
+    return {}
+  end
+
+  if (repo:find('^/') or repo:find('^%a:[/\\]')) and __is_git_dir(repo..'/.git') then
+    -- Local repository.
+    return { ['type']='git', ['local']=1 }
+  elseif vim.fn.match(repo, [[//\%(raw\|gist\)\.githubusercontent\.com/\|/archive/[^/]\+\.zip$]])~=-1 then
+    return {}
+  end
+
+  local uri = get_uri(repo, options)
+  if uri == '' then
+    return {}
+  end
+
+  local directory = vim.fn.substitute(uri, [[\.git$]], '', '')
+  directory = vim.fn.substitute(directory, [[^https:/\+\|^git@]], '', '')
+  directory = vim.fn.substitute(directory, ':', '/', 'g')
+
+  return { ['type']='git', ['path']=dein._base_path..'/repos/'..directory }
+end
