@@ -258,7 +258,7 @@ function! s:job_execute.execute(cmd) abort
         \ s:convert_args(a:cmd),
         \ {'on_stdout': self.on_out})
 
-  return job.wait(g:dein#install_process_timeout * 1000)
+  return dein#job#_job_wait(job, g:dein#install_process_timeout * 1000)
 endfunction
 
 function! dein#install#__install_async(context) abort
@@ -461,7 +461,7 @@ function! s:init_job(process, context, cmd) abort
     endif
 
     if is_timeout
-      call a:process.job.stop()
+      call dein#job#_job_stop(a:process.job)
       let status = -1
     endif
 
@@ -474,7 +474,7 @@ function! s:init_job(process, context, cmd) abort
         \   'on_stderr': a:process.async.job_handler,
         \   'on_exit': a:process.async.on_exit,
         \ })
-  let a:process.id = a:process.job.pid()
+  let a:process.id = dein#job#_job_pid(a:process.job)
   let a:process.job.candidates = []
 endfunction
 function! dein#install#__check_output(context, process) abort

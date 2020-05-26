@@ -3,7 +3,7 @@ function! dein#job#import() abort
 endfunction
 
 function! s:start(args, options) abort
-  let job = extend(copy(s:job), a:options)
+  let job = a:options
   let job_options = {}
   if has_key(a:options, 'cwd')
     let job_options.cwd = a:options.cwd
@@ -43,35 +43,35 @@ function! s:_on_exit_raw(job, job_id, exitval, event) abort
 endfunction
 
 " Instance -------------------------------------------------------------------
-function! s:_job_id() abort dict
-  return self.pid()
+function! dein#job#_job_id(job) abort
+  return dein#job#_job_pid(a:job)
 endfunction
 
-function! s:_job_pid() abort dict
-  return jobpid(self.__job)
+function! dein#job#_job_pid(job) abort
+  return jobpid(a:job.__job)
 endfunction
 
-function! s:_job_status() abort dict
+function! dein#job#_job_status(job) abort
   try
     sleep 1m
-    call jobpid(self.__job)
+    call jobpid(a:job.__job)
     return 'run'
   catch /^Vim\%((\a\+)\)\=:E900/
     return 'dead'
   endtry
 endfunction
 
-function! s:_job_send(data) abort dict
-  return chansend(self.__job, a:data)
+function! dein#job#_job_send(job, data) abort
+  return chansend(a:job.__job, a:data)
 endfunction
 
-function! s:_job_close() abort dict
-  call chanclose(self.__job, 'stdin')
+function! dein#job#_job_close(job) abort
+  call chanclose(a:job.__job, 'stdin')
 endfunction
 
-function! s:_job_stop() abort dict
+function! dein#job#_job_stop(job) abort
   try
-    call jobstop(self.__job)
+    call jobstop(a:job.__job)
   catch /^Vim\%((\a\+)\)\=:E900/
     " NOTE:
     " Vim does not raise exception even the job has already closed so fail
@@ -79,28 +79,17 @@ function! s:_job_stop() abort dict
   endtry
 endfunction
 
-function! s:_job_wait(...) abort dict
+function! dein#job#_job_wait(job, ...) abort
   let timeout = a:0 ? a:1 : v:null
   let exitval = timeout is# v:null
-        \ ? jobwait([self.__job])[0]
-        \ : jobwait([self.__job], timeout)[0]
+        \ ? jobwait([a:job.__job])[0]
+        \ : jobwait([a:job.__job], timeout)[0]
   if exitval != -3
     return exitval
   endif
   " Wait until 'on_exit' callback is called
-  while self.__exitval is# v:null
+  while a:job.__exitval is# v:null
     sleep 1m
   endwhile
-  return self.__exitval
+  return a:job.__exitval
 endfunction
-
-" To make debug easier, use funcref instead.
-let s:job = {
-      \ 'id': function('s:_job_id'),
-      \ 'pid': function('s:_job_pid'),
-      \ 'status': function('s:_job_status'),
-      \ 'send': function('s:_job_send'),
-      \ 'close': function('s:_job_close'),
-      \ 'stop': function('s:_job_stop'),
-      \ 'wait': function('s:_job_wait'),
-      \}
