@@ -216,3 +216,15 @@ function get_rollback_command(git, plugin, rev)
 
   return {git.command, 'reset', '--hard', rev}
 end
+function get_revision_remote_command(git, plugin)
+  if git.executable==0 then
+    return {}
+  end
+
+  local rev = plugin.rev or ''
+  if rev == '' then
+    rev = 'HEAD'
+  end
+
+  return {git.command, 'ls-remote', 'origin', rev}
+end
