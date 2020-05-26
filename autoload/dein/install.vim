@@ -202,27 +202,6 @@ function! dein#install#_get_progress() abort
   return g:__progress
 endfunction
 
-function! s:get_sync_command(plugin, update_type, number, max) abort "{{{i
-  let type = dein#util#_get_type(a:plugin.type)
-
-  " TODO has_key(type, 'get_fetch_remote_command')
-  if a:update_type ==# 'check_update'
-        \ && type.name == 'git'
-    let cmd = v:lua.get_fetch_remote_command(type, a:plugin)
-  elseif type.name == 'git'  " TODO has_key(type, 'get_sync_command')
-    let cmd = v:lua.get_sync_command(type, a:plugin)
-  else
-    return ['', '']
-  endif
-
-  if empty(cmd)
-    return ['', '']
-  endif
-
-  let message = v:lua.__get_plugin_message(a:plugin, a:number, a:max, string(cmd))
-
-  return [cmd, message]
-endfunction
 function! s:get_revision_remote(plugin) abort
   let type = dein#util#_get_type(a:plugin.type)
 
@@ -394,7 +373,7 @@ function! dein#install#__sync(plugin, context) abort
     return
   endif
 
-  let [cmd, message] = s:get_sync_command(
+  let [cmd, message] = v:lua.__get_sync_command(
         \   a:plugin, a:context.update_type,
         \   a:context.number, a:context.max_plugins)
 

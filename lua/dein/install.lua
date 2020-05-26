@@ -832,3 +832,24 @@ function _recache_runtimepath()
 
   __log(vim.fn.strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 end
+function __get_sync_command(plugin, update_type, number, max)
+  local type = vim.fn['dein#util#_get_type'](plugin.type)
+  local cmd
+
+  -- TODO has_key(type, 'get_fetch_remote_command')
+  if update_type == 'check_update' and type.name == 'git' then
+    cmd = get_fetch_remote_command(type, plugin)
+  elseif type.name == 'git' then  -- TODO has_key(type, 'get_sync_command')
+    cmd = get_sync_command(type, plugin)
+  else
+    return {'', ''}
+  end
+
+  if vim.fn.empty(cmd)==1 then
+    return {'', ''}
+  end
+
+  local message = __get_plugin_message(plugin, number, max, vim.fn.string(cmd))
+
+  return {cmd, message}
+end
