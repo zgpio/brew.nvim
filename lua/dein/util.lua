@@ -25,6 +25,13 @@ function _get_runtime_path()
   return rtp
 end
 
+function _is_fish()
+  return vim.fn['dein#install#_is_async']()~=0 and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
+end
+function _is_powershell()
+  local t = vim.fn.fnamemodify(vim.o.shell, ':t:r')
+  return vim.fn['dein#install#_is_async']()~=0 and (t == 'powershell' or t == 'pwsh')
+end
 function _error(msg)
   for _, mes in ipairs(__msg2list(msg)) do
     vim.api.nvim_command(string.format("echohl WarningMsg | echomsg '[dein] %s' | echohl None", mes))
