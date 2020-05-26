@@ -209,3 +209,10 @@ function get_revision_lock_command(git, plugin)
 
   return {git.command, 'checkout', rev, '--'}
 end
+function get_rollback_command(git, plugin, rev)
+  if git.executable==0 then
+    return {}
+  end
+
+  return {git.command, 'reset', '--hard', rev}
+end
