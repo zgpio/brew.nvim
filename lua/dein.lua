@@ -100,9 +100,9 @@ function load_state(path, ...)
     end,
     catch {
       function(error)
-      -- if v:exception !=# 'Cache loading error'
-      --   call dein#util#_error('Loading state error: ' . v:exception)
-      -- end
+        if vim.v.exception ~= 'Cache loading error' then
+          _error('Loading state error: ' .. vim.v.exception)
+        end
         vim.fn['dein#clear_state']()
         print('caught error: ' .. error)
         return 1

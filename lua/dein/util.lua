@@ -25,6 +25,19 @@ function _get_runtime_path()
   return rtp
 end
 
+function _error(msg)
+  for _, mes in ipairs(__msg2list(msg)) do
+    vim.api.nvim_command(string.format("echohl WarningMsg | echomsg '[dein] %s' | echohl None", mes))
+  end
+end
+
+function __msg2list(expr)
+  if vim.tbl_islist(expr) then
+    return expr
+  else
+    return vim.fn.split(expr, '\n')
+  end
+end
 function _set_default(var, val)
   if vim.g[var]==nil or type(vim.g[var]) ~= type(val) then
     vim.g[var] = val
@@ -82,10 +95,10 @@ function _execute_hook(plugin, hook)
     end,
     catch {
       function(error)
-        vim.fn['dein#util#_error'](
+        _error(
                'Error occurred while executing hook: ' ..
                vim.fn.get(plugin, 'name', ''))
-        vim.fn['dein#util#_error'](vim.v.exception)
+        _error(vim.v.exception)
 
         print('caught error: ' .. error)
       end

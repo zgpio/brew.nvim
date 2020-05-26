@@ -5,6 +5,7 @@
 " License: MIT license
 "=============================================================================
 
+lua require 'dein/util'
 " Global options definition.
 let g:dein#types#git#command_path = 'git'
 let g:dein#types#git#default_protocol = 'https'
@@ -77,14 +78,14 @@ function! s:type.get_uri(repo, options) abort
   endif
 
   if protocol !=# 'https' && protocol !=# 'ssh'
-    call dein#util#_error(
+    call v:lua._error(
           \ printf('Repo: %s The protocol "%s" is unsecure and invalid.',
           \ a:repo, protocol))
     return ''
   endif
 
   if a:repo !~# '/'
-    call dein#util#_error(
+    call v:lua._error(
           \ printf('vim-scripts.org is deprecated.'
           \ . ' You can use "vim-scripts/%s" instead.', a:repo))
     return ''

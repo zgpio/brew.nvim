@@ -32,12 +32,12 @@ function! dein#parse#_load_toml(filename, default) abort
   try
     let toml = dein#toml#parse_file(v:lua._expand(a:filename))
   catch /Text.TOML:/
-    call dein#util#_error('Invalid toml format: ' . a:filename)
-    call dein#util#_error(v:exception)
+    call v:lua._error('Invalid toml format: ' . a:filename)
+    call v:lua._error(v:exception)
     return 1
   endtry
   if type(toml) != v:t_dict
-    call dein#util#_error('Invalid toml file: ' . a:filename)
+    call v:lua._error('Invalid toml file: ' . a:filename)
     return 1
   endif
 
@@ -54,7 +54,7 @@ function! dein#parse#_load_toml(filename, default) abort
   if has_key(toml, 'plugins')
     for plugin in toml.plugins
       if !has_key(plugin, 'repo')
-        call dein#util#_error('No repository plugin data: ' . a:filename)
+        call v:lua._error('No repository plugin data: ' . a:filename)
         return 1
       endif
 

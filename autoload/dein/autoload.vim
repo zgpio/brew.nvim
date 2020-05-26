@@ -9,7 +9,7 @@ function! dein#autoload#_on_cmd(command, name, args, bang, line1, line2) abort
   call dein#source(a:name)
 
   if exists(':' . a:command) != 2
-    call dein#util#_error(printf('command %s is not found.', a:command))
+    call v:lua._error(printf('command %s is not found.', a:command))
     return
   endif
 

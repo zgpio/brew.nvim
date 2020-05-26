@@ -18,10 +18,11 @@ function clear_runtimepath()
   end
 end
 function append_log_file(msg)
-  local logfile = _expand(vim.g['dein#install_log_filename'])
-  if logfile == '' then
+  local fn = vim.g['dein#install_log_filename']
+  if not fn or fn=='' then
     return
   end
+  local logfile = _expand(fn)
 
   -- Appends to log file.
   if vim.fn.filereadable(logfile)==1 then
@@ -164,13 +165,13 @@ function _rm(path)
   cmdline = rm_command .. cmdline
   local result = vim.fn.system(cmdline)
   if vim.v.shell_error~=0 then
-    vim.fn['dein#util#_error'](result)
+    _error(result)
   end
 
   -- Error check.
   if vim.fn.getftype(path) ~= '' then
-    vim.fn['dein#util#_error'](string.format('"%s" cannot be removed.', path))
-    vim.fn['dein#util#_error'](string.format('cmdline is "%s".', cmdline))
+    _error(string.format('"%s" cannot be removed.', path))
+    _error(string.format('cmdline is "%s".', cmdline))
   end
 end
 
@@ -413,7 +414,7 @@ function _copy_directories(srcs, dest)
   local result
   if _is_windows() then
     if vim.fn.executable('robocopy')==0 then
-      vim.fn['dein#util#_error']('robocopy command is needed.')
+      _error('robocopy command is needed.')
       return 1
     end
 
@@ -438,10 +439,10 @@ function _copy_directories(srcs, dest)
     end
 
     if status~=0 then
-      vim.fn['dein#util#_error']('copy command failed.')
-      vim.fn['dein#util#_error'](vim.fn['dein#install#__iconv'](result, 'char', vim.o.encoding))
-      vim.fn['dein#util#_error']('cmdline: ' .. temp)
-      vim.fn['dein#util#_error']('tempfile: ' .. vim.fn.string(lines))
+      _error('copy command failed.')
+      _error(vim.fn['dein#install#__iconv'](result, 'char', vim.o.encoding))
+      _error('cmdline: ' .. temp)
+      _error('tempfile: ' .. vim.fn.string(lines))
     end
   else -- Not Windows
     local srcs = vim.tbl_map(
@@ -472,9 +473,9 @@ function _copy_directories(srcs, dest)
       end
     end
     if status~=0 then
-      vim.fn['dein#util#_error']('copy command failed.')
-      vim.fn['dein#util#_error'](result)
-      vim.fn['dein#util#_error']('cmdline: ' .. cmdline)
+      _error('copy command failed.')
+      _error(result)
+      _error('cmdline: ' .. cmdline)
     end
   end
 
@@ -509,7 +510,7 @@ function _reinstall(plugins)
     repeat
       -- Remove the plugin
       if plugin.type == 'none' or (plugin['local'] or 0)==1 or (plugin.sourced==1 and vim.fn.index({'dein'}, plugin.normalized_name) >= 0) then
-        vim.fn['dein#util#_error'](vim.fn.printf('|%s| Cannot reinstall the plugin!', plugin.name))
+        _error(vim.fn.printf('|%s| Cannot reinstall the plugin!', plugin.name))
         break
       end
 
