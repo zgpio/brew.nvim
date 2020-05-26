@@ -66,10 +66,3 @@ function! s:type.get_log_command(plugin, new_rev, old_rev) abort
         \ ' --pretty=format:"%%h [%%cr] %%s"',
         \ a:old_rev, (is_not_ancestor ? '' : '^'), a:new_rev)
 endfunction
-function! s:type.get_fetch_remote_command(plugin) abort
-  if !self.executable
-    return []
-  endif
-
-  return [self.command, 'fetch', 'origin']
-endfunction

@@ -228,3 +228,10 @@ function get_revision_remote_command(git, plugin)
 
   return {git.command, 'ls-remote', 'origin', rev}
 end
+function get_fetch_remote_command(git, plugin)
+  if git.executable==0 then
+    return {}
+  end
+
+  return {git.command, 'fetch', 'origin'}
+end
