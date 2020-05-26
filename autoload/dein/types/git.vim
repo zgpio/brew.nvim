@@ -6,6 +6,7 @@
 "=============================================================================
 
 lua require 'dein/util'
+lua require 'dein/types/git'
 " Global options definition.
 let g:dein#types#git#command_path = 'git'
 let g:dein#types#git#default_protocol = 'https'
@@ -228,7 +229,7 @@ function! s:is_git_dir(path) abort
       " if there's no tail, the path probably ends in a directory separator
       let path = fnamemodify(path, ':h')
     endif
-    let git_dir = s:join_paths(path, matches[1])
+    let git_dir = v:lua.__join_paths(path, matches[1])
     if !isdirectory(git_dir)
       return 0
     endif
@@ -246,7 +247,7 @@ function! s:is_git_dir(path) abort
   " Note: Git also accepts having the GIT_OBJECT_DIRECTORY env var set instead
   " of using .git/objects, but we don't care about that.
   for name in ['objects', 'refs']
-    if !isdirectory(s:join_paths(git_dir, name))
+    if !isdirectory(v:lua.__join_paths(git_dir, name))
       return 0
     endif
   endfor
@@ -256,7 +257,7 @@ function! s:is_git_dir(path) abort
   " sure the file exists and is readable.
   " Note: it may also be a symlink, which can point to a path that doesn't
   " necessarily exist yet.
-  let head = s:join_paths(git_dir, 'HEAD')
+  let head = v:lua.__join_paths(git_dir, 'HEAD')
   if !filereadable(head) && getftype(head) !=# 'link'
     return 0
   endif
@@ -266,33 +267,3 @@ function! s:is_git_dir(path) abort
   " those edge cases.
   return 1
 endfunction
-
-let s:is_windows = v:lua._is_windows()
-
-function! s:join_paths(path1, path2) abort
-  " Joins two paths together, handling the case where the second path
-  " is an absolute path.
-  if s:is_absolute(a:path2)
-    return a:path2
-  endif
-  if a:path1 =~ (s:is_windows ? '[\\/]$' : '/$') ||
-        \ a:path2 =~ (s:is_windows ? '^[\\/]' : '^/')
-    " the appropriate separator already exists
-    return a:path1 . a:path2
-  else
-    " note: I'm assuming here that '/' is always valid as a directory
-    " separator on Windows. I know Windows has paths that start with \\?\ that
-    " diasble behavior like that, but I don't know how Vim deals with that.
-    return a:path1 . '/' . a:path2
-  endif
-endfunction
-
-if s:is_windows
-  function! s:is_absolute(path) abort
-    return a:path =~# '^[\\/]\|^\a:'
-  endfunction
-else
-  function! s:is_absolute(path) abort
-    return a:path =~# '^/'
-  endfunction
-endif
