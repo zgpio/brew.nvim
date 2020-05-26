@@ -317,8 +317,9 @@ endfunction
 function! s:get_updated_log_message(plugin, new_rev, old_rev) abort
   let type = dein#util#_get_type(a:plugin.type)
 
-  let cmd = has_key(type, 'get_log_command') ?
-        \ type.get_log_command(a:plugin, a:new_rev, a:old_rev) : ''
+  " TODO has_key(type, 'get_log_command')
+  let cmd = type.name == 'git' ?
+        \ v:lua.get_log_command(type, a:plugin, a:new_rev, a:old_rev) : ''
   let log = empty(cmd) ? '' : v:lua.__system_cd(cmd, a:plugin.path)
   return log !=# '' ? log :
         \            (a:old_rev  == a:new_rev) ? ''

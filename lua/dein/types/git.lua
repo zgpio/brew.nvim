@@ -235,3 +235,21 @@ function get_fetch_remote_command(git, plugin)
 
   return {git.command, 'fetch', 'origin'}
 end
+function get_log_command(git, plugin, new_rev, old_rev)
+  if git.executable==0 or new_rev == '' or old_rev == '' then
+    return {}
+  end
+
+  -- Note: If the a:old_rev is not the ancestor of two branchs. Then do not use
+  -- %s^.  use %s^ will show one commit message which already shown last time.
+  local is_not_ancestor = vim.fn['dein#install#_system'](
+         git.command .. ' merge-base '
+         .. old_rev .. ' ' .. new_rev) == old_rev
+  local t
+  if is_not_ancestor then t = ''
+  else t = '^' end
+  return string.format(git.command ..
+         ' log %s%s..%s --graph --no-show-signature' ..
+         ' --pretty=format:"%%h [%%cr] %%s"',
+         old_rev, t, new_rev)
+end

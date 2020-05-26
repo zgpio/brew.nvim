@@ -50,19 +50,3 @@ function! s:type.init(repo, options) abort
   return { 'type': 'git',
         \  'path': luaeval('dein._base_path').'/repos/'.directory }
 endfunction
-
-function! s:type.get_log_command(plugin, new_rev, old_rev) abort
-  if !self.executable || a:new_rev ==# '' || a:old_rev ==# ''
-    return []
-  endif
-
-  " Note: If the a:old_rev is not the ancestor of two branchs. Then do not use
-  " %s^.  use %s^ will show one commit message which already shown last time.
-  let is_not_ancestor = dein#install#_system(
-        \ self.command . ' merge-base '
-        \ . a:old_rev . ' ' . a:new_rev) ==# a:old_rev
-  return printf(self.command .
-        \ ' log %s%s..%s --graph --no-show-signature' .
-        \ ' --pretty=format:"%%h [%%cr] %%s"',
-        \ a:old_rev, (is_not_ancestor ? '' : '^'), a:new_rev)
-endfunction
