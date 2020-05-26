@@ -19,7 +19,7 @@ function! dein#parse#_init(repo, options) abort
         \ v:lua.init(dein#util#_get_type(a:options.type), repo, a:options) :
         \ v:lua.init(s:git, repo, a:options)
   if empty(plugin)
-    let plugin = s:check_type(repo, a:options)
+    let plugin = v:lua.__check_type(repo, a:options)
   endif
   call extend(plugin, a:options)
   let plugin.repo = repo
@@ -109,21 +109,4 @@ function! dein#parse#_get_types() abort
     endfor
   endif
   return s:types
-endfunction
-function! s:check_type(repo, options) abort
-  let plugin = {}
-  for type in values(dein#parse#_get_types())
-    let plugin = v:lua.init(type, a:repo, a:options)
-    if !empty(plugin)
-      break
-    endif
-  endfor
-
-  if empty(plugin)
-    let plugin.type = 'none'
-    let plugin.local = 1
-    let plugin.path = isdirectory(a:repo) ? a:repo : ''
-  endif
-
-  return plugin
 endfunction

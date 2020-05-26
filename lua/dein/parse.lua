@@ -298,3 +298,25 @@ end
 function _name_conversion(path)
   return vim.fn.fnamemodify(vim.fn.get(vim.fn.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
 end
+
+function __check_type(repo, options)
+  local plugin = {}
+  require 'dein/types/git'
+  for _, t in ipairs(vim.tbl_values(vim.fn['dein#parse#_get_types']())) do
+    plugin = init(t, repo, options)
+    if vim.fn.empty(plugin)==0 then
+      break
+    end
+  end
+
+  if vim.fn.empty(plugin)==1 then
+    plugin['type'] = 'none'
+    plugin['local'] = 1
+    plugin.path = ''
+    if vim.fn.isdirectory(repo)==1 then
+      plugin.path = repo
+    end
+  end
+
+  return plugin
+end
