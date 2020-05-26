@@ -685,8 +685,9 @@ function! dein#install#__check_output(context, process) abort
     let plugin.new_rev = new_rev
 
     let type = dein#util#_get_type(plugin.type)
-    let plugin.uri = has_key(type, 'get_uri') ?
-          \ type.get_uri(plugin.repo, plugin) : ''
+    " TODO has_key(type, 'get_uri')
+    let plugin.uri = type.name == 'git' ?
+          \ v:lua.get_uri(plugin.repo, plugin) : ''
 
     let cwd = getcwd()
     try

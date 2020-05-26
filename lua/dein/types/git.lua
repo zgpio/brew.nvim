@@ -97,3 +97,56 @@ function get_revision_number_command(git, plugin)
 
   return {git.command, 'rev-parse', 'HEAD'}
 end
+
+function get_uri(repo, options)
+  if repo:find('^/') or repo:find('^%a:[/\\]') then
+    if __is_git_dir(repo..'/.git')==1 then
+      return repo
+    else
+      return ''
+    end
+  end
+
+  local protocol, host, name, rest
+  if repo:find('^git@') then
+    -- Parse "git@host:name" pattern
+    protocol = 'ssh'
+    host = vim.fn.matchstr(repo:sub(5), '[^:]*')
+    name = repo:sub(5 + vim.fn.len(host) + 1)
+  else
+    protocol = vim.fn.matchstr(repo, [[^.\{-}\ze://]])
+    rest = repo:sub(vim.fn.len(protocol)+1)
+    name = vim.fn.substitute(rest, '^://[^/]*/', '', '')
+    host = vim.fn.substitute(vim.fn.matchstr(rest, [[^://\zs[^/]*\ze/]]), ':.*$', '', '')
+  end
+  if host == '' then
+    host = 'github.com'
+  end
+
+  if protocol == ''
+         or vim.fn.match(repo, [[\<\%(gh\|github\|bb\|bitbucket\):\S\+]])~=-1
+         or options.type__protocol then
+    protocol = options.type__protocol or vim.g['dein#types#git#default_protocol']
+  end
+
+  if protocol ~= 'https' and protocol ~= 'ssh' then
+    _error(string.format('Repo: %s The protocol "%s" is unsecure and invalid.',
+           repo, protocol))
+    return ''
+  end
+
+  local uri
+  if repo:find('/')==nil then
+    _error(string.format('vim-scripts.org is deprecated.'
+      .. ' You can use "vim-scripts/%s" instead.', repo))
+    return ''
+  else
+    if (protocol == 'ssh' and (host == 'github.com' or host == 'bitbucket.com' or host == 'bitbucket.org')) then
+      uri = 'git@' .. host .. ':' .. name
+    else
+      uri = protocol .. '://' .. host .. '/' .. name
+    end
+  end
+
+  return uri
+end

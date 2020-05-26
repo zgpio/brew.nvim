@@ -37,7 +37,7 @@ function! s:type.init(repo, options) abort
     return {}
   endif
 
-  let uri = self.get_uri(a:repo, a:options)
+  let uri = v:lua.get_uri(a:repo, a:options)
   if uri ==# ''
     return {}
   endif
@@ -49,56 +49,6 @@ function! s:type.init(repo, options) abort
   lua require 'dein/util'
   return { 'type': 'git',
         \  'path': luaeval('dein._base_path').'/repos/'.directory }
-endfunction
-function! s:type.get_uri(repo, options) abort
-  if a:repo =~# '^/\|^\a:[/\\]'
-    return v:lua.__is_git_dir(a:repo.'/.git') ? a:repo : ''
-  endif
-
-  if a:repo =~# '^git@'
-    " Parse "git@host:name" pattern
-    let protocol = 'ssh'
-    let host = matchstr(a:repo[4:], '[^:]*')
-    let name = a:repo[4 + len(host) + 1 :]
-  else
-    let protocol = matchstr(a:repo, '^.\{-}\ze://')
-    let rest = a:repo[len(protocol):]
-    let name = substitute(rest, '^://[^/]*/', '', '')
-    let host = substitute(matchstr(rest, '^://\zs[^/]*\ze/'),
-          \ ':.*$', '', '')
-  endif
-  if host ==# ''
-    let host = 'github.com'
-  endif
-
-  if protocol ==# ''
-        \ || a:repo =~# '\<\%(gh\|github\|bb\|bitbucket\):\S\+'
-        \ || has_key(a:options, 'type__protocol')
-    let protocol = get(a:options, 'type__protocol',
-          \ g:dein#types#git#default_protocol)
-  endif
-
-  if protocol !=# 'https' && protocol !=# 'ssh'
-    call v:lua._error(
-          \ printf('Repo: %s The protocol "%s" is unsecure and invalid.',
-          \ a:repo, protocol))
-    return ''
-  endif
-
-  if a:repo !~# '/'
-    call v:lua._error(
-          \ printf('vim-scripts.org is deprecated.'
-          \ . ' You can use "vim-scripts/%s" instead.', a:repo))
-    return ''
-  else
-    let uri = (protocol ==# 'ssh' &&
-          \    (host ==# 'github.com' || host ==# 'bitbucket.com' ||
-          \     host ==# 'bitbucket.org')) ?
-          \ 'git@' . host . ':' . name :
-          \ protocol . '://' . host . '/' . name
-  endif
-
-  return uri
 endfunction
 
 function! s:type.get_sync_command(plugin) abort
@@ -112,11 +62,11 @@ function! s:type.get_sync_command(plugin) abort
     let depth = get(a:plugin, 'type__depth',
           \ g:dein#types#git#clone_depth)
     if depth > 0 && get(a:plugin, 'rev', '') ==# ''
-          \ && self.get_uri(a:plugin.repo, a:plugin) !~# '^git@'
+          \ && v:lua.get_uri(a:plugin.repo, a:plugin) !~# '^git@'
       call add(commands, '--depth=' . depth)
     endif
 
-    call add(commands, self.get_uri(a:plugin.repo, a:plugin))
+    call add(commands, v:lua.get_uri(a:plugin.repo, a:plugin))
     call add(commands, a:plugin.path)
 
     return commands
