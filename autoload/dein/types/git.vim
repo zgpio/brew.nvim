@@ -51,41 +51,6 @@ function! s:type.init(repo, options) abort
         \  'path': luaeval('dein._base_path').'/repos/'.directory }
 endfunction
 
-function! s:type.get_sync_command(plugin) abort
-  if !isdirectory(a:plugin.path)
-    let commands = []
-
-    call add(commands, self.command)
-    call add(commands, 'clone')
-    call add(commands, '--recursive')
-
-    let depth = get(a:plugin, 'type__depth',
-          \ g:dein#types#git#clone_depth)
-    if depth > 0 && get(a:plugin, 'rev', '') ==# ''
-          \ && v:lua.get_uri(a:plugin.repo, a:plugin) !~# '^git@'
-      call add(commands, '--depth=' . depth)
-    endif
-
-    call add(commands, v:lua.get_uri(a:plugin.repo, a:plugin))
-    call add(commands, a:plugin.path)
-
-    return commands
-  else
-    let git = self.command
-
-    let cmd = g:dein#types#git#pull_command
-    let submodule_cmd = git . ' submodule update --init --recursive'
-    if v:lua._is_powershell()
-      let cmd .= '; if ($?) { ' . submodule_cmd . ' }'
-    else
-      let and = v:lua._is_fish() ? '; and ' : ' && '
-      let cmd .= and . submodule_cmd
-    endif
-
-    return git . ' ' . cmd
-  endif
-endfunction
-
 function! s:type.get_log_command(plugin, new_rev, old_rev) abort
   if !self.executable || a:new_rev ==# '' || a:old_rev ==# ''
     return []

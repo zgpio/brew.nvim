@@ -150,3 +150,36 @@ function get_uri(repo, options)
 
   return uri
 end
+function get_sync_command(git, plugin)
+  if vim.fn.isdirectory(plugin.path)==0 then
+    local commands = {git.command, 'clone', '--recursive'}
+
+    local depth = plugin.type__depth or vim.g['dein#types#git#clone_depth']
+    if depth > 0 and (plugin.rev or '') == '' and get_uri(plugin.repo, plugin):find('^git@')==nil then
+      table.insert(commands, '--depth=' .. depth)
+    end
+
+    table.insert(commands, get_uri(plugin.repo, plugin))
+    table.insert(commands, plugin.path)
+
+    return commands
+  else
+    local gcmd = git.command
+
+    local cmd = vim.g['dein#types#git#pull_command']
+    local submodule_cmd = gcmd .. ' submodule update --init --recursive'
+    if _is_powershell() then
+      cmd = cmd .. '; if ($?) { ' .. submodule_cmd .. ' }'
+    else
+      local AND
+      if _is_fish() then
+        AND = '; and '
+      else
+        AND = ' && '
+      end
+      cmd = cmd .. AND .. submodule_cmd
+    end
+
+    return gcmd .. ' ' .. cmd
+  end
+end

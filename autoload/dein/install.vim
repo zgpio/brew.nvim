@@ -253,8 +253,8 @@ function! s:get_sync_command(plugin, update_type, number, max) abort "{{{i
   if a:update_type ==# 'check_update'
         \ && has_key(type, 'get_fetch_remote_command')
     let cmd = type.get_fetch_remote_command(a:plugin)
-  elseif has_key(type, 'get_sync_command')
-    let cmd = type.get_sync_command(a:plugin)
+  elseif type.name == 'git'  " TODO has_key(type, 'get_sync_command')
+    let cmd = v:lua.get_sync_command(type, a:plugin)
   else
     return ['', '']
   endif
