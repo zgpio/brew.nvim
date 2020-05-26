@@ -35,15 +35,18 @@ function! dein#check_clean() abort
   return v:lua._check_clean()
 endfunction
 function! dein#install(...) abort
-  return dein#install#_update(get(a:000, 0, []),
+  lua require 'dein/install'
+  return v:lua._update(get(a:000, 0, []),
         \ 'install', dein#install#_is_async())
 endfunction
 function! dein#update(...) abort
-  return dein#install#_update(get(a:000, 0, []),
+  lua require 'dein/install'
+  return v:lua._update(get(a:000, 0, []),
         \ 'update', dein#install#_is_async())
 endfunction
 function! dein#check_update(...) abort
-  return dein#install#_update(get(a:000, 0, []),
+  lua require 'dein/install'
+  return v:lua._update(get(a:000, 0, []),
         \ 'check_update', dein#install#_is_async())
 endfunction
 function! dein#direct_install(repo, ...) abort

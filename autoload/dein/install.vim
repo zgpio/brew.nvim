@@ -33,59 +33,9 @@ function! s:get_job() abort
   return s:Job
 endfunction
 
-function! dein#install#_update(plugins, update_type, async) abort
-  if luaeval('dein._is_sudo')
-    call v:lua.__error('update/install is disabled in sudo session.')
-    return
-  endif
-
-  let plugins = v:lua._get_plugins(a:plugins)
-
-  if a:update_type ==# 'install'
-    let plugins = filter(plugins, '!isdirectory(v:val.path)')
-  elseif a:update_type ==# 'check_update'
-    let plugins = filter(plugins, 'isdirectory(v:val.path)')
-  endif
-
-  if a:async && !empty(g:__global_context) &&
-        \ confirm('The installation has not finished. Cancel now?',
-        \         "yes\nNo", 2) != 1
-    return
-  endif
-
-  " Set context.
-  let context = v:lua.__init_context(plugins, a:update_type, a:async)
-
-  call v:lua.__init_variables(context)
-
-  if empty(plugins)
-    if a:update_type !=# 'check_update'
-      call v:lua.__notify('Target plugins are not found.')
-      call v:lua.__notify('You may have used the wrong plugin name,'.
-            \ ' or all of the plugins are already installed.')
-    endif
-    let g:__global_context = {}
-    return
-  endif
-
-  call v:lua.__start()
-
-  if !a:async || has('vim_starting')
-    return v:lua.__update_loop(context)
-  endif
-
-  augroup dein-install
-    autocmd!
-  augroup END
-
-  if exists('g:__timer')
-    call timer_stop(g:__timer)
-    unlet g:__timer
-  endif
-
-  let g:__timer = timer_start(1000,
-        \ {-> dein#install#_polling()}, {'repeat': -1})
-endfunction
+func dein#install#_timer_handler(timer)
+  call dein#install#_polling()
+endf
 
 function! dein#install#_rollback(date, plugins) abort
   let glob = v:lua.__get_rollback_directory() . '/' . a:date . '*'

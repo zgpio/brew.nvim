@@ -406,7 +406,7 @@ function _direct_install(repo, options)
     return
   end
 
-  vim.fn['dein#install#_update'](plugin.name, 'install', 0)
+  _update(plugin.name, 'install', 0)
   vim.fn['dein#source'](plugin.name)
 
   -- Add to direct_install.vim
@@ -550,7 +550,7 @@ function _reinstall(plugins)
     until true
   end
 
-  vim.fn['dein#install#_update'](_convert2list(plugins), 'install', 0)
+  _update(_convert2list(plugins), 'install', 0)
 end
 function __start()
   __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
@@ -852,4 +852,56 @@ function __get_sync_command(plugin, update_type, number, max)
   local message = __get_plugin_message(plugin, number, max, vim.fn.string(cmd))
 
   return {cmd, message}
+end
+function _update(plugins, update_type, async)
+  if dein._is_sudo then
+    __error('update/install is disabled in sudo session.')
+    return
+  end
+
+  local plugins = _get_plugins(plugins)
+
+  if update_type == 'install' then
+    plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==0 end, plugins)
+  elseif update_type == 'check_update' then
+    plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, plugins)
+  end
+
+  if async==1 and vim.fn.empty(vim.g.__global_context)==0
+    and vim.fn.confirm('The installation has not finished. Cancel now?', "yes\nNo", 2) ~= 1 then
+    return
+  end
+
+  -- Set context.
+  local context = __init_context(plugins, update_type, async)
+
+  __init_variables(context)
+
+  if vim.fn.empty(plugins)==1 then
+    if update_type ~= 'check_update' then
+      __notify('Target plugins are not found.')
+      __notify('You may have used the wrong plugin name, or all of the plugins are already installed.')
+    end
+    vim.g.__global_context = {}
+    return
+  end
+
+  __start()
+
+  if async==0 or vim.fn.has('vim_starting')==1 then
+    return __update_loop(context)
+  end
+
+  vim.api.nvim_exec([[
+    augroup dein-install
+      autocmd!
+    augroup END
+  ]], false)
+
+  if vim.fn.exists('g:__timer')==1 then
+    vim.fn.timer_stop(vim.g.__timer)
+    vim.g.__timer=nil
+  end
+
+  vim.g.__timer = vim.fn.timer_start(1000, 'dein#install#_timer_handler', {['repeat']=-1})
 end
