@@ -170,17 +170,6 @@ function! s:get_revision_remote(plugin) abort
   " If rev contains spaces, it is error message
   return (rev !~# '\s') ? rev : ''
 endfunction
-function! s:get_updated_log_message(plugin, new_rev, old_rev) abort
-  let type = dein#util#_get_type(a:plugin.type)
-
-  " TODO has_key(type, 'get_log_command')
-  let cmd = type.name == 'git' ?
-        \ v:lua.get_log_command(type, a:plugin, a:new_rev, a:old_rev) : ''
-  let log = empty(cmd) ? '' : v:lua.__system_cd(cmd, a:plugin.path)
-  return log !=# '' ? log :
-        \            (a:old_rev  == a:new_rev) ? ''
-        \            : printf('%s -> %s', a:old_rev, a:new_rev)
-endfunction
 function! s:lock_revision(process, context) abort
   let num = a:process.number
   let max = a:context.max_plugins
@@ -532,7 +521,7 @@ function! dein#install#__check_output(context, process) abort
     call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Updated'))
 
     if a:context.update_type !=# 'check_update'
-      let log_messages = split(s:get_updated_log_message(
+      let log_messages = split(v:lua.__get_updated_log_message(
             \   plugin, new_rev, a:process.rev), '\n')
       let plugin.commit_count = len(log_messages)
       call v:lua.__log(map(log_messages,

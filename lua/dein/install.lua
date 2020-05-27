@@ -85,6 +85,28 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __get_updated_log_message(plugin, new_rev, old_rev)
+  local type = vim.fn['dein#util#_get_type'](plugin.type)
+
+  -- TODO has_key(type, 'get_log_command')
+  local cmd = ''
+  if type.name == 'git' then
+    cmd = get_log_command(type, plugin, new_rev, old_rev)
+  end
+  local log = ''
+  if vim.fn.empty(cmd)==0 then
+    log = __system_cd(cmd, plugin.path)
+  end
+  if log ~= '' then
+    return log
+  else
+    if old_rev == new_rev then
+      return ''
+    else
+      return old_rev..' -> '..new_rev
+    end
+  end
+end
 function __get_revision_number(plugin)
   local type = vim.fn['dein#util#_get_type'](plugin.type)
 
