@@ -373,6 +373,44 @@ function! dein#install#__init_process(plugin, context, cmd) abort
 
   return process
 endfunction
+
+function! s:async_get(async, process) abort
+  " Check job status
+  let status = -1
+  if has_key(a:process.job, 'exitval')
+    let a:async.eof = 1
+    let status = a:process.job.exitval
+  endif
+
+  let candidates = get(a:process.job, 'candidates', [])
+  let output = join((a:async.eof ? candidates : candidates[: -2]), "\n")
+  if output !=# ''
+    let a:process.output .= output
+    let a:process.start_time = localtime()
+    call v:lua.__log(v:lua.__get_short_message(
+          \ a:process.plugin, a:process.number,
+          \ a:process.max_plugins, output))
+  endif
+  let a:async.candidates = a:async.eof ? [] : candidates[-1:]
+
+  let is_timeout = (localtime() - a:process.start_time)
+        \             >= get(a:process.plugin, 'timeout',
+        \                    g:dein#install_process_timeout)
+
+  if a:async.eof
+    let is_timeout = 0
+    let is_skip = 0
+  else
+    let is_skip = 1
+  endif
+
+  if is_timeout
+    call dein#job#_job_stop(a:process.job)
+    let status = -1
+  endif
+
+  return [is_timeout, is_skip, status]
+endfunction
 function! s:init_job(process, context, cmd) abort
   let a:process.start_time = localtime()
 
@@ -401,44 +439,6 @@ function! s:init_job(process, context, cmd) abort
     let self.exitval = a:exitval
   endfunction
 
-  function! a:process.async.get(process) abort
-    " Check job status
-    let status = -1
-    if has_key(a:process.job, 'exitval')
-      let self.eof = 1
-      let status = a:process.job.exitval
-    endif
-
-    let candidates = get(a:process.job, 'candidates', [])
-    let output = join((self.eof ? candidates : candidates[: -2]), "\n")
-    if output !=# ''
-      let a:process.output .= output
-      let a:process.start_time = localtime()
-      call v:lua.__log(v:lua.__get_short_message(
-            \ a:process.plugin, a:process.number,
-            \ a:process.max_plugins, output))
-    endif
-    let self.candidates = self.eof ? [] : candidates[-1:]
-
-    let is_timeout = (localtime() - a:process.start_time)
-          \             >= get(a:process.plugin, 'timeout',
-          \                    g:dein#install_process_timeout)
-
-    if self.eof
-      let is_timeout = 0
-      let is_skip = 0
-    else
-      let is_skip = 1
-    endif
-
-    if is_timeout
-      call dein#job#_job_stop(a:process.job)
-      let status = -1
-    endif
-
-    return [is_timeout, is_skip, status]
-  endfunction
-
   let a:process.job = s:get_job().start(
         \ s:convert_args(a:cmd), {
         \   'on_stdout': a:process.async.job_handler,
@@ -450,7 +450,7 @@ function! s:init_job(process, context, cmd) abort
 endfunction
 function! dein#install#__check_output(context, process) abort
   if a:context.async
-    let [is_timeout, is_skip, status] = a:process.async.get(a:process)
+    let [is_timeout, is_skip, status] = s:async_get(a:process.async, a:process)
   else
     let [is_timeout, is_skip, status] = [0, 0, a:process.status]
   endif
