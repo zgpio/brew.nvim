@@ -206,10 +206,16 @@ function! dein#install#_status() abort
 endfunction
 
 function! dein#install#_execute(command) abort
-  return s:job_execute.execute(a:command)
+  let s:job_execute.candidates = []
+
+  let job = s:get_job().start(
+        \ s:convert_args(a:command),
+        \ {'on_stdout': s:job_execute_on_out})
+
+  return dein#job#_job_wait(job, g:dein#install_process_timeout * 1000)
 endfunction
 let s:job_execute = {}
-function! s:job_execute.on_out(data) abort
+function! s:job_execute_on_out(data) abort
   for line in a:data
     echo line
   endfor
@@ -221,15 +227,6 @@ function! s:job_execute.on_out(data) abort
     let candidates[-1] .= a:data[0]
   endif
   let candidates += a:data[1:]
-endfunction
-function! s:job_execute.execute(cmd) abort
-  let self.candidates = []
-
-  let job = s:get_job().start(
-        \ s:convert_args(a:cmd),
-        \ {'on_stdout': self.on_out})
-
-  return dein#job#_job_wait(job, g:dein#install_process_timeout * 1000)
 endfunction
 
 function! dein#install#__install_async(context) abort
