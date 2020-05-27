@@ -152,24 +152,6 @@ function! dein#install#_get_progress() abort
   return g:__progress
 endfunction
 
-function! s:get_revision_remote(plugin) abort
-  let type = dein#util#_get_type(a:plugin.type)
-
-  " TODO !has_key(type, 'get_revision_remote_command')
-  if !isdirectory(a:plugin.path)
-        \ || type.name != 'git'
-    return ''
-  endif
-
-  let cmd = v:lua.get_revision_remote_command(type, a:plugin)
-  if empty(cmd)
-    return ''
-  endif
-
-  let rev = v:lua.__system_cd(cmd, a:plugin.path)
-  " If rev contains spaces, it is error message
-  return (rev !~# '\s') ? rev : ''
-endfunction
 function! s:lock_revision(process, context) abort
   let num = a:process.number
   let max = a:context.max_plugins
@@ -489,7 +471,7 @@ function! dein#install#__check_output(context, process) abort
   endif
 
   let new_rev = (a:context.update_type ==# 'check_update') ?
-        \ s:get_revision_remote(plugin) :
+        \ v:lua.__get_revision_remote(plugin) :
         \ v:lua.__get_revision_number(plugin)
 
   if is_timeout || status

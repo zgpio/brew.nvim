@@ -85,6 +85,27 @@ function _get_default_ftplugin()
     [[]],
   }
 end
+function __get_revision_remote(plugin)
+  local type = vim.fn['dein#util#_get_type'](plugin.type)
+
+  -- TODO !has_key(type, 'get_revision_remote_command')
+  if vim.fn.isdirectory(plugin.path)==0 or type.name ~= 'git' then
+    return ''
+  end
+
+  local cmd = get_revision_remote_command(type, plugin)
+  if vim.fn.empty(cmd)==1 then
+    return ''
+  end
+
+  local rev = __system_cd(cmd, plugin.path)
+  -- If rev contains spaces, it is error message
+  if rev:find('%s')==nil then
+    return rev
+  else
+    return ''
+  end
+end
 function __get_updated_log_message(plugin, new_rev, old_rev)
   local type = vim.fn['dein#util#_get_type'](plugin.type)
 
