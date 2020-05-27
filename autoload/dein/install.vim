@@ -197,8 +197,8 @@ function! dein#install#_system(command) abort
   " let exitval = job.wait()
 
   let command = a:command
-  let command = dein#install#__iconv(command, &encoding, 'char')
-  let output = dein#install#__iconv(system(command), 'char', &encoding)
+  let command = v:lua.__iconv(command, &encoding, 'char')
+  let output = v:lua.__iconv(system(command), 'char', &encoding)
   return substitute(output, '\n$', '', '')
 endfunction
 function! dein#install#_status() abort
@@ -275,7 +275,7 @@ function! dein#install#__check_loop(context) abort
   call filter(a:context.processes, '!v:val.eof')
 endfunction
 function! s:convert_args(args) abort
-  let args = dein#install#__iconv(a:args, &encoding, 'char')
+  let args = v:lua.__iconv(a:args, &encoding, 'char')
   if type(args) != v:t_list
     let args = split(&shell) + split(&shellcmdflag) + [args]
   endif
@@ -540,17 +540,4 @@ function! dein#install#__check_output(context, process) abort
   endif
 
   let a:process.eof = 1
-endfunction
-
-function! dein#install#__iconv(expr, from, to) abort
-  if a:from ==# '' || a:to ==# '' || a:from ==? a:to
-    return a:expr
-  endif
-
-  if type(a:expr) == v:t_list
-    return map(copy(a:expr), 'iconv(v:val, a:from, a:to)')
-  else
-    let result = iconv(a:expr, a:from, a:to)
-    return result !=# '' ? result : a:expr
-  endif
 endfunction

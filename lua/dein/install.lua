@@ -510,7 +510,7 @@ function _copy_directories(srcs, dest)
 
     if status~=0 then
       _error('copy command failed.')
-      _error(vim.fn['dein#install#__iconv'](result, 'char', vim.o.encoding))
+      _error(__iconv(result, 'char', vim.o.encoding))
       _error('cmdline: ' .. temp)
       _error('tempfile: ' .. vim.fn.string(lines))
     end
@@ -947,4 +947,20 @@ function _update(plugins, update_type, async)
   end
 
   vim.g.__timer = vim.fn.timer_start(1000, 'dein#install#_timer_handler', {['repeat']=-1})
+end
+function __iconv(expr, from, to)
+  if from == '' or to == '' or string.lower(from) == string.lower(to) then
+    return expr
+  end
+
+  if vim.tbl_islist(expr) then
+    return vim.tbl_map(function(v) return vim.fn.iconv(v, from, to) end, vim.fn.copy(expr))
+  else
+    local result = vim.fn.iconv(expr, from, to)
+    if result ~= '' then
+      return result
+    else
+      return expr
+    end
+  end
 end
