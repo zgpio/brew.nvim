@@ -431,15 +431,11 @@ function! s:init_job(process, context, cmd) abort
   endif
 
   let a:process.async = {'eof': 0}
-  function! a:process.async.on_exit(exitval) abort
-    let self.exitval = a:exitval
-  endfunction
 
   let a:process.job = s:get_job().start(
         \ s:convert_args(a:cmd), {
         \   'on_stdout': function('s:async_job_handler', [a:process.async]),
         \   'on_stderr': function('s:async_job_handler', [a:process.async]),
-        \   'on_exit': a:process.async.on_exit,
         \ })
   let a:process.id = dein#job#_job_pid(a:process.job)
   let a:process.job.candidates = []

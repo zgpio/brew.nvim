@@ -14,11 +14,7 @@ function! s:start(args, options) abort
   if has_key(job, 'on_stderr')
     let job_options.on_stderr = function('s:_on_stderr', [job])
   endif
-  if has_key(job, 'on_exit')
-    let job_options.on_exit = function('s:_on_exit', [job])
-  else
-    let job_options.on_exit = function('s:_on_exit_raw', [job])
-  endif
+  let job_options.on_exit = function('s:_on_exit', [job])
   let job.__job = jobstart(a:args, job_options)
   let job.__exitval = v:null
   let job.args = a:args
@@ -34,12 +30,7 @@ function! s:_on_stderr(job, job_id, data, event) abort
 endfunction
 
 function! s:_on_exit(job, job_id, exitval, event) abort
-  let a:job.__exitval = a:exitval
-  call a:job.on_exit(a:exitval)
-endfunction
-
-function! s:_on_exit_raw(job, job_id, exitval, event) abort
-  let a:job.__exitval = a:exitval
+  let a:job.exitval = a:exitval
 endfunction
 
 " Instance -------------------------------------------------------------------
