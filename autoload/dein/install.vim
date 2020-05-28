@@ -371,19 +371,6 @@ function! dein#install#__init_process(plugin, context, cmd) abort
   return process
 endfunction
 
-function! s:async_job_handler(async, data) abort
-  if !has_key(a:async, 'candidates')
-    let a:async.candidates = []
-  endif
-  let candidates = a:async.candidates
-  if empty(candidates)
-    call add(candidates, a:data[0])
-  else
-    let candidates[-1] .= a:data[0]
-  endif
-
-  let candidates += a:data[1:]
-endfunction
 function! s:async_get(async, process) abort
   " Check job status
   let status = -1
@@ -433,10 +420,7 @@ function! s:init_job(process, context, cmd) abort
   let a:process.async = {'eof': 0}
 
   let a:process.job = s:get_job().start(
-        \ s:convert_args(a:cmd), {
-        \   'on_stdout': function('s:async_job_handler', [a:process.async]),
-        \   'on_stderr': function('s:async_job_handler', [a:process.async]),
-        \ })
+        \ s:convert_args(a:cmd), {})
   let a:process.id = dein#job#_job_pid(a:process.job)
   let a:process.job.candidates = []
 endfunction

@@ -8,12 +8,8 @@ function! s:start(args, options) abort
   if has_key(a:options, 'cwd')
     let job_options.cwd = a:options.cwd
   endif
-  if has_key(job, 'on_stdout')
-    let job_options.on_stdout = function('s:_on_stdout', [job])
-  endif
-  if has_key(job, 'on_stderr')
-    let job_options.on_stderr = function('s:_on_stderr', [job])
-  endif
+  let job_options.on_stdout = function('s:_on_stdout', [job])
+  let job_options.on_stderr = function('s:_on_stderr', [job])
   let job_options.on_exit = function('s:_on_exit', [job])
   let job.__job = jobstart(a:args, job_options)
   let job.__exitval = v:null
@@ -21,12 +17,25 @@ function! s:start(args, options) abort
   return job
 endfunction
 
+function! s:job_handler(job, data) abort
+  if !has_key(a:job, 'candidates')
+    let a:job.candidates = []
+  endif
+  let candidates = a:job.candidates
+  if empty(candidates)
+    call add(candidates, a:data[0])
+  else
+    let candidates[-1] .= a:data[0]
+  endif
+
+  let candidates += a:data[1:]
+endfunction
 function! s:_on_stdout(job, job_id, data, event) abort
-  call a:job.on_stdout(a:data)
+  call s:job_handler(a:job, a:data)
 endfunction
 
 function! s:_on_stderr(job, job_id, data, event) abort
-  call a:job.on_stderr(a:data)
+  call s:job_handler(a:job, a:data)
 endfunction
 
 function! s:_on_exit(job, job_id, exitval, event) abort
