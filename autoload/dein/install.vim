@@ -335,12 +335,12 @@ endfunction
 function! s:async_get(async, process) abort
   " Check job status
   let status = -1
-  if has_key(a:process.job, 'exitval')
+  if has_key(g:job_pool[a:process.job], 'exitval')
     let a:async.eof = 1
-    let status = a:process.job.exitval
+    let status = g:job_pool[a:process.job].exitval
   endif
 
-  let candidates = get(a:process.job, 'candidates', [])
+  let candidates = get(g:job_pool[a:process.job], 'candidates', [])
   let output = join((a:async.eof ? candidates : candidates[: -2]), "\n")
   if output !=# ''
     let a:process.output .= output
@@ -363,12 +363,13 @@ function! s:async_get(async, process) abort
   endif
 
   if is_timeout
-    call dein#job#_job_stop(a:process.job)
+    call dein#job#_job_stop(g:job_pool[a:process.job])
     let status = -1
   endif
 
   return [is_timeout, is_skip, status]
 endfunction
+let g:job_pool = []
 function! s:init_job(process, context, cmd) abort
   let a:process.start_time = localtime()
 
@@ -380,10 +381,10 @@ function! s:init_job(process, context, cmd) abort
 
   let a:process.async = {'eof': 0}
 
-  let a:process.job = s:get_job().start(
-        \ s:convert_args(a:cmd), {})
-  let a:process.id = dein#job#_job_pid(a:process.job)
-  let a:process.job.candidates = []
+  let a:process.job = len(g:job_pool)
+  call add(g:job_pool, s:get_job().start(s:convert_args(a:cmd), {}))
+  let a:process.id = dein#job#_job_pid(g:job_pool[a:process.job])
+  let g:job_pool[a:process.job].candidates = []
 endfunction
 function! dein#install#__check_output(context, process) abort
   if a:context.async
