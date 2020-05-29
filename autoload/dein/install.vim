@@ -322,7 +322,7 @@ function! dein#install#__init_process(plugin, context, cmd) abort
       endtry
     endif
 
-    call s:init_job(process, a:context, a:cmd)
+    let process = v:lua.__init_job(process, a:context, a:cmd)
   finally
     let $LANG = lang_save
     let $GIT_TERMINAL_PROMPT = prompt_save
@@ -370,21 +370,12 @@ function! s:async_get(async, process) abort
   return [is_timeout, is_skip, status]
 endfunction
 let g:job_pool = []
-function! s:init_job(process, context, cmd) abort
-  let a:process.start_time = localtime()
-
-  if !a:context.async
-    let a:process.output = dein#install#_system(a:cmd)
-    let a:process.status = dein#install#_status()
-    return
-  endif
-
-  let a:process.async = {'eof': 0}
-
+function! dein#install#__init_job(process, context, cmd) abort
   let a:process.job = len(g:job_pool)
   call add(g:job_pool, s:get_job().start(s:convert_args(a:cmd), {}))
   let a:process.id = dein#job#_job_pid(g:job_pool[a:process.job])
   let g:job_pool[a:process.job].candidates = []
+  return a:process
 endfunction
 function! dein#install#__check_output(context, process) abort
   if a:context.async

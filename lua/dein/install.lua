@@ -1002,3 +1002,16 @@ function __lock_revision(process, context)
     return -1
   end
 end
+function __init_job(process, context, cmd)
+  process.start_time = vim.fn.localtime()
+
+  if context.async==0 then
+    process.output = vim.fn['dein#install#_system'](cmd)
+    process.status = vim.fn['dein#install#_status']()
+    return process
+  end
+
+  process.async = {eof=0}
+  process = vim.fn['dein#install#__init_job'](process, context, cmd)
+  return process
+end
