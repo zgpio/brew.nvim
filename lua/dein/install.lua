@@ -964,3 +964,41 @@ function __iconv(expr, from, to)
     end
   end
 end
+function __lock_revision(process, context)
+  local num = process.number
+  local max = context.max_plugins
+  local plugin = process.plugin
+
+  plugin.new_rev = __get_revision_number(plugin)
+
+  local typ = vim.fn['dein#util#_get_type'](plugin['type'])
+  -- TODO !has_key(type, 'get_revision_lock_command')
+  if typ.name ~= 'git' then
+    return 0
+  end
+
+  local cmd = get_revision_lock_command(typ, plugin)
+
+  if vim.fn.empty(cmd)==1 or plugin.new_rev == (plugin.rev or '') then
+    -- Skipped.
+    return 0
+  elseif type(cmd) == 'string' and cmd:find('^E: ') then
+    -- Errored.
+    __error(plugin.path)
+    __error(cmd:sub(4))
+    return -1
+  end
+
+  if (plugin.rev or '') ~= '' then
+    __log(__get_plugin_message(plugin, num, max, 'Locked'))
+  end
+
+  local result = __system_cd(cmd, plugin.path)
+  local status = vim.fn['dein#install#_status']()
+
+  if status~=0 then
+    __error(plugin.path)
+    __error(result)
+    return -1
+  end
+end

@@ -152,45 +152,6 @@ function! dein#install#_get_progress() abort
   return g:__progress
 endfunction
 
-function! s:lock_revision(process, context) abort
-  let num = a:process.number
-  let max = a:context.max_plugins
-  let plugin = a:process.plugin
-
-  let plugin.new_rev = v:lua.__get_revision_number(plugin)
-
-  let type = dein#util#_get_type(plugin.type)
-  " TODO !has_key(type, 'get_revision_lock_command')
-  if type.name != 'git'
-    return 0
-  endif
-
-  let cmd = v:lua.get_revision_lock_command(type, plugin)
-
-  if empty(cmd) || plugin.new_rev ==# get(plugin, 'rev', '')
-    " Skipped.
-    return 0
-  elseif type(cmd) == v:t_string && cmd =~# '^E: '
-    " Errored.
-    call v:lua.__error(plugin.path)
-    call v:lua.__error(cmd[3:])
-    return -1
-  endif
-
-  if get(plugin, 'rev', '') !=# ''
-    call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Locked'))
-  endif
-
-  let result = v:lua.__system_cd(cmd, plugin.path)
-  let status = dein#install#_status()
-
-  if status
-    call v:lua.__error(plugin.path)
-    call v:lua.__error(result)
-    return -1
-  endif
-endfunction
-
 function! dein#install#_system(command) abort
   " Todo: use job API instead for Vim8/neovim only
   " let job = s:Job.start()
@@ -355,7 +316,7 @@ function! dein#install#__init_process(plugin, context, cmd) abort
         " The repository may be checked out.
         let a:plugin.rev = ''
 
-        call s:lock_revision(process, a:context)
+        call v:lua.__lock_revision(process, a:context)
       finally
         let a:plugin.rev = rev_save
       endtry
@@ -443,7 +404,7 @@ function! dein#install#__check_output(context, process) abort
         \ && get(plugin, 'rev', '') !=# ''
         \ && !get(plugin, 'local', 0)
     " Restore revision.
-    call s:lock_revision(a:process, a:context)
+    call v:lua.__lock_revision(a:process, a:context)
   endif
 
   let new_rev = (a:context.update_type ==# 'check_update') ?
