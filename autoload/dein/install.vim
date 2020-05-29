@@ -101,16 +101,6 @@ function! dein#install#_get_progress() abort
   return g:__progress
 endfunction
 
-function! dein#install#_system(command) abort
-  " Todo: use job API instead for Vim8/neovim only
-  " let job = s:Job.start()
-  " let exitval = job.wait()
-
-  let command = a:command
-  let command = v:lua.__iconv(command, &encoding, 'char')
-  let output = v:lua.__iconv(system(command), 'char', &encoding)
-  return substitute(output, '\n$', '', '')
-endfunction
 function! dein#install#_status() abort
   return v:shell_error
 endfunction

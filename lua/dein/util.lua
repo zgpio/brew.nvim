@@ -529,7 +529,7 @@ function _notify(msg)
   end
 
   if cmd ~= '' then
-    vim.fn['dein#install#_system'](cmd)
+    _system(cmd)
   end
 end
 function msg2list(expr)

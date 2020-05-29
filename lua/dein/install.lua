@@ -17,6 +17,15 @@ function clear_runtimepath()
     vim.fn.mkdir(runtimepath, 'p')
   end
 end
+function _system(command)
+  -- Todo: use job API instead for Vim8/neovim only
+  -- let job = s:Job.start()
+  -- let exitval = job.wait()
+
+  local command = __iconv(command, vim.o.encoding, 'char')
+  local output = __iconv(vim.fn.system(command), 'char', vim.o.encoding)
+  return vim.fn.substitute(output, '\n$', '', '')
+end
 function _rollback(date, plugins)
   local glob = __get_rollback_directory() .. '/' .. date .. '*'
   local rollbacks = vim.fn.reverse(vim.fn.sort(_globlist(glob)))
@@ -210,7 +219,7 @@ function __system_cd(command, path)
   try {
     function()
       _cd(path)
-      rv = vim.fn['dein#install#_system'](command)
+      rv = _system(command)
     end,
     catch {
       function(e)
@@ -547,7 +556,7 @@ function _copy_directories(srcs, dest)
       table.insert(lines, string.format(format, vim.fn.substitute(string.format('"%s" "%s"', src, dest), '/', '\\', 'g')))
     end
     vim.fn.writefile(lines, temp)
-    result = vim.fn['dein#install#_system'](temp)
+    result = _system(temp)
     vim.fn.delete(temp)
 
     -- For some baffling reason robocopy almost always returns between 1 and 3
@@ -579,12 +588,12 @@ function _copy_directories(srcs, dest)
     local cmdline
     if is_rsync then
       cmdline = string.format("rsync -a -q --exclude '/.git/' %s %s", vim.fn.join(srcs), vim.fn.shellescape(dest))
-      result = vim.fn['dein#install#_system'](cmdline)
+      result = _system(cmdline)
       status = vim.fn['dein#install#_status']()
     else
       for _, src in ipairs(srcs) do
         cmdline = string.format('cp -Ra %s* %s', src, vim.fn.shellescape(dest))
-        result = vim.fn['dein#install#_system'](cmdline)
+        result = _system(cmdline)
         status = vim.fn['dein#install#_status']()
         if status~=0 then
           break
@@ -918,7 +927,8 @@ function _recache_runtimepath()
 
   _save_merged_plugins()
 
-  _save_rollback(__get_rollback_directory() .. '/' .. vim.fn.strftime('%Y%m%d%H%M%S'), {})
+  -- FIXME
+  -- _save_rollback(__get_rollback_directory() .. '/' .. vim.fn.strftime('%Y%m%d%H%M%S'), {})
 
   _clear_state()
 
@@ -1055,7 +1065,7 @@ function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
 
   if context.async==0 then
-    process.output = vim.fn['dein#install#_system'](cmd)
+    process.output = _system(cmd)
     process.status = vim.fn['dein#install#_status']()
     return process
   end

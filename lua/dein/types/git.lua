@@ -191,14 +191,14 @@ function get_revision_lock_command(git, plugin)
   local rev = plugin.rev or ''
   if rev:find('*') then
     -- Use the released tag (git 1.9.2 or above required)
-    rev = vim.fn.get(vim.fn.split(vim.fn['dein#install#_system'](
+    rev = vim.fn.get(vim.fn.split(_system(
            {git.command, 'tag', '--list', vim.fn.escape(rev, '*'), '--sort', '-version:refname'}),
            "\n"), 0, '')
   end
   if rev == '' then
     -- Fix detach HEAD.
     -- Use symbolic-ref feature (git 1.8.7 or above required)
-    rev = vim.fn['dein#install#_system']({
+    rev = _system({
            git.command, 'symbolic-ref', '--short', 'HEAD'
            })
     if rev:find('fatal: ') then
@@ -242,7 +242,7 @@ function get_log_command(git, plugin, new_rev, old_rev)
 
   -- Note: If the a:old_rev is not the ancestor of two branchs. Then do not use
   -- %s^.  use %s^ will show one commit message which already shown last time.
-  local is_not_ancestor = vim.fn['dein#install#_system'](
+  local is_not_ancestor = _system(
          git.command .. ' merge-base '
          .. old_rev .. ' ' .. new_rev) == old_rev
   local t
