@@ -1,6 +1,13 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local util = require 'dein/util'
 
+-- Global options definition.
+vim.g['dein#install_max_processes'] = vim.g['dein#install_max_processes'] or 8
+vim.g['dein#install_progress_type'] = vim.g['dein#install_progress_type'] or 'echo'
+vim.g['dein#install_message_type'] = vim.g['dein#install_message_type'] or 'echo'
+vim.g['dein#install_process_timeout'] = vim.g['dein#install_process_timeout'] or 120
+vim.g['dein#install_log_filename'] = vim.g['dein#install_log_filename'] or ''
+
 function clear_runtimepath()
   if _get_cache_path() == '' then
     util._error('Invalid base path.')

@@ -12,18 +12,6 @@ let g:__log = []
 let g:__updates_log = []
 let g:__progress = ''
 
-" Global options definition.
-let g:dein#install_max_processes =
-      \ get(g:, 'dein#install_max_processes', 8)
-let g:dein#install_progress_type =
-      \ get(g:, 'dein#install_progress_type', 'echo')
-let g:dein#install_message_type =
-      \ get(g:, 'dein#install_message_type', 'echo')
-let g:dein#install_process_timeout =
-      \ get(g:, 'dein#install_process_timeout', 120)
-let g:dein#install_log_filename =
-      \ get(g:, 'dein#install_log_filename', '')
-
 function! s:get_job() abort
   if !exists('s:Job')
     let s:Job = dein#job#import()
