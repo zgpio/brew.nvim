@@ -40,38 +40,19 @@ endfunction
 
 function! s:_on_exit(job, job_id, exitval, event) abort
   let a:job.exitval = a:exitval
+  let a:job.__exitval = a:exitval
 endfunction
 
 " Instance -------------------------------------------------------------------
-function! dein#job#_job_id(job) abort
-  return dein#job#_job_pid(a:job)
-endfunction
-
 function! dein#job#_job_pid(job) abort
-  return jobpid(a:job.__job)
-endfunction
-
-function! dein#job#_job_status(job) abort
-  try
-    sleep 1m
-    call jobpid(a:job.__job)
-    return 'run'
-  catch /^Vim\%((\a\+)\)\=:E900/
-    return 'dead'
-  endtry
-endfunction
-
-function! dein#job#_job_send(job, data) abort
-  return chansend(a:job.__job, a:data)
-endfunction
-
-function! dein#job#_job_close(job) abort
-  call chanclose(a:job.__job, 'stdin')
+  let obj = g:job_pool[a:job]
+  return jobpid(obj.__job)
 endfunction
 
 function! dein#job#_job_stop(job) abort
+  let obj = g:job_pool[a:job]
   try
-    call jobstop(a:job.__job)
+    call jobstop(obj.__job)
   catch /^Vim\%((\a\+)\)\=:E900/
     " NOTE:
     " Vim does not raise exception even the job has already closed so fail

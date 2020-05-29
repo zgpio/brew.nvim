@@ -363,7 +363,7 @@ function! s:async_get(async, process) abort
   endif
 
   if is_timeout
-    call dein#job#_job_stop(g:job_pool[a:process.job])
+    call dein#job#_job_stop(a:process.job)
     let status = -1
   endif
 
@@ -373,7 +373,7 @@ let g:job_pool = []
 function! dein#install#__init_job(process, context, cmd) abort
   let a:process.job = len(g:job_pool)
   call add(g:job_pool, s:get_job().start(s:convert_args(a:cmd), {}))
-  let a:process.id = dein#job#_job_pid(g:job_pool[a:process.job])
+  let a:process.id = dein#job#_job_pid(a:process.job)
   let g:job_pool[a:process.job].candidates = []
   return a:process
 endfunction
