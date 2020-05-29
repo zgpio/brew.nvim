@@ -1074,3 +1074,29 @@ function __init_job(process, context, cmd)
   process = vim.fn['dein#install#__init_job'](process, context, cmd)
   return process
 end
+function _remote_plugins()
+  if vim.fn.has('vim_starting')==1 then
+    -- Note: UpdateRemotePlugins is not defined in vim_starting
+    vim.api.nvim_command('autocmd dein VimEnter * silent call dein#remote_plugins()')
+    return
+  end
+
+  if vim.fn.exists(':UpdateRemotePlugins') ~= 2 then
+    return
+  end
+
+  -- Load not loaded neovim remote plugins
+  local remote_plugins = vim.tbl_filter(
+    function(v) return vim.fn.isdirectory(v.rtp .. '/rplugin')==1 and v.sourced==0 end,
+    vim.tbl_values(dein.get()))
+
+  require 'dein/autoload'
+  _source(remote_plugins)
+
+  __log('loaded remote plugins: ' .. vim.fn.string(vim.tbl_map(function(v) return v.name end, vim.fn.copy(remote_plugins))))
+
+  vim.o.rtp = _join_rtp(_uniq(_split_rtp(vim.o.rtp)), vim.o.rtp, '')
+
+  local result = vim.fn.execute('UpdateRemotePlugins', '')
+  __log(result)
+end

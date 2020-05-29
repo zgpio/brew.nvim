@@ -74,7 +74,8 @@ function! dein#load_rollback(rollbackfile, ...) abort
   call v:lua._load_rollback(a:rollbackfile, (a:0 ? a:1 : []))
 endfunction
 function! dein#remote_plugins() abort
-  return dein#install#_remote_plugins()
+  lua require 'dein/install'
+  return v:lua._remote_plugins()
 endfunction
 function! dein#recache_runtimepath() abort
   lua require 'dein/install'

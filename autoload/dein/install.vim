@@ -55,39 +55,6 @@ function! dein#install#_polling() abort
   endif
 endfunction
 
-function! dein#install#_remote_plugins() abort
-  if !has('nvim')
-    return
-  endif
-
-  if has('vim_starting')
-    " Note: UpdateRemotePlugins is not defined in vim_starting
-    autocmd dein VimEnter * silent call dein#remote_plugins()
-    return
-  endif
-
-  if exists(':UpdateRemotePlugins') != 2
-    return
-  endif
-
-  " Load not loaded neovim remote plugins
-  let remote_plugins = filter(values(v:lua.dein.get()),
-        \ "isdirectory(v:val.rtp . '/rplugin') && !v:val.sourced")
-
-  lua require 'dein/autoload'
-  call v:lua._source(remote_plugins)
-
-  call v:lua.__log('loaded remote plugins: ' .
-        \ string(map(copy(remote_plugins), 'v:val.name')))
-
-  lua require 'dein/util'
-  let &runtimepath = v:lua._join_rtp(v:lua._uniq(
-        \ v:lua._split_rtp(&runtimepath)), &runtimepath, '')
-
-  let result = execute('UpdateRemotePlugins', '')
-  call v:lua.__log(result)
-endfunction
-
 function! dein#install#_get_log() abort
   return g:__log
 endfunction
