@@ -37,57 +37,6 @@ func dein#install#_timer_handler(timer)
   call dein#install#_polling()
 endf
 
-function! dein#install#_rollback(date, plugins) abort
-  let glob = v:lua.__get_rollback_directory() . '/' . a:date . '*'
-  let rollbacks = reverse(sort(v:lua._globlist(glob)))
-  if empty(rollbacks)
-    return
-  endif
-
-  call dein#install#_load_rollback(rollbacks[0], a:plugins)
-endfunction
-
-function! dein#install#_save_rollback(rollbackfile, plugins) abort
-  let revisions = {}
-  for plugin in filter(v:lua._get_plugins(a:plugins),
-        \ 's:check_rollback(v:val)')
-    let rev = v:lua.__get_revision_number(plugin)
-    if rev !=# ''
-      let revisions[plugin.name] = rev
-    endif
-  endfor
-
-  call writefile([json_encode(revisions)], expand(a:rollbackfile))
-endfunction
-function! dein#install#_load_rollback(rollbackfile, plugins) abort
-  let revisions = json_decode(readfile(a:rollbackfile)[0])
-
-  let plugins = v:lua._get_plugins(a:plugins)
-  " TODO has_key(dein#util#_get_type(v:val.type), 'get_rollback_command')
-  call filter(plugins, "has_key(revisions, v:val.name)
-        \ && dein#util#_get_type(v:val.type).name == 'git'
-        \ && s:check_rollback(v:val)
-        \ && v:lua.__get_revision_number(v:val) !=# revisions[v:val.name]")
-  if empty(plugins)
-    return
-  endif
-
-  for plugin in plugins
-    let type = dein#util#_get_type(plugin.type)
-    let cmd = v.lua.get_rollback_command(type,
-          \ dein#util#_get_type(plugin.type), revisions[plugin.name])
-    call v:lua._each(cmd, plugin)
-  endfor
-
-  call dein#recache_runtimepath()
-  call v:lua.__error('Rollback to '.fnamemodify(a:rollbackfile, ':t').' version.')
-endfunction
-function! s:check_rollback(plugin) abort
-  return !has_key(a:plugin, 'local')
-        \ && !get(a:plugin, 'frozen', 0)
-        \ && get(a:plugin, 'rev', '') ==# ''
-endfunction
-
 function! dein#install#_is_async() abort
   return g:dein#install_max_processes > 1
 endfunction

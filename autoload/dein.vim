@@ -62,13 +62,16 @@ function! dein#reinstall(plugins) abort
   call v:lua._reinstall(a:plugins)
 endfunction
 function! dein#rollback(date, ...) abort
-  call dein#install#_rollback(a:date, (a:0 ? a:1 : []))
+  lua require 'dein/install'
+  call v:lua._rollback(a:date, (a:0 ? a:1 : []))
 endfunction
 function! dein#save_rollback(rollbackfile, ...) abort
-  call dein#install#_save_rollback(a:rollbackfile, (a:0 ? a:1 : []))
+  lua require 'dein/install'
+  call v:lua._save_rollback(a:rollbackfile, (a:0 ? a:1 : []))
 endfunction
 function! dein#load_rollback(rollbackfile, ...) abort
-  call dein#install#_load_rollback(a:rollbackfile, (a:0 ? a:1 : []))
+  lua require 'dein/install'
+  call v:lua._load_rollback(a:rollbackfile, (a:0 ? a:1 : []))
 endfunction
 function! dein#remote_plugins() abort
   return dein#install#_remote_plugins()

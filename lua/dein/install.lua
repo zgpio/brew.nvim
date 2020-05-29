@@ -17,6 +17,55 @@ function clear_runtimepath()
     vim.fn.mkdir(runtimepath, 'p')
   end
 end
+function _rollback(date, plugins)
+  local glob = __get_rollback_directory() .. '/' .. date .. '*'
+  local rollbacks = vim.fn.reverse(vim.fn.sort(_globlist(glob)))
+  if vim.fn.empty(rollbacks)==1 then
+    return
+  end
+
+  _load_rollback(rollbacks[0], plugins)
+end
+function __check_rollback(plugin)
+  return vim.fn.has_key(plugin, 'local')==0 and (plugin.frozen or 0)==0 and (plugin.rev or '') == ''
+end
+function _save_rollback(rollbackfile, plugins)
+  local revisions = {}
+  for _, plugin in ipairs(vim.fn.filter(__check_rollback, _get_plugins(plugins))) do
+    local rev = __get_revision_number(plugin)
+    if rev ~= '' then
+      revisions[plugin.name] = rev
+    end
+  end
+
+  vim.fn.writefile({vim.fn.json_encode(revisions)}, vim.fn.expand(rollbackfile))
+end
+function _load_rollback(rollbackfile, plugins)
+  local revisions = vim.fn.json_decode(vim.fn.readfile(rollbackfile)[0])
+
+  local plugins = _get_plugins(plugins)
+  -- TODO has_key(dein#util#_get_type(v:val.type), 'get_rollback_command')
+  plugins = vim.tbl_filter(
+    function(v)
+      return vim.fn.has_key(revisions, v.name)==1
+        and vim.fn['dein#util#_get_type'](v.type).name == 'git'
+        and __check_rollback(v)
+        and __get_revision_number(v) ~= revisions[v.name]
+    end,
+    plugins)
+  if vim.fn.empty(plugins)==1 then
+    return
+  end
+
+  for _, plugin in ipairs(plugins) do
+    local typ = vim.fn['dein#util#_get_type'](plugin.type)
+    local cmd = get_rollback_command(typ, vim.fn['dein#util#_get_type'](plugin.type), revisions[plugin.name])
+    _each(cmd, plugin)
+  end
+
+  vim.fn['dein#recache_runtimepath']()
+  __error('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
+end
 function append_log_file(msg)
   local fn = vim.g['dein#install_log_filename']
   if not fn or fn=='' then
@@ -869,7 +918,7 @@ function _recache_runtimepath()
 
   _save_merged_plugins()
 
-  vim.fn['dein#install#_save_rollback'](__get_rollback_directory() .. '/' .. vim.fn.strftime('%Y%m%d%H%M%S'), {})
+  _save_rollback(__get_rollback_directory() .. '/' .. vim.fn.strftime('%Y%m%d%H%M%S'), {})
 
   _clear_state()
 
