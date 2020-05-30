@@ -32,7 +32,14 @@ function! dein#install#_polling() abort
     set guioptions-=!
   endif
 
-  call dein#install#__install_async(g:__global_context)
+  let [_, new_context] = v:lua.__install_async(g:__global_context)
+  " FIXME:
+  if type(g:__global_context) == v:t_dict
+    call extend(g:__global_context, new_context)
+  endif
+  if type(g:__global_context) == v:t_list
+    echom string(g:__global_context)
+  endif
 
   if exists('+guioptions')
     let &guioptions = save_guioptions
@@ -80,28 +87,6 @@ function! s:job_execute_on_out(data) abort
   let candidates += a:data[1:]
 endfunction
 
-function! dein#install#__install_async(context) abort
-  if empty(a:context)
-    return
-  endif
-
-  let new_context = v:lua.__check_loop(a:context)
-  call extend(a:context, new_context)
-
-  if empty(a:context.processes)
-        \ && a:context.number == a:context.max_plugins
-    call v:lua.__done(a:context)
-  elseif a:context.number != a:context.prev_number
-        \ && a:context.number < len(a:context.plugins)
-    let plugin = a:context.plugins[a:context.number]
-    call v:lua.__print_progress_message(
-          \ v:lua.__get_progress_message(plugin,
-          \   a:context.number, a:context.max_plugins))
-    let a:context.prev_number = a:context.number
-  endif
-
-  return len(a:context.errored_plugins)
-endfunction
 function! s:convert_args(args) abort
   let args = v:lua.__iconv(a:args, &encoding, 'char')
   if type(args) != v:t_list

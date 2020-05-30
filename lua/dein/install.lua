@@ -433,7 +433,7 @@ function __update_loop(context)
     function()
       if vim.fn.has('vim_starting')==1 then
         while vim.fn.empty(vim.g.__global_context)==0 do
-          errored = vim.fn['dein#install#__install_async'](context)
+          errored, _ = unpack(__install_async(context))
           vim.api.nvim_command('sleep 50ms')
           vim.api.nvim_command('redraw')
         end
@@ -1383,4 +1383,22 @@ function __check_loop(context)
   -- Filter eof processes.
   context.processes = vim.tbl_filter(function(v) return v.eof==0 end, context.processes)
   return context
+end
+function __install_async(context)
+  if vim.fn.empty(context)==1 then
+    return
+  end
+
+  __check_loop(context)
+
+  if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
+    __done(context)
+  elseif context.number ~= context.prev_number and context.number < vim.fn.len(context.plugins) then
+    local plugin = context.plugins[context.number]
+    __print_progress_message(__get_progress_message(plugin,
+             context.number, context.max_plugins))
+    context.prev_number = context.number
+  end
+
+  return {vim.fn.len(context.errored_plugins), context}
 end
