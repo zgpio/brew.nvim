@@ -60,11 +60,11 @@ function _load_rollback(rollbackfile, plugins)
   local revisions = vim.fn.json_decode(vim.fn.readfile(rollbackfile)[0])
 
   local plugins = _get_plugins(plugins)
-  -- TODO has_key(dein#util#_get_type(v:val.type), 'get_rollback_command')
+  -- TODO has_key(v:lua._get_type(v:val.type), 'get_rollback_command')
   plugins = vim.tbl_filter(
     function(v)
       return vim.fn.has_key(revisions, v.name)==1
-        and vim.fn['dein#util#_get_type'](v.type).name == 'git'
+        and _get_type(v.type).name == 'git'
         and __check_rollback(v)
         and __get_revision_number(v) ~= revisions[v.name]
     end,
@@ -74,8 +74,8 @@ function _load_rollback(rollbackfile, plugins)
   end
 
   for _, plugin in ipairs(plugins) do
-    local typ = vim.fn['dein#util#_get_type'](plugin.type)
-    local cmd = get_rollback_command(typ, vim.fn['dein#util#_get_type'](plugin.type), revisions[plugin.name])
+    local typ = _get_type(plugin.type)
+    local cmd = get_rollback_command(typ, _get_type(plugin.type), revisions[plugin.name])
     _each(cmd, plugin)
   end
 
@@ -151,7 +151,7 @@ function _get_default_ftplugin()
   }
 end
 function __get_revision_remote(plugin)
-  local type = vim.fn['dein#util#_get_type'](plugin.type)
+  local type = _get_type(plugin.type)
 
   -- TODO !has_key(type, 'get_revision_remote_command')
   if vim.fn.isdirectory(plugin.path)==0 or type.name ~= 'git' then
@@ -172,7 +172,7 @@ function __get_revision_remote(plugin)
   end
 end
 function __get_updated_log_message(plugin, new_rev, old_rev)
-  local type = vim.fn['dein#util#_get_type'](plugin.type)
+  local type = _get_type(plugin.type)
 
   -- TODO has_key(type, 'get_log_command')
   local cmd = ''
@@ -194,7 +194,7 @@ function __get_updated_log_message(plugin, new_rev, old_rev)
   end
 end
 function __get_revision_number(plugin)
-  local type = vim.fn['dein#util#_get_type'](plugin.type)
+  local type = _get_type(plugin.type)
 
   -- TODO !has_key(type, 'get_revision_number_command')
   if vim.fn.isdirectory(plugin.path)==0 or type.name ~= 'git' then
@@ -946,7 +946,7 @@ function _recache_runtimepath()
   __log(vim.fn.strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 end
 function __get_sync_command(plugin, update_type, number, max)
-  local type = vim.fn['dein#util#_get_type'](plugin.type)
+  local type = _get_type(plugin.type)
   local cmd
 
   -- TODO has_key(type, 'get_fetch_remote_command')
@@ -1041,7 +1041,7 @@ function __lock_revision(process, context)
 
   plugin.new_rev = __get_revision_number(plugin)
 
-  local typ = vim.fn['dein#util#_get_type'](plugin['type'])
+  local typ = _get_type(plugin['type'])
   -- TODO !has_key(type, 'get_revision_lock_command')
   if typ.name ~= 'git' then
     return 0
@@ -1283,7 +1283,7 @@ function __check_output(context, process)
     plugin.old_rev = process.rev
     plugin.new_rev = new_rev
 
-    local type = vim.fn['dein#util#_get_type'](plugin.type)
+    local type = _get_type(plugin.type)
     -- TODO has_key(type, 'get_uri')
     if type.name == 'git' then
       plugin.uri = get_uri(plugin.repo, plugin)

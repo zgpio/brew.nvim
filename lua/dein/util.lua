@@ -464,6 +464,9 @@ function _convert2list(expr)
     return {expr}
   end
 end
+function _get_type(name)
+  return ((vim.fn['dein#parse#_get_types']())[name] or {})
+end
 function escape(path)
   -- Escape a path for runtimepath.
   return vim.fn.substitute(path, [[,\|\\,\@=]], [[\\\0]], 'g')
