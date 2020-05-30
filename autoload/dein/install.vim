@@ -106,7 +106,11 @@ function! dein#install#__check_loop(context) abort
         \ && len(a:context.processes) < g:dein#install_max_processes
 
     let plugin = a:context.plugins[a:context.number]
-    call dein#install#__sync(plugin, a:context)
+    " FIXME: temporary fix
+    let new_context = v:lua.__sync(plugin, a:context)
+    let a:context.number = new_context.number
+    let a:context.processes = new_context.processes
+    let a:context.errored_plugins = new_context.errored_plugins
 
     if !a:context.async
       call v:lua.__print_progress_message(
@@ -128,49 +132,6 @@ function! s:convert_args(args) abort
     let args = split(&shell) + split(&shellcmdflag) + [args]
   endif
   return args
-endfunction
-
-function! dein#install#__sync(plugin, context) abort
-  let a:context.number += 1
-
-  let num = a:context.number
-  let max = a:context.max_plugins
-
-  if isdirectory(a:plugin.path) && get(a:plugin, 'frozen', 0)
-    " Skip frozen plugin
-    call v:lua.__log(v:lua.__get_plugin_message(a:plugin, num, max, 'is frozen.'))
-    return
-  endif
-
-  let [cmd, message] = v:lua.__get_sync_command(
-        \   a:plugin, a:context.update_type,
-        \   a:context.number, a:context.max_plugins)
-
-  if empty(cmd)
-    " Skip
-    call v:lua.__log(v:lua.__get_plugin_message(a:plugin, num, max, message))
-    return
-  endif
-
-  if type(cmd) == v:t_string && cmd =~# '^E: '
-    " Errored.
-
-    call v:lua.__print_progress_message(v:lua.__get_plugin_message(
-          \ a:plugin, num, max, 'Error'))
-    call v:lua.__error(cmd[3:])
-    call add(a:context.errored_plugins,
-          \ a:plugin)
-    return
-  endif
-
-  if !a:context.async
-    call v:lua.__print_progress_message(message)
-  endif
-
-  let process = v:lua.__init_process(a:plugin, a:context, cmd)
-  if !empty(process)
-    call add(a:context.processes, process)
-  endif
 endfunction
 
 function! s:async_get(async, process) abort

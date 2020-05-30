@@ -1172,3 +1172,47 @@ function __init_process(plugin, context, cmd)
 
   return process
 end
+function __sync(plugin, context)
+  context.number = context.number + 1
+
+  num = context.number
+  max = context.max_plugins
+
+  -- if not plugin then return end
+  if vim.fn.isdirectory(plugin.path)==1 and (plugin.frozen or 0)==1 then
+    -- Skip frozen plugin
+    __log(__get_plugin_message(plugin, num, max, 'is frozen.'))
+    return
+  end
+
+  cmd, message = unpack(
+    __get_sync_command(plugin, context.update_type, context.number, context.max_plugins))
+
+  if vim.fn.empty(cmd)==1 then
+    -- Skip
+    __log(__get_plugin_message(plugin, num, max, message))
+    return
+  end
+
+  if type(cmd) == 'string' and cmd:find('^E: ') then
+    -- Errored.
+
+    __print_progress_message(__get_plugin_message(
+           plugin, num, max, 'Error'))
+    __error(cmd:sub(4))
+    table.insert(context.errored_plugins, plugin)
+    return
+  end
+
+  if context.async==0 then
+    __print_progress_message(message)
+  end
+
+  local process = __init_process(plugin, context, cmd)
+  if vim.fn.empty(process)==0 then
+    table.insert(context.processes, process)
+  end
+  -- call luaeval('dein_log:write(vim.inspect(_A), "\n")', [a:context])
+  -- lua dein_log:flush()
+  return context
+end
