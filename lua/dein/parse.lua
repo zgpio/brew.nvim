@@ -283,18 +283,23 @@ function _dict(plug)
 
   return plugin
 end
-
---function _get_types()
---  if types == nil then
---    -- Load types.
---    types = {}
---    local fl = vim.fn.split(vim.fn.globpath(vim.o.runtimepath, 'autoload/dein/types/*.vim', 1), '\n')
---    for type in vim.fn.filter(vim.fn.map(fl, "dein#types#{fnamemodify(v:val, ':t:r')}#define()"), '!empty(v:val)') do
---      types[type.name] = type
---    end
---  end
---  return types
---end
+local types
+function _get_types()
+  if types == nil then
+    -- Load types.
+    types = {}
+    local fl = vim.fn.split(vim.fn.globpath(vim.o.rtp, 'lua/dein/types/*.lua', 1), '\n')
+    for _, typ in ipairs(vim.tbl_map(
+      function(v)
+        return require('dein/types/'..vim.fn.fnamemodify(v, ':t:r'))
+      end, fl)) do
+      if vim.fn.empty(typ)==0 then
+        types[typ.name] = typ
+      end
+    end
+  end
+  return types
+end
 function _name_conversion(path)
   return vim.fn.fnamemodify(vim.fn.get(vim.fn.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
 end
@@ -302,7 +307,7 @@ end
 function __check_type(repo, options)
   local plugin = {}
   require 'dein/types/git'
-  for _, t in ipairs(vim.tbl_values(vim.fn['dein#parse#_get_types']())) do
+  for _, t in ipairs(vim.tbl_values(_get_types())) do
     plugin = init(t, repo, options)
     if vim.fn.empty(plugin)==0 then
       break

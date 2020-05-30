@@ -1,19 +1,32 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
+require 'dein/util'
+-- Global options definition.
+-- TODO load user config
+dein_types_git_command_path = 'git'
+dein_types_git_default_protocol = 'https'
+dein_types_git_clone_depth = 0
+dein_types_git_pull_command = 'pull --ff --ff-only'
+local M = {
+  name='git',
+  command=dein_types_git_command_path,
+  executable=vim.fn.executable(dein_types_git_command_path),
+}
+
 local is_windows = _is_windows()
 if is_windows then
-  function __is_absolute(path)
+  local function is_absolute(path)
     return path:find('^[\\/]')~=nil or path:find('^%a:')~=nil
   end
 else
-  function __is_absolute(path)
+  local function is_absolute(path)
     return path:find('^/')~=nil
   end
 end
 
-function __join_paths(path1, path2)
+local function join_paths(path1, path2)
   -- Joins two paths together, handling the case where the second path
   -- is an absolute path.
-  if __is_absolute(path2) then
+  if is_absolute(path2) then
     return path2
   end
   local p1, p2
@@ -34,7 +47,7 @@ function __join_paths(path1, path2)
     return path1 .. '/' .. path2
   end
 end
-function __is_git_dir(path)
+local function is_git_dir(path)
   local git_dir
   if vim.fn.isdirectory(path)==1 then
     git_dir = path
@@ -52,7 +65,7 @@ function __is_git_dir(path)
       -- if there's no tail, the path probably ends in a directory separator
       p = vim.fn.fnamemodify(p, ':h')
     end
-    git_dir = __join_paths(p, matches[1])
+    git_dir = join_paths(p, matches[1])
     if vim.fn.isdirectory(git_dir)==0 then
       return 0
     end
@@ -70,7 +83,7 @@ function __is_git_dir(path)
   -- Note: Git also accepts having the GIT_OBJECT_DIRECTORY env var set instead
   -- of using .git/objects, but we don't care about that.
   for _, name in ipairs({'objects', 'refs'}) do
-    if vim.fn.isdirectory(__join_paths(git_dir, name))==0 then
+    if vim.fn.isdirectory(join_paths(git_dir, name))==0 then
       return 0
     end
   end
@@ -80,7 +93,7 @@ function __is_git_dir(path)
   -- sure the file exists and is readable.
   -- Note: it may also be a symlink, which can point to a path that doesn't
   -- necessarily exist yet.
-  local head = __join_paths(git_dir, 'HEAD')
+  local head = join_paths(git_dir, 'HEAD')
   if vim.fn.filereadable(head)==0 and vim.fn.getftype(head) ~= 'link' then
     return 0
   end
@@ -100,7 +113,7 @@ end
 
 function get_uri(repo, options)
   if repo:find('^/') or repo:find('^%a:[/\\]') then
-    if __is_git_dir(repo..'/.git')==1 then
+    if is_git_dir(repo..'/.git')==1 then
       return repo
     else
       return ''
@@ -126,7 +139,7 @@ function get_uri(repo, options)
   if protocol == ''
          or vim.fn.match(repo, [[\<\%(gh\|github\|bb\|bitbucket\):\S\+]])~=-1
          or options.type__protocol then
-    protocol = options.type__protocol or vim.g['dein#types#git#default_protocol']
+    protocol = options.type__protocol or dein_types_git_default_protocol
   end
 
   if protocol ~= 'https' and protocol ~= 'ssh' then
@@ -154,7 +167,7 @@ function get_sync_command(git, plugin)
   if vim.fn.isdirectory(plugin.path)==0 then
     local commands = {git.command, 'clone', '--recursive'}
 
-    local depth = plugin.type__depth or vim.g['dein#types#git#clone_depth']
+    local depth = plugin.type__depth or dein_types_git_clone_depth
     if depth > 0 and (plugin.rev or '') == '' and get_uri(plugin.repo, plugin):find('^git@')==nil then
       table.insert(commands, '--depth=' .. depth)
     end
@@ -166,7 +179,7 @@ function get_sync_command(git, plugin)
   else
     local gcmd = git.command
 
-    local cmd = vim.g['dein#types#git#pull_command']
+    local cmd = dein_types_git_pull_command
     local submodule_cmd = gcmd .. ' submodule update --init --recursive'
     if _is_powershell() then
       cmd = cmd .. '; if ($?) { ' .. submodule_cmd .. ' }'
@@ -258,7 +271,7 @@ function init(git, repo, options)
     return {}
   end
 
-  if (repo:find('^/') or repo:find('^%a:[/\\]')) and __is_git_dir(repo..'/.git') then
+  if (repo:find('^/') or repo:find('^%a:[/\\]')) and is_git_dir(repo..'/.git') then
     -- Local repository.
     return { ['type']='git', ['local']=1 }
   elseif vim.fn.match(repo, [[//\%(raw\|gist\)\.githubusercontent\.com/\|/archive/[^/]\+\.zip$]])~=-1 then
@@ -276,3 +289,5 @@ function init(git, repo, options)
 
   return { ['type']='git', ['path']=dein._base_path..'/repos/'..directory }
 end
+
+return M

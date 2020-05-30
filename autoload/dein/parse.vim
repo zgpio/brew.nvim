@@ -96,17 +96,3 @@ function! dein#parse#_local(localdir, options, includes) abort
     endif
   endfor
 endfunction
-
-function! dein#parse#_get_types() abort
-  if !exists('s:types')
-    " Load types.
-    let s:types = {}
-    for type in filter(map(split(globpath(&runtimepath,
-          \ 'autoload/dein/types/*.vim', 1), '\n'),
-          \ "dein#types#{fnamemodify(v:val, ':t:r')}#define()"),
-          \ '!empty(v:val)')
-      let s:types[type.name] = type
-    endfor
-  endif
-  return s:types
-endfunction
