@@ -319,8 +319,15 @@ function __install_blocking(context)
         if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
           break
         end
+        -- FIXME
+        assert(false)
       end
-    end
+    end,
+    catch {
+      function(e)
+        print('caught error: ' .. e)
+      end
+    }
   }
   __done(context)
 
@@ -660,9 +667,6 @@ function _reinstall(plugins)
 
   _update(_convert2list(plugins), 'install', 0)
 end
-function __start()
-  __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
-end
 function __get_progress_message(plugin, number, max)
   -- FIXME 去掉math.modf外的圆括号会报错 E118: Too many arguments for function: repeat
   return vim.fn.printf('(%'..vim.fn.len(max)..'d/%'..vim.fn.len(max)..'d) [%s%s] %s',
@@ -995,7 +999,7 @@ function _update(plugins, update_type, async)
     return
   end
 
-  __start()
+  __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 
   if async==0 or vim.fn.has('vim_starting')==1 then
     return __update_loop(context)
@@ -1106,4 +1110,65 @@ function _remote_plugins()
 
   local result = vim.fn.execute('UpdateRemotePlugins', '')
   __log(result)
+end
+function __init_process(plugin, context, cmd)
+  local process = {}
+
+  local cwd = vim.fn.getcwd()
+  local lang_save = vim.env['LANG']
+  local prompt_save = vim.env['GIT_TERMINAL_PROMPT']
+  try {
+    function()
+      vim.env['LANG'] = 'C'
+      -- Disable git prompt (git version >= 2.3.0)
+      vim.env['GIT_TERMINAL_PROMPT'] = 0
+
+      _cd(plugin.path)
+
+      local rev = __get_revision_number(plugin)
+
+      process = {
+        number=context.number,
+        max_plugins=context.max_plugins,
+        rev=rev,
+        plugin=plugin,
+        output='',
+        status=-1,
+        eof=0,
+        installed=vim.fn.isdirectory(plugin.path),
+      }
+
+      if vim.fn.isdirectory(plugin.path)==1 and (plugin['local'] or 0)==0 then
+        local rev_save = plugin.rev or ''
+        try {
+          function()
+            -- Force checkout HEAD revision.
+            -- The repository may be checked out.
+            plugin.rev = ''
+
+            __lock_revision(process, context)
+          end,
+          catch {
+            function(e)
+              print('caught error: ' .. e)
+            end
+          }
+        }
+        plugin.rev = rev_save
+      end
+
+      process = __init_job(process, context, cmd)
+    end,
+    catch {
+      function(e)
+        print('caught error: ' .. e)
+      end
+    }
+  }
+
+  vim.env['LANG'] = lang_save
+  vim.env['GIT_TERMINAL_PROMPT'] = prompt_save
+  _cd(cwd)
+
+  return process
 end

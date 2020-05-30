@@ -11,15 +11,11 @@ let g:__global_context = {}
 let g:__log = []
 let g:__updates_log = []
 let g:__progress = ''
-
-function! s:get_job() abort
-  if !exists('s:Job')
-    let s:Job = dein#job#import()
-  endif
-  " call luaeval('dein_log:write(vim.inspect(_A), "\n")', [string(s:Job)])
-  " lua dein_log:flush()
-  return s:Job
-endfunction
+if !exists('g:__Job')
+  let g:__Job = dein#job#import()
+endif
+" call luaeval('dein_log:write(vim.inspect(_A), "\n")', [string(s:Job)])
+" lua dein_log:flush()
 
 func dein#install#_timer_handler(timer)
   call dein#install#_polling()
@@ -63,7 +59,7 @@ endfunction
 function! dein#install#_execute(command) abort
   let s:job_execute.candidates = []
 
-  let job = s:get_job().start(
+  let job = g:__Job.start(
         \ s:convert_args(a:command),
         \ {'on_stdout': s:job_execute_on_out})
 
@@ -171,59 +167,10 @@ function! dein#install#__sync(plugin, context) abort
     call v:lua.__print_progress_message(message)
   endif
 
-  let process = dein#install#__init_process(a:plugin, a:context, cmd)
+  let process = v:lua.__init_process(a:plugin, a:context, cmd)
   if !empty(process)
     call add(a:context.processes, process)
   endif
-endfunction
-function! dein#install#__init_process(plugin, context, cmd) abort
-  let process = {}
-
-  let cwd = getcwd()
-  let lang_save = $LANG
-  let prompt_save = $GIT_TERMINAL_PROMPT
-  try
-    let $LANG = 'C'
-    " Disable git prompt (git version >= 2.3.0)
-    let $GIT_TERMINAL_PROMPT = 0
-
-    call v:lua._cd(a:plugin.path)
-
-    let rev = v:lua.__get_revision_number(a:plugin)
-
-    let process = {
-          \ 'number': a:context.number,
-          \ 'max_plugins': a:context.max_plugins,
-          \ 'rev': rev,
-          \ 'plugin': a:plugin,
-          \ 'output': '',
-          \ 'status': -1,
-          \ 'eof': 0,
-          \ 'installed': isdirectory(a:plugin.path),
-          \ }
-
-    if isdirectory(a:plugin.path)
-          \ && !get(a:plugin, 'local', 0)
-      let rev_save = get(a:plugin, 'rev', '')
-      try
-        " Force checkout HEAD revision.
-        " The repository may be checked out.
-        let a:plugin.rev = ''
-
-        call v:lua.__lock_revision(process, a:context)
-      finally
-        let a:plugin.rev = rev_save
-      endtry
-    endif
-
-    let process = v:lua.__init_job(process, a:context, a:cmd)
-  finally
-    let $LANG = lang_save
-    let $GIT_TERMINAL_PROMPT = prompt_save
-    call v:lua._cd(cwd)
-  endtry
-
-  return process
 endfunction
 
 function! s:async_get(async, process) abort
@@ -266,7 +213,7 @@ endfunction
 let g:job_pool = []
 function! dein#install#__init_job(process, context, cmd) abort
   let a:process.job = len(g:job_pool)
-  call add(g:job_pool, s:get_job().start(s:convert_args(a:cmd), {}))
+  call add(g:job_pool, g:__Job.start(s:convert_args(a:cmd), {}))
   let a:process.id = dein#job#_job_pid(a:process.job)
   let g:job_pool[a:process.job].candidates = []
   return a:process
