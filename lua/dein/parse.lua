@@ -11,9 +11,24 @@ function unique(items)
   return rv
 end
 
+function _init(repo, options)
+  repo = _expand(repo)
+  options.type = options.type or 'git'
+  local typ = _get_type(options.type)
+  local plugin = init(typ, repo, options)
+  if vim.fn.empty(plugin)==1 then
+    plugin = __check_type(repo, options)
+  end
+  plugin = vim.tbl_extend('force', plugin, options)
+  plugin.repo = repo
+  if vim.fn.empty(options)==0 then
+    plugin.orig_opts = vim.fn.deepcopy(options)
+  end
+  return plugin
+end
 function _add(repo, options)
   local _plugins = dein._plugins
-  local plugin = _dict(vim.fn['dein#parse#_init'](repo, options))
+  local plugin = _dict(_init(repo, options))
   if (_plugins[plugin.name]~=nil
         and _plugins[plugin.name].sourced==1)
         or (plugin['if'] or 1)==0 then

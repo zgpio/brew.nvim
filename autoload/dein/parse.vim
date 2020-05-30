@@ -10,24 +10,6 @@ lua require 'dein/util'
 let g:dein#enable_name_conversion =
       \ get(g:, 'dein#enable_name_conversion', 0)
 
-
-let s:git = dein#types#git#define()
-
-function! dein#parse#_init(repo, options) abort
-  let repo = v:lua._expand(a:repo)
-  let plugin = has_key(a:options, 'type') ?
-        \ v:lua.init(v:lua._get_type(a:options.type), repo, a:options) :
-        \ v:lua.init(s:git, repo, a:options)
-  if empty(plugin)
-    let plugin = v:lua.__check_type(repo, a:options)
-  endif
-  call extend(plugin, a:options)
-  let plugin.repo = repo
-  if !empty(a:options)
-    let plugin.orig_opts = deepcopy(a:options)
-  endif
-  return plugin
-endfunction
 function! dein#parse#_load_toml(filename, default) abort
   try
     let toml = dein#toml#parse_file(v:lua._expand(a:filename))
