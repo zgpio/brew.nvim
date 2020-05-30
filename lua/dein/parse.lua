@@ -1,4 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
+require 'dein/util'
 function unique(items)
   flags = {}
   rv = {}
@@ -372,4 +373,50 @@ function _local(localdir, options, includes)
       vim.fn['dein#add'](dir, options)
     end
   end
+end
+function _load_toml(filename, default)
+  local toml
+  try {
+    function()
+      toml = vim.fn['dein#toml#parse_file'](_expand(filename))
+    end,
+    catch {
+      -- TODO catch /Text.TOML:/
+      function(e)
+        print(e)
+        _error('Invalid toml format: ' .. filename)
+        _error(vim.v.exception)
+        return 1
+      end
+    }
+  }
+
+  if type(toml)~='table' or vim.tbl_islist(toml) then
+    _error('Invalid toml file: ' .. filename)
+    return 1
+  end
+
+  -- Parse.
+  if toml.hook_add then
+    local pattern = [[\n\s*\\\|\%(^\|\n\)\s*"[^\n]*]]
+    set_dein_hook_add(dein._hook_add .. "\n" .. vim.fn.substitute(toml.hook_add, pattern, '', 'g'))
+  end
+  if toml.ftplugin then
+    merge_ftplugin(toml.ftplugin)
+  end
+
+  if toml.plugins then
+    for _, plugin in ipairs(toml.plugins) do
+      if not plugin.repo then
+        _error('No repository plugin data: ' .. filename)
+        return 1
+      end
+
+      local options = vim.fn.extend(plugin, default, 'keep')
+      vim.fn['dein#add'](plugin.repo, options)
+    end
+  end
+
+  -- Add to dein._vimrcs
+  add_dein_vimrcs(_expand(filename))
 end

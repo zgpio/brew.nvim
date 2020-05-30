@@ -91,7 +91,8 @@ function! dein#check_lazy_plugins() abort
   return v:lua._check_lazy_plugins()
 endfunction
 function! dein#load_toml(filename, ...) abort
-  return dein#parse#_load_toml(a:filename, get(a:000, 0, {}))
+  lua require 'dein/parse'
+  return v:lua._load_toml(a:filename, get(a:000, 0, {}))
 endfunction
 function! dein#load_dict(dict, ...) abort
   return dein#parse#_load_dict(a:dict, get(a:000, 0, {}))
