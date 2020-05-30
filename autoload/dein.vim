@@ -22,7 +22,8 @@ function! dein#add(repo, ...) abort
   return v:lua._add(a:repo, get(a:000, 0, {}))
 endfunction
 function! dein#local(dir, ...) abort
-  return dein#parse#_local(a:dir, get(a:000, 0, {}), get(a:000, 1, ['*']))
+  lua require 'dein/parse'
+  return v:lua._local(a:dir, get(a:000, 0, {}), get(a:000, 1, ['*']))
 endfunction
 function! dein#source(...) abort
   return v:lua._source(a:000)

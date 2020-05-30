@@ -53,28 +53,3 @@ function! dein#parse#_load_dict(dict, default) abort
     call dein#add(repo, extend(copy(options), a:default, 'keep'))
   endfor
 endfunction
-function! dein#parse#_local(localdir, options, includes) abort
-  lua require 'dein/util'
-  let base = fnamemodify(v:lua._expand(a:localdir), ':p')
-  let directories = []
-  for glob in a:includes
-    let directories += map(filter(v:lua._globlist(base . glob),
-          \ 'isdirectory(v:val)'), "
-          \ substitute(v:lua._substitute_path(
-          \   fnamemodify(v:val, ':p')), '/$', '', '')")
-  endfor
-
-  lua require 'dein/util'
-  for dir in v:lua._uniq(directories)
-    let options = extend({
-          \ 'repo': dir, 'local': 1, 'path': dir,
-          \ 'name': fnamemodify(dir, ':t')
-          \ }, a:options)
-
-    if has_key(luaeval('dein._plugins'), options.name)
-      call dein#config(options.name, options)
-    else
-      call dein#add(dir, options)
-    endif
-  endfor
-endfunction

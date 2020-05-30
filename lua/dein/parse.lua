@@ -340,3 +340,36 @@ function __check_type(repo, options)
 
   return plugin
 end
+function _local(localdir, options, includes)
+  require 'dein/util'
+  local base = vim.fn.fnamemodify(_expand(localdir), ':p')
+  local directories = {}
+  for _, glob in ipairs(includes) do
+    local dirs = vim.tbl_filter(
+      function(v) return vim.fn.isdirectory(v)==1 end,
+      _globlist(base .. glob)
+    )
+    dirs = vim.tbl_map(
+      function(v)
+        return vim.fn.substitute(_substitute_path(vim.fn.fnamemodify(v, ':p')), '/$', '', '')
+      end,
+      dirs
+    )
+    directories = vim.fn.extend(directories, dirs)
+  end
+
+  for _, dir in ipairs(_uniq(directories)) do
+    local options = vim.tbl_extend('force', {
+      ['repo']=dir,
+      ['local']=1,
+      ['path']=dir,
+      ['name']=fnamemodify(dir, ':t')
+    }, options)
+
+    if dein._plugins[options.name] then
+      vim.fn['dein#config'](options.name, options)
+    else
+      vim.fn['dein#add'](dir, options)
+    end
+  end
+end
