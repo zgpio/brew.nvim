@@ -314,7 +314,7 @@ function __install_blocking(context)
   try {
     function()
       while true do
-        vim.fn['dein#install#__check_loop'](context)
+        __check_loop(context)
 
         if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
           break
@@ -1214,5 +1214,173 @@ function __sync(plugin, context)
   end
   -- call luaeval('dein_log:write(vim.inspect(_A), "\n")', [a:context])
   -- lua dein_log:flush()
+  return context
+end
+function __check_output(context, process)
+  local is_timeout, is_skip, status
+  if context.async==1 then
+    is_timeout, is_skip, status = __async_get(process.async, process)
+  else
+    is_timeout, is_skip, status = 0, 0, process.status
+  end
+
+  if is_skip==1 and is_timeout==0 then
+    return
+  end
+
+  local num = process.number
+  local max = context.max_plugins
+  local plugin = process.plugin
+
+  if vim.fn.isdirectory(plugin.path)==1
+         and (plugin.rev or '') ~= ''
+         and (plugin['local'] or 0)==0 then
+    -- Restore revision.
+    __lock_revision(process, context)
+  end
+
+  local new_rev
+  if context.update_type == 'check_update' then
+    new_rev = __get_revision_remote(plugin)
+  else
+    new_rev = __get_revision_number(plugin)
+  end
+
+  if is_timeout==1 or status==1 then
+    __log(__get_plugin_message(plugin, num, max, 'Error'))
+    __error(plugin.path)
+    if process.installed==0 then
+      if vim.fn.isdirectory(plugin.path)==0 then
+        __error('Maybe wrong username or repository.')
+      elseif vim.fn.isdirectory(plugin.path)==1 then
+        __error('Remove the installed directory:' .. plugin.path)
+        _rm(plugin.path)
+      end
+    end
+
+    if is_timeout==1 then
+      __error(vim.fn.strftime('Process timeout: (%Y/%m/%d %H:%M:%S)'))
+    else
+      __error(vim.fn.split(process.output, '\n'))
+    end
+
+    table.insert(context.errored_plugins, plugin)
+  elseif process.rev == new_rev or (context.update_type == 'check_update' and new_rev == '') then
+    if context.update_type ~= 'check_update' then
+      __log(__get_plugin_message(plugin, num, max, 'Same revision'))
+    end
+  else
+    __log(__get_plugin_message(plugin, num, max, 'Updated'))
+
+    if context.update_type ~= 'check_update' then
+      local log_messages = vim.fn.split(__get_updated_log_message(plugin, new_rev, process.rev), '\n')
+      plugin.commit_count = vim.fn.len(log_messages)
+      __log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
+    else
+      plugin.commit_count = 0
+    end
+
+    plugin.old_rev = process.rev
+    plugin.new_rev = new_rev
+
+    local type = vim.fn['dein#util#_get_type'](plugin.type)
+    -- TODO has_key(type, 'get_uri')
+    if type.name == 'git' then
+      plugin.uri = get_uri(plugin.repo, plugin)
+    else
+      plugin.uri = ''
+    end
+
+    local cwd = vim.fn.getcwd()
+    try {
+      function()
+        _cd(plugin.path)
+        vim.fn['dein#call_hook']('post_update', plugin)
+      end,
+      catch {
+        function(e)
+          print('caught error: ' .. e)
+        end
+      }
+    }
+    _cd(cwd)
+
+    if _build({plugin.name}) then
+      __log(__get_plugin_message(plugin, num, max, 'Build failed'))
+      __error(plugin.path)
+      -- Remove.
+      table.insert(context.errored_plugins, plugin)
+    else
+      table.insert(context.synced_plugins, plugin)
+    end
+  end
+
+  process.eof = 1
+end
+function __async_get(async, process)
+  -- Check job status
+  local status = -1
+  if vim.g.job_pool[process.job+1].exitval then
+    async.eof = 1
+    status = vim.g.job_pool[process.job+1].exitval
+  end
+
+  local candidates = vim.g.job_pool[process.job+1].candidates or {}
+  local output
+  if async.eof==1 then
+    output = vim.fn.join(candidates, "\n")
+  else
+    output = vim.fn.join(slice(candidates, 1, #candidates-1), "\n")
+  end
+  if output ~= '' then
+    process.output = process.output .. output
+    process.start_time = vim.fn.localtime()
+    __log(__get_short_message(process.plugin, process.number,
+          process.max_plugins, output))
+  end
+  if async.eof==1 then
+    async.candidates = {}
+  else
+    async.candidates = {candidates[#candidates]}
+  end
+
+  local is_timeout = (vim.fn.localtime() - process.start_time)
+                     >= (process.plugin.timeout or vim.g['dein#install_process_timeout'])
+
+  local is_skip
+  if async.eof==1 then
+    is_timeout = 0
+    is_skip = 0
+  else
+    is_skip = 1
+  end
+
+  if is_timeout==1 then
+    vim.fn['dein#job#_job_stop'](process.job+1)
+    status = -1
+  end
+
+  return is_timeout, is_skip, status
+end
+function __check_loop(context)
+  while context.number < context.max_plugins
+         and vim.fn.len(context.processes) < vim.g['dein#install_max_processes'] do
+
+    local plugin = context.plugins[context.number+1]
+    __sync(plugin, context)
+
+    if context.async==0 then
+      __print_progress_message(
+             __get_progress_message(plugin,
+               context.number, context.max_plugins))
+    end
+  end
+
+  for _, process in ipairs(context.processes) do
+    __check_output(context, process)
+  end
+
+  -- Filter eof processes.
+  context.processes = vim.tbl_filter(function(v) return v.eof==0 end, context.processes)
   return context
 end

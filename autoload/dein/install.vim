@@ -85,7 +85,8 @@ function! dein#install#__install_async(context) abort
     return
   endif
 
-  call dein#install#__check_loop(a:context)
+  let new_context = v:lua.__check_loop(a:context)
+  call extend(a:context, new_context)
 
   if empty(a:context.processes)
         \ && a:context.number == a:context.max_plugins
@@ -101,31 +102,6 @@ function! dein#install#__install_async(context) abort
 
   return len(a:context.errored_plugins)
 endfunction
-function! dein#install#__check_loop(context) abort
-  while a:context.number < a:context.max_plugins
-        \ && len(a:context.processes) < g:dein#install_max_processes
-
-    let plugin = a:context.plugins[a:context.number]
-    " FIXME: temporary fix
-    let new_context = v:lua.__sync(plugin, a:context)
-    let a:context.number = new_context.number
-    let a:context.processes = new_context.processes
-    let a:context.errored_plugins = new_context.errored_plugins
-
-    if !a:context.async
-      call v:lua.__print_progress_message(
-            \ v:lua.__get_progress_message(plugin,
-            \   a:context.number, a:context.max_plugins))
-    endif
-  endwhile
-
-  for process in a:context.processes
-    call dein#install#__check_output(a:context, process)
-  endfor
-
-  " Filter eof processes.
-  call filter(a:context.processes, '!v:val.eof')
-endfunction
 function! s:convert_args(args) abort
   let args = v:lua.__iconv(a:args, &encoding, 'char')
   if type(args) != v:t_list
@@ -134,43 +110,6 @@ function! s:convert_args(args) abort
   return args
 endfunction
 
-function! s:async_get(async, process) abort
-  " Check job status
-  let status = -1
-  if has_key(g:job_pool[a:process.job], 'exitval')
-    let a:async.eof = 1
-    let status = g:job_pool[a:process.job].exitval
-  endif
-
-  let candidates = get(g:job_pool[a:process.job], 'candidates', [])
-  let output = join((a:async.eof ? candidates : candidates[: -2]), "\n")
-  if output !=# ''
-    let a:process.output .= output
-    let a:process.start_time = localtime()
-    call v:lua.__log(v:lua.__get_short_message(
-          \ a:process.plugin, a:process.number,
-          \ a:process.max_plugins, output))
-  endif
-  let a:async.candidates = a:async.eof ? [] : candidates[-1:]
-
-  let is_timeout = (localtime() - a:process.start_time)
-        \             >= get(a:process.plugin, 'timeout',
-        \                    g:dein#install_process_timeout)
-
-  if a:async.eof
-    let is_timeout = 0
-    let is_skip = 0
-  else
-    let is_skip = 1
-  endif
-
-  if is_timeout
-    call dein#job#_job_stop(a:process.job)
-    let status = -1
-  endif
-
-  return [is_timeout, is_skip, status]
-endfunction
 let g:job_pool = []
 function! dein#install#__init_job(process, context, cmd) abort
   let a:process.job = len(g:job_pool)
@@ -178,97 +117,4 @@ function! dein#install#__init_job(process, context, cmd) abort
   let a:process.id = dein#job#_job_pid(a:process.job)
   let g:job_pool[a:process.job].candidates = []
   return a:process
-endfunction
-function! dein#install#__check_output(context, process) abort
-  if a:context.async
-    let [is_timeout, is_skip, status] = s:async_get(a:process.async, a:process)
-  else
-    let [is_timeout, is_skip, status] = [0, 0, a:process.status]
-  endif
-
-  if is_skip && !is_timeout
-    return
-  endif
-
-  let num = a:process.number
-  let max = a:context.max_plugins
-  let plugin = a:process.plugin
-
-  if isdirectory(plugin.path)
-        \ && get(plugin, 'rev', '') !=# ''
-        \ && !get(plugin, 'local', 0)
-    " Restore revision.
-    call v:lua.__lock_revision(a:process, a:context)
-  endif
-
-  let new_rev = (a:context.update_type ==# 'check_update') ?
-        \ v:lua.__get_revision_remote(plugin) :
-        \ v:lua.__get_revision_number(plugin)
-
-  if is_timeout || status
-    call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Error'))
-    call v:lua.__error(plugin.path)
-    if !a:process.installed
-      if !isdirectory(plugin.path)
-        call v:lua.__error('Maybe wrong username or repository.')
-      elseif isdirectory(plugin.path)
-        call v:lua.__error('Remove the installed directory:' . plugin.path)
-        call v:lua._rm(plugin.path)
-      endif
-    endif
-
-    call v:lua.__error((is_timeout ?
-          \    strftime('Process timeout: (%Y/%m/%d %H:%M:%S)') :
-          \    split(a:process.output, '\n')
-          \ ))
-
-    call add(a:context.errored_plugins,
-          \ plugin)
-  elseif a:process.rev ==# new_rev
-        \ || (a:context.update_type ==# 'check_update' && new_rev ==# '')
-    if a:context.update_type !=# 'check_update'
-      call v:lua.__log(v:lua.__get_plugin_message(
-            \ plugin, num, max, 'Same revision'))
-    endif
-  else
-    call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Updated'))
-
-    if a:context.update_type !=# 'check_update'
-      let log_messages = split(v:lua.__get_updated_log_message(
-            \   plugin, new_rev, a:process.rev), '\n')
-      let plugin.commit_count = len(log_messages)
-      call v:lua.__log(map(log_messages,
-            \   'v:lua.__get_short_message(plugin, num, max, v:val)'))
-    else
-      let plugin.commit_count = 0
-    endif
-
-    let plugin.old_rev = a:process.rev
-    let plugin.new_rev = new_rev
-
-    let type = dein#util#_get_type(plugin.type)
-    " TODO has_key(type, 'get_uri')
-    let plugin.uri = type.name == 'git' ?
-          \ v:lua.get_uri(plugin.repo, plugin) : ''
-
-    let cwd = getcwd()
-    try
-      call v:lua._cd(plugin.path)
-
-      call dein#call_hook('post_update', plugin)
-    finally
-      call v:lua._cd(cwd)
-    endtry
-
-    if v:lua._build([plugin.name])
-      call v:lua.__log(v:lua.__get_plugin_message(plugin, num, max, 'Build failed'))
-      call v:lua.__error(plugin.path)
-      " Remove.
-      call add(a:context.errored_plugins, plugin)
-    else
-      call add(a:context.synced_plugins, plugin)
-    endif
-  endif
-
-  let a:process.eof = 1
 endfunction
