@@ -1,5 +1,8 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 require 'dein/util'
+-- Global options definition.
+vim.g['dein#enable_name_conversion'] = vim.g['dein#enable_name_conversion'] or 0
+
 function unique(items)
   flags = {}
   rv = {}
@@ -419,4 +422,9 @@ function _load_toml(filename, default)
 
   -- Add to dein._vimrcs
   add_dein_vimrcs(_expand(filename))
+end
+function _load_dict(dict, default)
+  for repo, options in pairs(dict) do
+    vim.fn['dein#add'](repo, vim.fn.extend(vim.fn.copy(options), default, 'keep'))
+  end
 end

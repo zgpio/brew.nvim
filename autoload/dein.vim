@@ -95,7 +95,8 @@ function! dein#load_toml(filename, ...) abort
   return v:lua._load_toml(a:filename, get(a:000, 0, {}))
 endfunction
 function! dein#load_dict(dict, ...) abort
-  return dein#parse#_load_dict(a:dict, get(a:000, 0, {}))
+  lua require 'dein/parse'
+  return v:lua._load_dict(a:dict, get(a:000, 0, {}))
 endfunction
 function! dein#get_log() abort
   return join(dein#install#_get_log(), "\n")
