@@ -13,12 +13,10 @@ local M = {
 }
 
 local is_windows = _is_windows()
-if is_windows then
-  local function is_absolute(path)
+local function is_absolute(path)
+  if is_windows then
     return path:find('^[\\/]')~=nil or path:find('^%a:')~=nil
-  end
-else
-  local function is_absolute(path)
+  else
     return path:find('^/')~=nil
   end
 end
@@ -288,6 +286,13 @@ function init(git, repo, options)
   directory = vim.fn.substitute(directory, ':', '/', 'g')
 
   return { ['type']='git', ['path']=dein._base_path..'/repos/'..directory }
+end
+
+if _TEST then
+  -- Note: we prefix it with an underscore, such that the test function and real function have
+  -- different names. Otherwise an accidental call in the code to `M.FirstToUpper` would
+  -- succeed in tests, but later fail unexpectedly in production
+  M._join_paths = join_paths
 end
 
 return M

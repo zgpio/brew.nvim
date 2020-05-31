@@ -4,8 +4,8 @@ require 'dein/util'
 vim.g['dein#enable_name_conversion'] = vim.g['dein#enable_name_conversion'] or 0
 
 function unique(items)
-  flags = {}
-  rv = {}
+  local flags = {}
+  local rv = {}
   for i=1,#items do
      if not flags[items[i]] then
         table.insert(rv, items[i])
@@ -257,8 +257,8 @@ function _dict(plug)
   -- Deprecated check.
   for _, key in ipairs({'directory', 'base'}) do
     if plugin[key] ~= nil then
-      require 'dein/util'._error('plugin name = ' .. plugin.name)
-      require 'dein/util'._error(vim.fn.string(key) .. ' is deprecated.')
+      _error('plugin name = ' .. plugin.name)
+      _error(vim.fn.string(key) .. ' is deprecated.')
     end
   end
 
@@ -303,6 +303,9 @@ function _dict(plug)
   return plugin
 end
 local types
+function _get_type(name)
+  return (_get_types()[name] or {})
+end
 function _get_types()
   if types == nil then
     -- Load types.
@@ -312,7 +315,7 @@ function _get_types()
       function(v)
         return require('dein/types/'..vim.fn.fnamemodify(v, ':t:r'))
       end, fl)) do
-      if vim.fn.empty(typ)==0 then
+      if not vim.tbl_isempty(typ) then
         types[typ.name] = typ
       end
     end
@@ -415,8 +418,8 @@ function _load_toml(filename, default)
         return 1
       end
 
-      local options = vim.fn.extend(plugin, default, 'keep')
-      vim.fn['dein#add'](plugin.repo, options)
+      local options = vim.tbl_extend('keep', plugin, default)
+      _add(plugin.repo, options)
     end
   end
 
