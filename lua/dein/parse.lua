@@ -19,7 +19,7 @@ function _init(repo, options)
   repo = _expand(repo)
   options.type = options.type or 'git'
   local typ = _get_type(options.type)
-  local plugin = init(typ, repo, options)
+  local plugin = typ:init(repo, options)
   if vim.fn.empty(plugin)==1 then
     plugin = __check_type(repo, options)
   end
@@ -330,7 +330,7 @@ function __check_type(repo, options)
   local plugin = {}
   require 'dein/types/git'
   for _, t in ipairs(vim.tbl_values(_get_types())) do
-    plugin = init(t, repo, options)
+    plugin = t:init(repo, options)
     if vim.fn.empty(plugin)==0 then
       break
     end
@@ -376,7 +376,7 @@ function _local(localdir, options, includes)
     if dein._plugins[options.name] then
       vim.fn['dein#config'](options.name, options)
     else
-      vim.fn['dein#add'](dir, options)
+      _add(dir, options)
     end
   end
 end
@@ -428,6 +428,6 @@ function _load_toml(filename, default)
 end
 function _load_dict(dict, default)
   for repo, options in pairs(dict) do
-    vim.fn['dein#add'](repo, vim.fn.extend(vim.fn.copy(options), default, 'keep'))
+    _add(repo, vim.fn.extend(vim.fn.copy(options), default, 'keep'))
   end
 end

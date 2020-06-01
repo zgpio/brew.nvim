@@ -75,7 +75,7 @@ function _load_rollback(rollbackfile, plugins)
 
   for _, plugin in ipairs(plugins) do
     local typ = _get_type(plugin.type)
-    local cmd = get_rollback_command(typ, _get_type(plugin.type), revisions[plugin.name])
+    local cmd = typ:get_rollback_command(_get_type(plugin.type), revisions[plugin.name])
     _each(cmd, plugin)
   end
 
@@ -158,7 +158,7 @@ function __get_revision_remote(plugin)
     return ''
   end
 
-  local cmd = get_revision_remote_command(type, plugin)
+  local cmd = type:get_revision_remote_command(plugin)
   if vim.fn.empty(cmd)==1 then
     return ''
   end
@@ -177,7 +177,7 @@ function __get_updated_log_message(plugin, new_rev, old_rev)
   -- TODO has_key(type, 'get_log_command')
   local cmd = ''
   if type.name == 'git' then
-    cmd = get_log_command(type, plugin, new_rev, old_rev)
+    cmd = type:get_log_command(plugin, new_rev, old_rev)
   end
   local log = ''
   if vim.fn.empty(cmd)==0 then
@@ -201,7 +201,7 @@ function __get_revision_number(plugin)
     return ''
   end
 
-  local cmd = get_revision_number_command(type, plugin)
+  local cmd = type:get_revision_number_command(plugin)
   if vim.fn.empty(cmd)==1 then
     return ''
   end
@@ -516,7 +516,7 @@ function _direct_install(repo, options)
   local opts = vim.fn.copy(options)
   opts.merged = 0
 
-  local plugin = vim.fn['dein#add'](repo, opts)
+  local plugin = _add(repo, opts)
   if vim.fn.empty(plugin)==1 then
     return
   end
@@ -951,9 +951,9 @@ function __get_sync_command(plugin, update_type, number, max)
 
   -- TODO has_key(type, 'get_fetch_remote_command')
   if update_type == 'check_update' and type.name == 'git' then
-    cmd = get_fetch_remote_command(type, plugin)
+    cmd = type:get_fetch_remote_command(plugin)
   elseif type.name == 'git' then  -- TODO has_key(type, 'get_sync_command')
-    cmd = get_sync_command(type, plugin)
+    cmd = type:get_sync_command(plugin)
   else
     return {'', ''}
   end
@@ -1047,7 +1047,7 @@ function __lock_revision(process, context)
     return 0
   end
 
-  local cmd = get_revision_lock_command(typ, plugin)
+  local cmd = typ:get_revision_lock_command(plugin)
 
   if vim.fn.empty(cmd)==1 or plugin.new_rev == (plugin.rev or '') then
     -- Skipped.

@@ -101,12 +101,12 @@ local function is_git_dir(path)
   -- those edge cases.
   return 1
 end
-function get_revision_number_command(git, plugin)
-  if git.executable==0 then
+function M:get_revision_number_command(plugin)
+  if self.executable==0 then
     return {}
   end
 
-  return {git.command, 'rev-parse', 'HEAD'}
+  return {self.command, 'rev-parse', 'HEAD'}
 end
 
 function get_uri(repo, options)
@@ -161,9 +161,9 @@ function get_uri(repo, options)
 
   return uri
 end
-function get_sync_command(git, plugin)
+function M:get_sync_command(plugin)
   if vim.fn.isdirectory(plugin.path)==0 then
-    local commands = {git.command, 'clone', '--recursive'}
+    local commands = {self.command, 'clone', '--recursive'}
 
     local depth = plugin.type__depth or dein_types_git_clone_depth
     if depth > 0 and (plugin.rev or '') == '' and get_uri(plugin.repo, plugin):find('^git@')==nil then
@@ -175,7 +175,7 @@ function get_sync_command(git, plugin)
 
     return commands
   else
-    local gcmd = git.command
+    local gcmd = self.command
 
     local cmd = dein_types_git_pull_command
     local submodule_cmd = gcmd .. ' submodule update --init --recursive'
@@ -194,8 +194,8 @@ function get_sync_command(git, plugin)
     return gcmd .. ' ' .. cmd
   end
 end
-function get_revision_lock_command(git, plugin)
-  if git.executable==0 then
+function M:get_revision_lock_command(plugin)
+  if self.executable==0 then
     return {}
   end
 
@@ -203,14 +203,14 @@ function get_revision_lock_command(git, plugin)
   if rev:find('*') then
     -- Use the released tag (git 1.9.2 or above required)
     rev = vim.fn.get(vim.fn.split(_system(
-           {git.command, 'tag', '--list', vim.fn.escape(rev, '*'), '--sort', '-version:refname'}),
+           {self.command, 'tag', '--list', vim.fn.escape(rev, '*'), '--sort', '-version:refname'}),
            "\n"), 0, '')
   end
   if rev == '' then
     -- Fix detach HEAD.
     -- Use symbolic-ref feature (git 1.8.7 or above required)
     rev = _system({
-           git.command, 'symbolic-ref', '--short', 'HEAD'
+           self.command, 'symbolic-ref', '--short', 'HEAD'
            })
     if rev:find('fatal: ') then
       -- Fix "fatal: ref HEAD is not a symbolic ref" error
@@ -218,17 +218,17 @@ function get_revision_lock_command(git, plugin)
     end
   end
 
-  return {git.command, 'checkout', rev, '--'}
+  return {self.command, 'checkout', rev, '--'}
 end
-function get_rollback_command(git, plugin, rev)
-  if git.executable==0 then
+function M:get_rollback_command(plugin, rev)
+  if self.executable==0 then
     return {}
   end
 
-  return {git.command, 'reset', '--hard', rev}
+  return {self.command, 'reset', '--hard', rev}
 end
-function get_revision_remote_command(git, plugin)
-  if git.executable==0 then
+function M:get_revision_remote_command(plugin)
+  if self.executable==0 then
     return {}
   end
 
@@ -237,35 +237,35 @@ function get_revision_remote_command(git, plugin)
     rev = 'HEAD'
   end
 
-  return {git.command, 'ls-remote', 'origin', rev}
+  return {self.command, 'ls-remote', 'origin', rev}
 end
-function get_fetch_remote_command(git, plugin)
-  if git.executable==0 then
+function M:get_fetch_remote_command(plugin)
+  if self.executable==0 then
     return {}
   end
 
-  return {git.command, 'fetch', 'origin'}
+  return {self.command, 'fetch', 'origin'}
 end
-function get_log_command(git, plugin, new_rev, old_rev)
-  if git.executable==0 or new_rev == '' or old_rev == '' then
+function M:get_log_command(plugin, new_rev, old_rev)
+  if self.executable==0 or new_rev == '' or old_rev == '' then
     return {}
   end
 
   -- Note: If the a:old_rev is not the ancestor of two branchs. Then do not use
   -- %s^.  use %s^ will show one commit message which already shown last time.
   local is_not_ancestor = _system(
-         git.command .. ' merge-base '
+         self.command .. ' merge-base '
          .. old_rev .. ' ' .. new_rev) == old_rev
   local t
   if is_not_ancestor then t = ''
   else t = '^' end
-  return string.format(git.command ..
+  return string.format(self.command ..
          ' log %s%s..%s --graph --no-show-signature' ..
          ' --pretty=format:"%%h [%%cr] %%s"',
          old_rev, t, new_rev)
 end
-function init(git, repo, options)
-  if git.executable==0 then
+function M:init(repo, options)
+  if self.executable==0 then
     return {}
   end
 
