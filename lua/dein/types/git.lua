@@ -109,7 +109,7 @@ function M:get_revision_number_command(plugin)
   return {self.command, 'rev-parse', 'HEAD'}
 end
 
-function get_uri(repo, options)
+function M:get_uri(repo, options)
   if repo:find('^/') or repo:find('^%a:[/\\]') then
     if is_git_dir(repo..'/.git')==1 then
       return repo
@@ -166,11 +166,11 @@ function M:get_sync_command(plugin)
     local commands = {self.command, 'clone', '--recursive'}
 
     local depth = plugin.type__depth or dein_types_git_clone_depth
-    if depth > 0 and (plugin.rev or '') == '' and get_uri(plugin.repo, plugin):find('^git@')==nil then
+    if depth > 0 and (plugin.rev or '') == '' and self:get_uri(plugin.repo, plugin):find('^git@')==nil then
       table.insert(commands, '--depth=' .. depth)
     end
 
-    table.insert(commands, get_uri(plugin.repo, plugin))
+    table.insert(commands, self:get_uri(plugin.repo, plugin))
     table.insert(commands, plugin.path)
 
     return commands
@@ -276,7 +276,7 @@ function M:init(repo, options)
     return {}
   end
 
-  local uri = get_uri(repo, options)
+  local uri = self:get_uri(repo, options)
   if uri == '' then
     return {}
   end
@@ -293,6 +293,8 @@ if _TEST then
   -- different names. Otherwise an accidental call in the code to `M.FirstToUpper` would
   -- succeed in tests, but later fail unexpectedly in production
   M._join_paths = join_paths
+  M._is_absolute = is_absolute
+  M._is_git_dir = is_git_dir
 end
 
 return M
