@@ -18,49 +18,11 @@ endif
 " lua dein_log:flush()
 
 func dein#install#_timer_handler(timer)
-  call dein#install#_polling()
+  call v:lua._polling()
 endf
 
 function! dein#install#_is_async() abort
   return g:dein#install_max_processes > 1
-endfunction
-
-function! dein#install#_polling() abort
-  if exists('+guioptions')
-    " Note: guioptions-! does not work in async state
-    let save_guioptions = &guioptions
-    set guioptions-=!
-  endif
-
-  let [_, new_context] = v:lua.__install_async(g:__global_context)
-  " FIXME:
-  if type(g:__global_context) == v:t_dict
-    call extend(g:__global_context, new_context)
-  endif
-  if type(g:__global_context) == v:t_list
-    echom string(g:__global_context)
-  endif
-
-  if exists('+guioptions')
-    let &guioptions = save_guioptions
-  endif
-endfunction
-
-function! dein#install#_get_log() abort
-  return g:__log
-endfunction
-function! dein#install#_get_updates_log() abort
-  return g:__updates_log
-endfunction
-function! dein#install#_get_context() abort
-  return g:__global_context
-endfunction
-function! dein#install#_get_progress() abort
-  return g:__progress
-endfunction
-
-function! dein#install#_status() abort
-  return v:shell_error
 endfunction
 
 function! dein#install#_execute(command) abort

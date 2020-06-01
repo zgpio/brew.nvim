@@ -27,12 +27,12 @@ class Source(Base):
         context['__source_log'] = []
 
     def gather_candidates(self, context):
-        dein_context = self.vim.call('dein#install#_get_context')
+        dein_context = self.vim.call('v:lua._get_context')
         context['is_async'] = bool(dein_context)
         if context['args'] and context['args'][0] == '!':
-            log_func = 'dein#install#_get_updates_log'
+            log_func = 'v:lua._get_updates_log'
         else:
-            log_func = 'dein#install#_get_log'
+            log_func = 'v:lua._get_log'
         logs = self.vim.call(log_func)
 
         def make_candidates(row):

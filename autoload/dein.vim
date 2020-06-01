@@ -99,13 +99,16 @@ function! dein#load_dict(dict, ...) abort
   return v:lua._load_dict(a:dict, get(a:000, 0, {}))
 endfunction
 function! dein#get_log() abort
-  return join(dein#install#_get_log(), "\n")
+  lua require 'dein/install'
+  return join(v:lua._get_log(), "\n")
 endfunction
 function! dein#get_updates_log() abort
-  return join(dein#install#_get_updates_log(), "\n")
+  lua require 'dein/install'
+  return join(v:lua._get_updates_log(), "\n")
 endfunction
 function! dein#get_progress() abort
-  return dein#install#_get_progress()
+  lua require 'dein/install'
+  return v:lua._get_progress()
 endfunction
 function! dein#each(command, ...) abort
   lua require 'dein/install'

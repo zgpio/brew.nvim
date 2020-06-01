@@ -8,6 +8,9 @@ vim.g['dein#install_message_type'] = vim.g['dein#install_message_type'] or 'echo
 vim.g['dein#install_process_timeout'] = vim.g['dein#install_process_timeout'] or 120
 vim.g['dein#install_log_filename'] = vim.g['dein#install_log_filename'] or ''
 
+function _status()
+  return vim.v.shell_error
+end
 function clear_runtimepath()
   if _get_cache_path() == '' then
     util._error('Invalid base path.')
@@ -443,7 +446,7 @@ function __update_loop(context)
     function()
       if vim.fn.has('vim_starting')==1 then
         while vim.fn.empty(vim.g.__global_context)==0 do
-          errored, _ = unpack(__install_async(context))
+          errored, _ = __install_async(context)
           vim.api.nvim_command('sleep 50ms')
           vim.api.nvim_command('redraw')
         end
@@ -585,7 +588,7 @@ function _copy_directories(srcs, dest)
 
     -- For some baffling reason robocopy almost always returns between 1 and 3
     -- upon success
-    status = vim.fn['dein#install#_status']()
+    status = _status()
     if status <= 3 then
       status = 0
     end
@@ -613,12 +616,12 @@ function _copy_directories(srcs, dest)
     if is_rsync then
       cmdline = string.format("rsync -a -q --exclude '/.git/' %s %s", vim.fn.join(srcs), vim.fn.shellescape(dest))
       result = _system(cmdline)
-      status = vim.fn['dein#install#_status']()
+      status = _status()
     else
       for _, src in ipairs(srcs) do
         cmdline = string.format('cp -Ra %s* %s', src, vim.fn.shellescape(dest))
         result = _system(cmdline)
-        status = vim.fn['dein#install#_status']()
+        status = _status()
         if status~=0 then
           break
         end
@@ -1063,7 +1066,7 @@ function __lock_revision(process, context)
   end
 
   local result = __system_cd(cmd, plugin.path)
-  local status = vim.fn['dein#install#_status']()
+  local status = _status()
 
   if status~=0 then
     __error(plugin.path)
@@ -1076,7 +1079,7 @@ function __init_job(process, context, cmd)
 
   if context.async==0 then
     process.output = _system(cmd)
-    process.status = vim.fn['dein#install#_status']()
+    process.status = _status()
     return process
   end
 
@@ -1361,6 +1364,21 @@ local function check_output(context, process)
 
   process.eof = 1
 end
+function _polling()
+  local save_guioptions
+  if vim.fn.exists('+guioptions')==1 then
+    -- Note: guioptions-! does not work in async state
+    save_guioptions = vim.o.guioptions
+    vim.api.nvim_command('set guioptions-=!')
+  end
+
+  local _, new_context = __install_async(vim.g.__global_context)
+  vim.g.__global_context = new_context
+
+  if vim.fn.exists('+guioptions')==1 then
+    vim.o.guioptions = save_guioptions
+  end
+end
 function __check_loop(context)
   while context.number < context.max_plugins
          and vim.fn.len(context.processes) < vim.g['dein#install_max_processes'] do
@@ -1399,5 +1417,17 @@ function __install_async(context)
     context.prev_number = context.number
   end
 
-  return {vim.fn.len(context.errored_plugins), context}
+  return vim.fn.len(context.errored_plugins), context
+end
+function _get_progress()
+  return vim.g.__progress
+end
+function _get_context()
+  return vim.g.__global_context
+end
+function _get_updates_log()
+  return vim.g.__updates_log
+end
+function _get_log()
+  return vim.g.__log
 end
