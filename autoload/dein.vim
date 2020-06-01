@@ -38,17 +38,17 @@ endfunction
 function! dein#install(...) abort
   lua require 'dein/install'
   return v:lua._update(get(a:000, 0, []),
-        \ 'install', dein#install#_is_async())
+        \ 'install', v:lua._is_async())
 endfunction
 function! dein#update(...) abort
   lua require 'dein/install'
   return v:lua._update(get(a:000, 0, []),
-        \ 'update', dein#install#_is_async())
+        \ 'update', v:lua._is_async())
 endfunction
 function! dein#check_update(...) abort
   lua require 'dein/install'
   return v:lua._update(get(a:000, 0, []),
-        \ 'check_update', dein#install#_is_async())
+        \ 'check_update', v:lua._is_async())
 endfunction
 function! dein#direct_install(repo, ...) abort
   lua require 'dein/install'

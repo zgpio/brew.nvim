@@ -2,14 +2,36 @@
 local util = require 'dein/util'
 
 -- Global options definition.
-vim.g['dein#install_max_processes'] = vim.g['dein#install_max_processes'] or 8
-vim.g['dein#install_progress_type'] = vim.g['dein#install_progress_type'] or 'echo'
-vim.g['dein#install_message_type'] = vim.g['dein#install_message_type'] or 'echo'
+dein_install_max_processes = dein_install_max_processes or 8
+dein_install_progress_type = dein_install_progress_type or 'echo'
+dein_install_message_type = dein_install_message_type or 'echo'
 vim.g['dein#install_process_timeout'] = vim.g['dein#install_process_timeout'] or 120
-vim.g['dein#install_log_filename'] = vim.g['dein#install_log_filename'] or ''
+dein_install_log_filename = dein_install_log_filename or ''
+
+-- Variables
+local __global_context = {}
+local var_log = {}
+local var_updates_log = {}
+local __progress = ''
 
 function _status()
   return vim.v.shell_error
+end
+function _is_async()
+  if dein_install_max_processes > 1 then
+    return 1
+  else
+    return 0
+  end
+end
+function __convert_args(args)
+  local args = __iconv(args, vim.o.encoding, 'char')
+  if not vim.tbl_islist(args) then
+    local rv = vim.api.nvim_eval('split(&shell) + split(&shellcmdflag)')
+    table.insert(rv, args)
+    args = rv
+  end
+  return args
 end
 function clear_runtimepath()
   if _get_cache_path() == '' then
@@ -96,7 +118,7 @@ function _load_rollback(rollbackfile, plugins)
   __error('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
 end
 function append_log_file(msg)
-  local fn = vim.g['dein#install_log_filename']
+  local fn = dein_install_log_filename
   if not fn or fn=='' then
     return
   end
@@ -366,8 +388,8 @@ function __done(context)
   __notify(vim.fn.strftime('Done: (%Y/%m/%d %H:%M:%S)'))
 
   -- Disable installation handler
-  vim.g.__global_context = {}
-  vim.g.__progress = ''
+  __global_context = {}
+  __progress = ''
   vim.api.nvim_exec([[
     augroup dein-install
       autocmd!
@@ -382,7 +404,7 @@ end
 function _each(cmd, plugins)
   local plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, _get_plugins(plugins))
 
-  local global_context_save = vim.g.__global_context
+  local global_context_save = __global_context
 
   local context = __init_context(plugins, 'each', 0)
   __init_variables(context)
@@ -408,7 +430,7 @@ function _each(cmd, plugins)
     }
   }
 
-  vim.g.__global_context = global_context_save
+  __global_context = global_context_save
   _cd(cwd)
 
   return error
@@ -445,7 +467,7 @@ function __update_loop(context)
   try {
     function()
       if vim.fn.has('vim_starting')==1 then
-        while vim.fn.empty(vim.g.__global_context)==0 do
+        while vim.fn.empty(__global_context)==0 do
           errored, _ = __install_async(context)
           vim.api.nvim_command('sleep 50ms')
           vim.api.nvim_command('redraw')
@@ -718,10 +740,10 @@ function __get_updated_message(context, plugins)
   return "Updated plugins:\n" .. vim.fn.join(vim.tbl_map(t, vim.fn.copy(plugins)), "\n")
 end
 function __init_variables(context)
-  vim.g.__progress = ''
-  vim.g.__global_context = context
-  vim.g.__log = {}
-  vim.g.__updates_log = {}
+  __progress = ''
+  __global_context = context
+  var_log = {}
+  var_updates_log = {}
 end
 function __restore_view(context)
   if context.progress_type == 'tabline' then
@@ -743,15 +765,15 @@ function __init_context(plugins, update_type, async)
   context.prev_number = -1
   context.plugins = plugins
   context.max_plugins = vim.fn.len(context.plugins)
-  if vim.fn.has('vim_starting')==1 and vim.g['dein#install_progress_type'] ~= 'none' then
+  if vim.fn.has('vim_starting')==1 and dein_install_progress_type ~= 'none' then
     context.progress_type = 'echo'
   else
-    context.progress_type = vim.g['dein#install_progress_type']
+    context.progress_type = dein_install_progress_type
   end
-  if vim.fn.has('vim_starting')==1 and vim.g['dein#install_message_type'] ~= 'none' then
+  if vim.fn.has('vim_starting')==1 and dein_install_message_type ~= 'none' then
     context.message_type = 'echo'
   else
-    context.message_type = vim.g['dein#install_message_type']
+    context.message_type = dein_install_message_type
   end
   context.laststatus = vim.o.laststatus
   context.showtabline = vim.o.showtabline
@@ -763,7 +785,7 @@ end
 
 function __print_progress_message(msg)
   local msg = _convert2list(msg)
-  local context = vim.g.__global_context
+  local context = __global_context
   if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
     return
   end
@@ -781,7 +803,7 @@ function __print_progress_message(msg)
 
   __log(msg)
 
-  vim.g.__progress = vim.fn.join(msg, "\n")
+  __progress = vim.fn.join(msg, "\n")
 end
 
 function __echo(expr, mode)
@@ -819,7 +841,7 @@ function __echo(expr, mode)
 end
 function __notify(msg)
   local msg = _convert2list(msg)
-  local context = vim.g.__global_context
+  local context = __global_context
   if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
     return
   end
@@ -829,19 +851,19 @@ function __notify(msg)
   end
 
   __updates_log(msg)
-  vim.g.__progress = vim.fn.join(msg, "\n")
+  __progress = vim.fn.join(msg, "\n")
 end
 
 function __updates_log(msg)
   local msg = _convert2list(msg)
 
-  table.insert(vim.g['__updates_log'], msg)
+  table.insert(var_updates_log, msg)
   __log(msg)
 end
 
 function __log(msg)
   local msg = _convert2list(msg)
-  table.insert(vim.g['__log'], msg)
+  table.insert(var_log, msg)
   append_log_file(msg)
 end
 
@@ -982,7 +1004,7 @@ function _update(plugins, update_type, async)
     plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, plugins)
   end
 
-  if async==1 and vim.fn.empty(vim.g.__global_context)==0
+  if async==1 and vim.fn.empty(__global_context)==0
     and vim.fn.confirm('The installation has not finished. Cancel now?', "yes\nNo", 2) ~= 1 then
     return
   end
@@ -997,7 +1019,7 @@ function _update(plugins, update_type, async)
       __notify('Target plugins are not found.')
       __notify('You may have used the wrong plugin name, or all of the plugins are already installed.')
     end
-    vim.g.__global_context = {}
+    __global_context = {}
     return
   end
 
@@ -1372,8 +1394,8 @@ function _polling()
     vim.api.nvim_command('set guioptions-=!')
   end
 
-  local _, new_context = __install_async(vim.g.__global_context)
-  vim.g.__global_context = new_context
+  local _, new_context = __install_async(__global_context)
+  __global_context = new_context
 
   if vim.fn.exists('+guioptions')==1 then
     vim.o.guioptions = save_guioptions
@@ -1381,7 +1403,7 @@ function _polling()
 end
 function __check_loop(context)
   while context.number < context.max_plugins
-         and vim.fn.len(context.processes) < vim.g['dein#install_max_processes'] do
+         and vim.fn.len(context.processes) < dein_install_max_processes do
 
     local plugin = context.plugins[context.number+1]
     __sync(plugin, context)
@@ -1420,14 +1442,14 @@ function __install_async(context)
   return vim.fn.len(context.errored_plugins), context
 end
 function _get_progress()
-  return vim.g.__progress
+  return __progress
 end
 function _get_context()
-  return vim.g.__global_context
+  return __global_context
 end
 function _get_updates_log()
-  return vim.g.__updates_log
+  return var_updates_log
 end
 function _get_log()
-  return vim.g.__log
+  return var_log
 end

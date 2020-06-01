@@ -26,11 +26,13 @@ function _get_runtime_path()
 end
 
 function _is_fish()
-  return vim.fn['dein#install#_is_async']()~=0 and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
+  require 'dein/install'
+  return _is_async()~=0 and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
 end
 function _is_powershell()
+  require 'dein/install'
   local t = vim.fn.fnamemodify(vim.o.shell, ':t:r')
-  return vim.fn['dein#install#_is_async']()~=0 and (t == 'powershell' or t == 'pwsh')
+  return _is_async()~=0 and (t == 'powershell' or t == 'pwsh')
 end
 function _error(msg)
   for _, mes in ipairs(__msg2list(msg)) do
