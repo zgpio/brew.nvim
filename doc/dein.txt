@@ -441,13 +441,13 @@ g:dein#download_command
 		Default: "curl --silent --location --output" or "wget -q -O"
 		or use PowerShell.
 
-					*g:dein#enable_name_conversion*
-g:dein#enable_name_conversion
-		If you set it to 1 and omit plugin name,
+					*dein.enable_name_conversion*
+dein.enable_name_conversion
+		If you set it to true and omit plugin name,
 		|dein-options-normalized_name| is used as plugin name.
 		It is useful for absorbing difference of repository name.
 
-		Defaults: "0"
+		Defaults: "false"
 
 						*g:dein#enable_notification*
 g:dein#enable_notification

@@ -1,7 +1,7 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 require 'dein/util'
 -- Global options definition.
-vim.g['dein#enable_name_conversion'] = vim.g['dein#enable_name_conversion'] or 0
+dein.enable_name_conversion = dein.enable_name_conversion or false
 
 function unique(items)
   local flags = {}
@@ -211,7 +211,7 @@ function _dict(plug)
           [[\c^n\?vim[_-]\|[_-]n\?vim$]], '', 'g')
   end
 
-  if plug.name==nil and vim.g['dein#enable_name_conversion']==1 then
+  if plug.name==nil and dein.enable_name_conversion then
     -- Use normalized name.
     plugin.name = plugin.normalized_name
   end

@@ -99,7 +99,7 @@ function clear_runtimepath()
     vim.fn.mkdir(runtimepath, 'p')
   end
 end
-local function error(msg)
+local function ERROR(msg)
   local msg = _convert2list(msg)
   if vim.fn.empty(msg)==1 then
     return
@@ -128,7 +128,7 @@ function _rollback(date, plugins)
   _load_rollback(rollbacks[0], plugins)
 end
 local function check_rollback(plugin)
-  return vim.fn.has_key(plugin, 'local')==0 and (plugin.frozen or 0)==0 and (plugin.rev or '') == ''
+  return plugin['local']==nil and (plugin.frozen or 0)==0 and (plugin.rev or '') == ''
 end
 function _save_rollback(rollbackfile, plugins)
   local revisions = {}
@@ -148,7 +148,7 @@ function _load_rollback(rollbackfile, plugins)
   -- TODO has_key(v:lua._get_type(v:val.type), 'get_rollback_command')
   plugins = vim.tbl_filter(
     function(v)
-      return vim.fn.has_key(revisions, v.name)==1
+      return revisions[v.name]~=nil
         and _get_type(v.type).name == 'git'
         and check_rollback(v)
         and get_revision_number(v) ~= revisions[v.name]
@@ -165,7 +165,7 @@ function _load_rollback(rollbackfile, plugins)
   end
 
   _recache_runtimepath()
-  error('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
+  ERROR('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
 end
 local function append_log_file(msg)
   local fn = dein_install_log_filename
@@ -295,12 +295,12 @@ local function get_revision_number(plugin)
 
   -- If rev contains spaces, it is error message
   if rev:find('%s') then
-    error(plugin.name)
-    error('Error revision number: ' .. rev)
+    ERROR(plugin.name)
+    ERROR('Error revision number: ' .. rev)
     return ''
   elseif rev == '' then
-    error(plugin.name)
-    error('Empty revision number: ' .. rev)
+    ERROR(plugin.name)
+    ERROR('Empty revision number: ' .. rev)
     return ''
   end
   return rev
@@ -340,10 +340,10 @@ function _cd(path)
     end,
     catch {
       function(e)
-        error('Error cd to: ' .. path)
-        error('Current directory: ' .. vim.fn.getcwd())
-        error(vim.v.exception)
-        error(vim.v.throwpoint)
+        ERROR('Error cd to: ' .. path)
+        ERROR('Current directory: ' .. vim.fn.getcwd())
+        ERROR(vim.v.exception)
+        ERROR(vim.v.throwpoint)
         print('caught error: ' .. e)
       end
     }
@@ -361,9 +361,9 @@ function _rm(path)
   --   try
   --     call delete(a:path, 'rf')
   --   catch
-  --     error('Error deleting directory: ' . a:path)
-  --     error(v:exception)
-  --     error(v:throwpoint)
+  --     ERROR('Error deleting directory: ' . a:path)
+  --     ERROR(v:exception)
+  --     ERROR(v:throwpoint)
   --   endtry
   --   return
   -- endif
@@ -399,6 +399,12 @@ local function get_plugin_message(plugin, number, max, message)
   return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) |%-20s| %s',
          number, max, plugin.name, message)
 end
+local function log(msg)
+  local msg = _convert2list(msg)
+  table.insert(var_log, msg)
+  append_log_file(msg)
+end
+
 local function lock_revision(process, context)
   local num = process.number
   local max = context.max_plugins
@@ -419,21 +425,21 @@ local function lock_revision(process, context)
     return 0
   elseif type(cmd) == 'string' and cmd:find('^E: ') then
     -- Errored.
-    error(plugin.path)
-    error(cmd:sub(4))
+    ERROR(plugin.path)
+    ERROR(cmd:sub(4))
     return -1
   end
 
   if (plugin.rev or '') ~= '' then
-    __log(get_plugin_message(plugin, num, max, 'Locked'))
+    log(get_plugin_message(plugin, num, max, 'Locked'))
   end
 
   local result = __system_cd(cmd, plugin.path)
   local status = _status()
 
   if status~=0 then
-    error(plugin.path)
-    error(result)
+    ERROR(plugin.path)
+    ERROR(result)
     return -1
   end
 end
@@ -455,7 +461,7 @@ local function async_get(async, process)
   if output ~= '' then
     process.output = process.output .. output
     process.start_time = vim.fn.localtime()
-    __log(__get_short_message(process.plugin, process.number,
+    log(__get_short_message(process.plugin, process.number,
           process.max_plugins, output))
   end
   if async.eof==1 then
@@ -511,35 +517,35 @@ local function check_output(context, process)
   end
 
   if is_timeout or status==1 then
-    __log(get_plugin_message(plugin, num, max, 'Error'))
-    error(plugin.path)
+    log(get_plugin_message(plugin, num, max, 'Error'))
+    ERROR(plugin.path)
     if process.installed==0 then
       if vim.fn.isdirectory(plugin.path)==0 then
-        error('Maybe wrong username or repository.')
+        ERROR('Maybe wrong username or repository.')
       elseif vim.fn.isdirectory(plugin.path)==1 then
-        error('Remove the installed directory:' .. plugin.path)
+        ERROR('Remove the installed directory:' .. plugin.path)
         _rm(plugin.path)
       end
     end
 
     if is_timeout then
-      error(vim.fn.strftime('Process timeout: (%Y/%m/%d %H:%M:%S)'))
+      ERROR(vim.fn.strftime('Process timeout: (%Y/%m/%d %H:%M:%S)'))
     else
-      error(vim.fn.split(process.output, '\n'))
+      ERROR(vim.fn.split(process.output, '\n'))
     end
 
     table.insert(context.errored_plugins, plugin)
   elseif process.rev == new_rev or (context.update_type == 'check_update' and new_rev == '') then
     if context.update_type ~= 'check_update' then
-      __log(get_plugin_message(plugin, num, max, 'Same revision'))
+      log(get_plugin_message(plugin, num, max, 'Same revision'))
     end
   else
-    __log(get_plugin_message(plugin, num, max, 'Updated'))
+    log(get_plugin_message(plugin, num, max, 'Updated'))
 
     if context.update_type ~= 'check_update' then
       local log_messages = vim.fn.split(get_updated_log_message(plugin, new_rev, process.rev), '\n')
       plugin.commit_count = vim.fn.len(log_messages)
-      __log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
+      log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
     else
       plugin.commit_count = 0
     end
@@ -570,8 +576,8 @@ local function check_output(context, process)
     _cd(cwd)
 
     if _build({plugin.name})~=0 then
-      __log(get_plugin_message(plugin, num, max, 'Build failed'))
-      error(plugin.path)
+      log(get_plugin_message(plugin, num, max, 'Build failed'))
+      ERROR(plugin.path)
       -- Remove.
       table.insert(context.errored_plugins, plugin)
     else
@@ -599,7 +605,7 @@ local function print_progress_message(msg)
     __echo(msg, 'echo')
   end
 
-  __log(msg)
+  log(msg)
 
   __progress = vim.fn.join(msg, "\n")
 end
@@ -704,7 +710,7 @@ function _each(cmd, plugins)
     end,
     catch {
       function(e)
-        error(vim.v.exception .. ' ' .. vim.v.throwpoint)
+        ERROR(vim.v.exception .. ' ' .. vim.v.throwpoint)
         error = 1
         print('caught error: ' .. e)
       end
@@ -745,13 +751,13 @@ local function helptags()
       vim.api.nvim_command('silent execute "helptags" '..vim.fn.string(vim.fn.fnameescape(tags)))
     end,
     catch {
-      function(error)
+      function(e)
         -- catch /^Vim(helptags):E151:/
         -- Ignore an error that occurs when there is no help file
-        error('Error generating helptags:')
-        error(vim.v.exception)
-        error(vim.v.throwpoint)
-        print('caught error: ' .. error)
+        ERROR('Error generating helptags:')
+        ERROR(vim.v.exception)
+        ERROR(vim.v.throwpoint)
+        print('caught error: ' .. e)
       end
     }
   }
@@ -789,10 +795,10 @@ local function update_loop(context)
       end
     end,
     catch {
-      function(error)
-        error(vim.v.exception)
-        error(vim.v.throwpoint)
-        print('caught error: ' .. error)
+      function(e)
+        ERROR(vim.v.exception)
+        ERROR(vim.v.throwpoint)
+        print('caught error: ' .. e)
         errored = 1
       end
     }
@@ -803,7 +809,7 @@ function _build(plugins)
   local error = 0
   for _, plugin in ipairs(vim.tbl_filter(
     function(v)
-      return vim.fn.isdirectory(v.path)==1 and vim.fn.has_key(v, 'build')==1
+      return vim.fn.isdirectory(v.path)==1 and v.build~=nil
     end,
     _get_plugins(plugins))) do
     print_progress_message('Building: ' .. plugin.name)
@@ -1096,13 +1102,7 @@ function __updates_log(msg)
   local msg = _convert2list(msg)
 
   table.insert(var_updates_log, msg)
-  __log(msg)
-end
-
-function __log(msg)
-  local msg = _convert2list(msg)
-  table.insert(var_log, msg)
-  append_log_file(msg)
+  log(msg)
 end
 
 local function strwidthpart(str, width)
@@ -1203,7 +1203,7 @@ function _recache_runtimepath()
 
   _clear_state()
 
-  __log(vim.fn.strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
+  log(vim.fn.strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 end
 local function get_sync_command(plugin, update_type, number, max)
   require 'dein/parse'
@@ -1216,11 +1216,11 @@ local function get_sync_command(plugin, update_type, number, max)
   elseif type.name == 'git' then  -- TODO has_key(type, 'get_sync_command')
     cmd = type:get_sync_command(plugin)
   else
-    return {'', ''}
+    return '', ''
   end
 
   if vim.fn.empty(cmd)==1 then
-    return {'', ''}
+    return '', ''
   end
 
   local message = get_plugin_message(plugin, number, max, vim.fn.string(cmd))
@@ -1229,7 +1229,7 @@ local function get_sync_command(plugin, update_type, number, max)
 end
 function _update(plugins, update_type, async)
   if dein._is_sudo then
-    error('update/install is disabled in sudo session.')
+    ERROR('update/install is disabled in sudo session.')
     return
   end
 
@@ -1311,12 +1311,12 @@ function _remote_plugins()
   require 'dein/autoload'
   _source(remote_plugins)
 
-  __log('loaded remote plugins: ' .. vim.fn.string(vim.tbl_map(function(v) return v.name end, vim.fn.copy(remote_plugins))))
+  log('loaded remote plugins: ' .. vim.fn.string(vim.tbl_map(function(v) return v.name end, vim.fn.copy(remote_plugins))))
 
   vim.o.rtp = _join_rtp(_uniq(_split_rtp(vim.o.rtp)), vim.o.rtp, '')
 
   local result = vim.fn.execute('UpdateRemotePlugins', '')
-  __log(result)
+  log(result)
 end
 function __init_process(plugin, context, cmd)
   local process = {}
@@ -1388,7 +1388,7 @@ function __sync(plugin, context)
   -- if not plugin then return end
   if vim.fn.isdirectory(plugin.path)==1 and (plugin.frozen or 0)==1 then
     -- Skip frozen plugin
-    __log(get_plugin_message(plugin, num, max, 'is frozen.'))
+    log(get_plugin_message(plugin, num, max, 'is frozen.'))
     return
   end
 
@@ -1396,7 +1396,7 @@ function __sync(plugin, context)
 
   if vim.fn.empty(cmd)==1 then
     -- Skip
-    __log(get_plugin_message(plugin, num, max, message))
+    log(get_plugin_message(plugin, num, max, message))
     return
   end
 
@@ -1405,7 +1405,7 @@ function __sync(plugin, context)
 
     print_progress_message(get_plugin_message(
            plugin, num, max, 'Error'))
-    error(cmd:sub(4))
+    ERROR(cmd:sub(4))
     table.insert(context.errored_plugins, plugin)
     return
   end

@@ -723,8 +723,6 @@ function _end()
   end
 
   local _event_plugins = dein._event_plugins
-  -- TODO
-  _event_plugins[true] = nil
   for event, plugins in pairs(_event_plugins) do
     if vim.fn.exists('##'..event) then
       local t = event .. ' *'

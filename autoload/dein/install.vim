@@ -1,9 +1,3 @@
-"=============================================================================
-" FILE: install.vim
-" AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
-" License: MIT license
-"=============================================================================
-
 lua require 'dein/util'
 lua require 'dein/install'
 
