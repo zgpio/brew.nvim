@@ -427,15 +427,15 @@ g:dein#auto_recache
 
 		Default: 0
 
-						*g:dein#cache_directory*
-g:dein#cache_directory
+						*dein.cache_directory*
+dein.cache_directory
 		The cache directory to use.
 
 		Default: Under the base directory you have already specified
 		by |dein#begin()|.
 
-						*g:dein#download_command*
-g:dein#download_command
+						*dein.download_command*
+dein.download_command
 		The default download command.
 
 		Default: "curl --silent --location --output" or "wget -q -O"
@@ -466,22 +466,22 @@ https://github.com/julienXX/terminal-notifier
 
 		Defaults: "0"
 
-						*g:dein#install_max_processes*
-g:dein#install_max_processes
+						*dein.install_max_processes*
+dein.install_max_processes
 		The max number of processes used for dein/install source
 		asynchronous update.
 		If it is less than equal 1, this feature is disabled.
 
 		Defaults: "8"
 
-					*g:dein#install_process_timeout*
-g:dein#install_process_timeout
+					*dein.install_process_timeout*
+dein.install_process_timeout
 		The time of timeout seconds when updating/installing plugins.
 
 		Defaults: "120"
 
-					*g:dein#install_progress_type*
-g:dein#install_progress_type
+					*dein.install_progress_type*
+dein.install_progress_type
 		The output type of the progress bar in the installer.
 		Note: If you want to display the progress in the 'statusline',
 		you should use |dein#get_progress()| .
@@ -498,8 +498,8 @@ g:dein#install_progress_type
 
 		Defaults: "echo"
 
-						*g:dein#install_message_type*
-g:dein#install_message_type
+						*dein.install_message_type*
+dein.install_message_type
 		The output type of the messages in the installer.
 
 		"none":
@@ -507,8 +507,8 @@ g:dein#install_message_type
 		"echo":
 			Displayed in the echo area.
 
-						*g:dein#install_log_filename*
-g:dein#install_log_filename
+						*dein.install_log_filename*
+dein.install_log_filename
 		The log filename. Set it to "" to disable logging.
 
 		Default: ""
@@ -790,7 +790,7 @@ script_type	(String)
 							*dein-options-timeout*
 timeout		(Number)
 		The time of timeout seconds when updating/installing plugins.
-		If omit it, |g:dein#install_process_timeout| will be used.
+		If omit it, |dein.install_process_timeout| will be used.
 
 							*dein-options-trusted*
 trusted        (Number)
@@ -1146,7 +1146,7 @@ https://github.com/Shougo/dein.vim/issues/144
 
 A: Please check |:messages| result.
 If you have found "Process timeout" error, you should increase
-|g:dein#install_process_timeout| value.
+|dein.install_process_timeout| value.
 
 Q: YouCompleteMe does not work.  I have built YouCompleteMe manually.
 

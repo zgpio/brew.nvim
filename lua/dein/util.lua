@@ -62,7 +62,7 @@ function _get_myvimrc()
 end
 
 function _clear_state()
-  local base = vim.g['dein#cache_directory'] or dein._base_path
+  local base = dein.cache_directory or dein._base_path
   local caches = _globlist(base..'/state_*.vim')
   vim.list_extend(caches, _globlist(base..'/cache_*'))
   caches = vim.tbl_filter(function(v) return v~='' end, caches)
@@ -188,7 +188,7 @@ function _save_cache(vimrcs, is_state, is_starting)
 
   local ftplugin = dein._ftplugin
   vim.fn.writefile({vim.fn.string(vimrcs), vim.fn.json_encode(plugins), vim.fn.json_encode(ftplugin)},
-    (vim.g['dein#cache_directory'] or base_path) ..'/cache_' .. dein._progname)
+    (dein.cache_directory or base_path) ..'/cache_' .. dein._progname)
 end
 
 --@param ... {{{}, {}, ...}}
@@ -258,7 +258,7 @@ function _get_cache_path()
     return cache_path
   end
 
-  cache_path = (vim.g['dein#cache_directory'] or dein._base_path)
+  cache_path = (dein.cache_directory or dein._base_path)
     ..'/.cache/'..vim.fn.fnamemodify(_get_myvimrc(), ':t')
   dein._cache_path = cache_path
   if vim.fn.isdirectory(cache_path) == 0 then
@@ -351,7 +351,7 @@ function _save_state(is_starting)
   end
 
   vim.fn.writefile(lines,
-    (vim.g['dein#cache_directory'] or dein._base_path) ..'/state_' .. dein._progname .. '.vim')
+    (dein.cache_directory or dein._base_path) ..'/state_' .. dein._progname .. '.vim')
 end
 function _writefile(path, list)
   if dein._is_sudo == 1 or (vim.fn.filewritable(_get_cache_path())==0) then
@@ -741,7 +741,7 @@ function _end()
 end
 
 function _download(uri, outpath)
-  if vim.fn.exists('g:dein#download_command')==0 then
+  if dein.download_command==nil then
     local c
     if vim.fn.executable('curl')==1 then
       c = 'curl --silent --location --output'
@@ -750,7 +750,7 @@ function _download(uri, outpath)
     else
       c = ''
     end
-    vim.g['dein#download_command'] = c
+    dein.download_command = c
   end
   if c ~= '' then
     return vim.fn.printf('%s "%s" "%s"', c, outpath, uri)

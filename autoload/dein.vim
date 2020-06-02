@@ -55,8 +55,7 @@ function! dein#direct_install(repo, ...) abort
   call v:lua._direct_install(a:repo, (a:0 ? a:1 : {}))
 endfunction
 function! dein#get_direct_plugins_path() abort
-  return get(g:, 'dein#cache_directory', luaeval('dein._base_path'))
-        \ .'/direct_install.vim'
+  return luaeval('(dein.cache_directory or dein._base_path).."/direct_install.vim"')
 endfunction
 function! dein#reinstall(plugins) abort
   lua require 'dein/install'

@@ -18,7 +18,7 @@ function! dein#install#_execute(command) abort
         \ v:lua.__convert_args(a:command),
         \ {'on_stdout': s:job_execute_on_out})
 
-  return dein#job#_job_wait(job, g:dein#install_process_timeout * 1000)
+  return dein#job#_job_wait(job, luaeval('dein.install_process_timeout') * 1000)
 endfunction
 let s:job_execute = {}
 function! s:job_execute_on_out(data) abort

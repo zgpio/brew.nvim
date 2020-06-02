@@ -2,11 +2,11 @@
 local util = require 'dein/util'
 
 -- Global options definition.
-dein_install_max_processes = dein_install_max_processes or 8
-dein_install_progress_type = dein_install_progress_type or 'echo'
-dein_install_message_type = dein_install_message_type or 'echo'
-vim.g['dein#install_process_timeout'] = vim.g['dein#install_process_timeout'] or 120
-dein_install_log_filename = dein_install_log_filename or ''
+dein.install_max_processes = dein.install_max_processes or 8
+dein.install_progress_type = dein.install_progress_type or 'echo'
+dein.install_message_type = dein.install_message_type or 'echo'
+dein.install_process_timeout = dein.install_process_timeout or 120
+dein.install_log_filename = dein.install_log_filename or ''
 
 -- Variables
 local __global_context = {}
@@ -47,15 +47,15 @@ local function init_context(plugins, update_type, async)
   context.prev_number = -1
   context.plugins = plugins
   context.max_plugins = vim.fn.len(context.plugins)
-  if vim.fn.has('vim_starting')==1 and dein_install_progress_type ~= 'none' then
+  if vim.fn.has('vim_starting')==1 and dein.install_progress_type ~= 'none' then
     context.progress_type = 'echo'
   else
-    context.progress_type = dein_install_progress_type
+    context.progress_type = dein.install_progress_type
   end
-  if vim.fn.has('vim_starting')==1 and dein_install_message_type ~= 'none' then
+  if vim.fn.has('vim_starting')==1 and dein.install_message_type ~= 'none' then
     context.message_type = 'echo'
   else
-    context.message_type = dein_install_message_type
+    context.message_type = dein.install_message_type
   end
   context.laststatus = vim.o.laststatus
   context.showtabline = vim.o.showtabline
@@ -68,7 +68,7 @@ function _status()
   return vim.v.shell_error
 end
 function _is_async()
-  if dein_install_max_processes > 1 then
+  if dein.install_max_processes > 1 then
     return 1
   else
     return 0
@@ -168,7 +168,7 @@ function _load_rollback(rollbackfile, plugins)
   ERROR('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
 end
 local function append_log_file(msg)
-  local fn = dein_install_log_filename
+  local fn = dein.install_log_filename
   if not fn or fn=='' then
     return
   end
@@ -471,7 +471,7 @@ local function async_get(async, process)
   end
 
   local is_timeout = (vim.fn.localtime() - process.start_time)
-                     >= (process.plugin.timeout or vim.g['dein#install_process_timeout'])
+                     >= (process.plugin.timeout or dein.install_process_timeout)
 
   local is_skip = true
   if async.eof==1 then
@@ -612,7 +612,7 @@ end
 
 local function check_loop(context)
   while context.number < context.max_plugins
-         and vim.fn.len(context.processes) < dein_install_max_processes do
+         and vim.fn.len(context.processes) < dein.install_max_processes do
 
     local plugin = context.plugins[context.number+1]
     __sync(plugin, context)

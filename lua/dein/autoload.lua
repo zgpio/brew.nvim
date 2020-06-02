@@ -23,7 +23,6 @@ function _dummy_complete(arglead, cmdline, cursorpos)
   return {arglead}
 end
 function _on_pre_cmd(name)
-  require 'dein/util'
   local t = vim.tbl_filter(
     function(v)
       local s = string.gsub(v.normalized_name:lower(), '[_-]', '')
@@ -36,7 +35,6 @@ function _on_pre_cmd(name)
   _source(t)
 end
 function _on_default_event(event)
-  require 'dein/util'
   local lazy_plugins = _get_lazy_plugins()
   local plugins = {}
 
@@ -158,7 +156,6 @@ function _source(...)
 end
 --@param plugins plugin name list
 function _on_event(event, plugins)
-  require 'dein/util'
   local lazy_plugins = vim.tbl_filter(function(v) return v.sourced==0 end, _get_plugins(plugins))
   if vim.tbl_isempty(lazy_plugins) then
     a.nvim_command('autocmd! dein-events ' ..event)
@@ -213,7 +210,6 @@ function M._on_func(name)
     return
   end
 
-  require 'dein/util'
   local x = vim.tbl_filter(
     function(v)
       return vim.fn.stridx(function_prefix, v.normalized_name..'#') == 0

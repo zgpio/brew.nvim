@@ -31,8 +31,7 @@ function M._init()
   M._cache_version = 150
   M._merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
   M._merged_length = 3
-  vim.g['dein#name'] = ''
-  vim.g['dein#plugin'] = {}
+  M.plugin = {}
   M._plugins = {}
   M._cache_path = ''
   M._base_path = ''
@@ -91,7 +90,7 @@ function load_state(path, ...)
   if (M._is_sudo==1 or not sourced) then return 1 end
   M._base_path = vim.fn.expand(path)
 
-  local state = (vim.g['dein#cache_directory'] or M._base_path)
+  local state = (dein.cache_directory or M._base_path)
     .. '/state_' .. M._progname .. '.vim'
   if vim.fn.filereadable(state)==0 then return 1 end
   try {
@@ -112,7 +111,7 @@ function load_state(path, ...)
 end
 function load_cache_raw(vimrcs)
   M._vimrcs = vimrcs
-  local cache = (vim.g['dein#cache_directory'] or M._base_path) ..'/cache_' .. M._progname
+  local cache = (dein.cache_directory or M._base_path) ..'/cache_' .. M._progname
   local time = vim.fn.getftime(cache)
   local t = vim.tbl_filter(
     function(v)
@@ -140,8 +139,7 @@ function tap(name)
   if _plugins.name==nil or vim.fn.isdirectory(_plugins[name].path)==0 then
     return 0
   end
-  vim.g['dein#name'] = name
-  vim.g['dein#plugin'] = _plugins[name]
+  M.plugin = _plugins[name]
   return 1
 end
 function is_sourced(name)
