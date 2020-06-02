@@ -1,8 +1,9 @@
-# dein.vim
+# brew.nvim
 
-[![Join the chat at https://gitter.im/Shougo/dein.vim](https://badges.gitter.im/Shougo/dein.vim.svg)](https://gitter.im/Shougo/dein.vim?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/Shougo/dein.vim.svg?branch=master)](https://travis-ci.org/Shougo/dein.vim)
+TODO: Build Status
+NOTE: Under development, some features are broken
 
-Dein.vim is a dark powered Neovim plugin manager.
+brew.nvim is a Neovim plugin manager, rewrite dein with neovim builtin lua.
 
 <!-- vim-markdown-toc GFM -->
 
@@ -21,16 +22,13 @@ Dein.vim is a dark powered Neovim plugin manager.
 - "xcopy" command in $PATH (Windows)
 - "git" command in $PATH (if you want to install github or vim.org plugins)
 
-If you need vim-plug like install UI, you can use dein-ui.vim.
-https://github.com/wsdjeg/dein-ui.vim
-
 ## Quick start
 
-**Note**: You must define the installation directory before to use dein.  The
+**Note**: You must define the installation directory before to use.  The
 directory that you will want to use depends on your usage.
 
-For example, `~/.vim/bundles` or `~/.cache/dein` or `~/.local/share/dein`.
-dein.vim does not define a default installation directory.
+For example, `~/.vim/bundles` or `~/.cache/brew` or `~/.local/share/brew`.
+brew.vim does not define a default installation directory.
 You must **not** set the installation directory as `~/.vim/plugin` or
 `~/.config/nvim/plugin`.
 
@@ -39,40 +37,37 @@ You must **not** set the installation directory as `~/.vim/plugin` or
 1. Run below script.
 
 ```sh
-curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh > installer.sh
-# For example, we just use `~/.cache/dein` as installation directory
-sh ./installer.sh ~/.cache/dein
+curl https://raw.githubusercontent.com/zgpio/brew.nvim/master/bin/installer.sh > installer.sh
+# For example, we just use `~/.cache/brew` as installation directory
+sh ./installer.sh ~/.cache/brew
 ```
 
 2. Edit your .vimrc like this.
 
 ```vim
-" Add the dein installation directory into runtimepath
-set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
+" Add the brew installation directory into runtimepath
+set runtimepath+=~/.cache/brew/repos/github.com/zgpio/brew.nvim
 
-if dein#load_state('~/.cache/dein')
-  call dein#begin('~/.cache/dein')
+if brew#load_state('~/.cache/brew')
+  call brew#begin('~/.cache/brew')
 
-  call dein#add('~/.cache/dein/repos/github.com/Shougo/dein.vim')
-  call dein#add('Shougo/deoplete.nvim')
+  call brew#add('~/.cache/brew/repos/github.com/zgpio/brew.nvim')
 
-  call dein#end()
-  call dein#save_state()
+  call brew#end()
+  call brew#save_state()
 endif
 
 filetype plugin indent on
 syntax enable
 ```
 
-3. Open vim and install dein
+3. Open nvim and install brew
 
 ```vim
-:call dein#install()
+:call brew#install()
 ```
 
 ## Features
-
-- Faster than NeoBundle
 
 - Simple
 
@@ -100,7 +95,7 @@ syntax enable
 
 ### Options
 
-Some common options. For a more detailed list, run `:h dein-options`
+Some common options. For a more detailed list, run `:h brew-options`
 
 | Option   | Type                 | Description                                                                           |
 | -------- | -------------------- | ------------------------------------------------------------------------------------- |
@@ -110,5 +105,5 @@ Some common options. For a more detailed list, run `:h dein-options`
 | `on_ft`  | `string` or `list`   | Load a plugin for the current filetype                                                |
 | `on_cmd` | `string` or `list`   | Load the plugin for these commands                                                    |
 | `rtp`    | `string`             | You can use this option when the repository has the Vim plugin in a subdirectory               |
-| `if`     | `string` or `number` | If it is String, dein will eval it.                                                   |
-| `merged` | `number`             | If set to 0, dein doesn't merge the plugin directory.                                 |
+| `if`     | `string` or `number` | If it is String, brew.nvim will eval it.                                                   |
+| `merged` | `number`             | If set to 0, brew.nvim doesn't merge the plugin directory.                                 |
