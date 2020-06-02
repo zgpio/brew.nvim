@@ -467,15 +467,13 @@ local function async_get(async, process)
   local is_timeout = (vim.fn.localtime() - process.start_time)
                      >= (process.plugin.timeout or vim.g['dein#install_process_timeout'])
 
-  local is_skip
+  local is_skip = true
   if async.eof==1 then
-    is_timeout = 0
-    is_skip = 0
-  else
-    is_skip = 1
+    is_timeout = false
+    is_skip = false
   end
 
-  if is_timeout==1 then
+  if is_timeout then
     vim.fn['dein#job#_job_stop'](process.job+1)
     status = -1
   end
@@ -487,10 +485,10 @@ local function check_output(context, process)
   if context.async==1 then
     is_timeout, is_skip, status = async_get(process.async, process)
   else
-    is_timeout, is_skip, status = 0, 0, process.status
+    is_timeout, is_skip, status = false, false, process.status
   end
 
-  if is_skip==1 and is_timeout==0 then
+  if is_skip and not is_timeout then
     return
   end
 
@@ -512,7 +510,7 @@ local function check_output(context, process)
     new_rev = get_revision_number(plugin)
   end
 
-  if is_timeout==1 or status==1 then
+  if is_timeout or status==1 then
     __log(get_plugin_message(plugin, num, max, 'Error'))
     error(plugin.path)
     if process.installed==0 then
@@ -524,7 +522,7 @@ local function check_output(context, process)
       end
     end
 
-    if is_timeout==1 then
+    if is_timeout then
       error(vim.fn.strftime('Process timeout: (%Y/%m/%d %H:%M:%S)'))
     else
       error(vim.fn.split(process.output, '\n'))
@@ -571,7 +569,7 @@ local function check_output(context, process)
     }
     _cd(cwd)
 
-    if _build({plugin.name}) then
+    if _build({plugin.name})~=0 then
       __log(get_plugin_message(plugin, num, max, 'Build failed'))
       error(plugin.path)
       -- Remove.
@@ -1227,7 +1225,7 @@ local function get_sync_command(plugin, update_type, number, max)
 
   local message = get_plugin_message(plugin, number, max, vim.fn.string(cmd))
 
-  return {cmd, message}
+  return cmd, message
 end
 function _update(plugins, update_type, async)
   if dein._is_sudo then
@@ -1394,8 +1392,7 @@ function __sync(plugin, context)
     return
   end
 
-  cmd, message = unpack(
-    get_sync_command(plugin, context.update_type, context.number, context.max_plugins))
+  cmd, message = get_sync_command(plugin, context.update_type, context.number, context.max_plugins)
 
   if vim.fn.empty(cmd)==1 then
     -- Skip
