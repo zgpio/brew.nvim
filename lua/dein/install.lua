@@ -114,7 +114,7 @@ function _load_rollback(rollbackfile, plugins)
     _each(cmd, plugin)
   end
 
-  vim.fn['dein#recache_runtimepath']()
+  _recache_runtimepath()
   __error('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
 end
 function append_log_file(msg)
@@ -381,8 +381,8 @@ function __done(context)
   end
 
   if vim.fn.empty(context.synced_plugins)==0 then
-    vim.fn['dein#call_hook']('done_update', context.synced_plugins)
-    vim.fn['dein#source'](vim.tbl_map(function(v) return v.name end, vim.fn.copy(context.synced_plugins)))
+    _call_hook('done_update', {context.synced_plugins})
+    _source(vim.tbl_map(function(v) return v.name end, vim.fn.copy(context.synced_plugins)))
   end
 
   __notify(vim.fn.strftime('Done: (%Y/%m/%d %H:%M:%S)'))
@@ -557,7 +557,7 @@ function _direct_install(repo, options)
   end
 
   _update(plugin.name, 'install', 0)
-  vim.fn['dein#source'](plugin.name)
+  _source({plugin.name})
 
   -- Add to direct_install.vim
   local file = vim.fn['dein#get_direct_plugins_path']()
@@ -958,7 +958,7 @@ function _recache_runtimepath()
 
   vim.api.nvim_command('silent call dein#remote_plugins()')
 
-  vim.fn['dein#call_hook']('post_source')
+  _call_hook('post_source')
 
   _save_merged_plugins()
 
@@ -970,6 +970,7 @@ function _recache_runtimepath()
   __log(vim.fn.strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 end
 local function get_sync_command(plugin, update_type, number, max)
+  require 'dein/parse'
   local type = _get_type(plugin.type)
   local cmd
 
@@ -1364,7 +1365,7 @@ local function check_output(context, process)
     try {
       function()
         _cd(plugin.path)
-        vim.fn['dein#call_hook']('post_update', plugin)
+        _call_hook('post_update', {plugin})
       end,
       catch {
         function(e)
@@ -1433,7 +1434,7 @@ function __install_async(context)
   if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
     __done(context)
   elseif context.number ~= context.prev_number and context.number < vim.fn.len(context.plugins) then
-    local plugin = context.plugins[context.number]
+    local plugin = context.plugins[context.number+1]
     __print_progress_message(__get_progress_message(plugin,
              context.number, context.max_plugins))
     context.prev_number = context.number

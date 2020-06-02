@@ -715,7 +715,7 @@ function _end()
   vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
 
   if vim.fn.empty(depends)==0 then
-    vim.fn['dein#source'](depends)
+    _source(depends)
   end
 
   if dein._hook_add ~= '' then

@@ -174,6 +174,39 @@ function _on_event(event, plugins)
 
   source_events(event, plugins)
 end
+function _on_cmd(command, name, args, bang, line1, line2)
+  _source({name})
+
+  if vim.fn.exists(':' .. command) ~= 2 then
+    _error(string.format('command %s is not found.', command))
+    return
+  end
+
+  local range
+  if line1 == line2 then
+    range = ''
+  elseif line1 == vim.fn.line("'<") and line2 == vim.fn.line("'>") then
+    range = "'<,'>"
+  else
+    range = line1..','..line2
+  end
+
+  try {
+    function()
+      local cmd = string.format('execute ' .. vim.fn.string(range .. command .. bang ..' '.. args))
+      vim.api.nvim_command(cmd)
+    end,
+    catch {
+      function(e)
+        -- TODO catch /^Vim\%((\a\+)\)\=:E481/
+        -- E481: No range allowed
+        -- execute command bang args
+        print('caught error: ' .. e)
+      end
+    }
+  }
+end
+
 function M._on_func(name)
   local function_prefix = vim.fn.substitute(name, '[^#]*$', '', '')
   if function_prefix:find('^dein#') or function_prefix:find('^vital#') or vim.fn.has('vim_starting')==1 then
@@ -348,7 +381,7 @@ function _on_map(mapping, name, mode)
 
   local input = get_input()
 
-  vim.fn['dein#source'](name)
+  _source({name})
 
   if mode == 'v' or mode == 'x' then
     vim.fn.feedkeys('gv', 'n')

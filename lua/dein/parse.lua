@@ -100,8 +100,8 @@ function generate_dummy_commands(plugin)
   plugin.dummy_commands = {}
   for i, name in ipairs(plugin.on_cmd) do
     -- Define dummy commands.
-    local raw_cmd = 'command -complete=customlist,dein#autoload#_dummy_complete -bang -bar -range -nargs=* ' .. name
-      .. vim.fn.printf(" call dein#autoload#_on_cmd(%s, %s, <q-args>, expand('<bang>'), expand('<line1>'), expand('<line2>'))",
+    local raw_cmd = 'command -complete=customlist,v:lua._dummy_complete -bang -bar -range -nargs=* ' .. name
+      .. vim.fn.printf(" call v:lua._on_cmd(%s, %s, <q-args>, expand('<bang>'), expand('<line1>'), expand('<line2>'))",
        vim.fn.string(name), vim.fn.string(plugin.name))
 
     table.insert(plugin.dummy_commands, {name, raw_cmd})
