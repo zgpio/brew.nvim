@@ -14,6 +14,56 @@ local var_log = {}
 local var_updates_log = {}
 local __progress = ''
 
+local function init_variables(context)
+  __progress = ''
+  __global_context = context
+  var_log = {}
+  var_updates_log = {}
+end
+local function iconv(expr, from, to)
+  if from == '' or to == '' or string.lower(from) == string.lower(to) then
+    return expr
+  end
+
+  if vim.tbl_islist(expr) then
+    return vim.tbl_map(function(v) return vim.fn.iconv(v, from, to) end, vim.fn.copy(expr))
+  else
+    local result = vim.fn.iconv(expr, from, to)
+    if result ~= '' then
+      return result
+    else
+      return expr
+    end
+  end
+end
+local function init_context(plugins, update_type, async)
+  local context = {}
+  context.update_type = update_type
+  context.async = async
+  context.synced_plugins = {}
+  context.errored_plugins = {}
+  context.processes = {}
+  context.number = 0
+  context.prev_number = -1
+  context.plugins = plugins
+  context.max_plugins = vim.fn.len(context.plugins)
+  if vim.fn.has('vim_starting')==1 and dein_install_progress_type ~= 'none' then
+    context.progress_type = 'echo'
+  else
+    context.progress_type = dein_install_progress_type
+  end
+  if vim.fn.has('vim_starting')==1 and dein_install_message_type ~= 'none' then
+    context.message_type = 'echo'
+  else
+    context.message_type = dein_install_message_type
+  end
+  context.laststatus = vim.o.laststatus
+  context.showtabline = vim.o.showtabline
+  context.tabline = vim.o.tabline
+  context.title = vim.o.title
+  context.titlestring = vim.o.titlestring
+  return context
+end
 function _status()
   return vim.v.shell_error
 end
@@ -25,7 +75,7 @@ function _is_async()
   end
 end
 function __convert_args(args)
-  local args = __iconv(args, vim.o.encoding, 'char')
+  local args = iconv(args, vim.o.encoding, 'char')
   if not vim.tbl_islist(args) then
     local rv = vim.api.nvim_eval('split(&shell) + split(&shellcmdflag)')
     table.insert(rv, args)
@@ -49,7 +99,7 @@ function clear_runtimepath()
     vim.fn.mkdir(runtimepath, 'p')
   end
 end
-local function __error(msg)
+local function error(msg)
   local msg = _convert2list(msg)
   if vim.fn.empty(msg)==1 then
     return
@@ -64,8 +114,8 @@ function _system(command)
   -- let job = s:Job.start()
   -- let exitval = job.wait()
 
-  local command = __iconv(command, vim.o.encoding, 'char')
-  local output = __iconv(vim.fn.system(command), 'char', vim.o.encoding)
+  local command = iconv(command, vim.o.encoding, 'char')
+  local output = iconv(vim.fn.system(command), 'char', vim.o.encoding)
   return vim.fn.substitute(output, '\n$', '', '')
 end
 function _rollback(date, plugins)
@@ -115,9 +165,9 @@ function _load_rollback(rollbackfile, plugins)
   end
 
   _recache_runtimepath()
-  __error('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
+  error('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
 end
-function append_log_file(msg)
+local function append_log_file(msg)
   local fn = dein_install_log_filename
   if not fn or fn=='' then
     return
@@ -136,7 +186,7 @@ function append_log_file(msg)
   end
   vim.fn.writefile(msg, logfile)
 end
-function merge_files(plugins, directory)
+local function merge_files(plugins, directory)
   local files = {}
   for _, plugin in ipairs(plugins) do
     local t = vim.tbl_filter(
@@ -152,7 +202,7 @@ function merge_files(plugins, directory)
     _writefile(string.format('.dein/%s/%s.vim', directory, directory), files)
   end
 end
-function _get_default_ftplugin()
+local function get_default_ftplugin()
   return {
     [[if exists("g:did_load_ftplugin")]],
     [[  finish]],
@@ -245,12 +295,12 @@ local function get_revision_number(plugin)
 
   -- If rev contains spaces, it is error message
   if rev:find('%s') then
-    __error(plugin.name)
-    __error('Error revision number: ' .. rev)
+    error(plugin.name)
+    error('Error revision number: ' .. rev)
     return ''
   elseif rev == '' then
-    __error(plugin.name)
-    __error('Empty revision number: ' .. rev)
+    error(plugin.name)
+    error('Empty revision number: ' .. rev)
     return ''
   end
   return rev
@@ -290,10 +340,10 @@ function _cd(path)
     end,
     catch {
       function(e)
-        __error('Error cd to: ' .. path)
-        __error('Current directory: ' .. vim.fn.getcwd())
-        __error(vim.v.exception)
-        __error(vim.v.throwpoint)
+        error('Error cd to: ' .. path)
+        error('Current directory: ' .. vim.fn.getcwd())
+        error(vim.v.exception)
+        error(vim.v.throwpoint)
         print('caught error: ' .. e)
       end
     }
@@ -311,9 +361,9 @@ function _rm(path)
   --   try
   --     call delete(a:path, 'rf')
   --   catch
-  --     call v:lua.__error('Error deleting directory: ' . a:path)
-  --     call v:lua.__error(v:exception)
-  --     call v:lua.__error(v:throwpoint)
+  --     error('Error deleting directory: ' . a:path)
+  --     error(v:exception)
+  --     error(v:throwpoint)
   --   endtry
   --   return
   -- endif
@@ -345,11 +395,244 @@ function _rm(path)
   end
 end
 
+local function get_plugin_message(plugin, number, max, message)
+  return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) |%-20s| %s',
+         number, max, plugin.name, message)
+end
+local function lock_revision(process, context)
+  local num = process.number
+  local max = context.max_plugins
+  local plugin = process.plugin
+
+  plugin.new_rev = get_revision_number(plugin)
+
+  local typ = _get_type(plugin['type'])
+  -- TODO !has_key(type, 'get_revision_lock_command')
+  if typ.name ~= 'git' then
+    return 0
+  end
+
+  local cmd = typ:get_revision_lock_command(plugin)
+
+  if vim.fn.empty(cmd)==1 or plugin.new_rev == (plugin.rev or '') then
+    -- Skipped.
+    return 0
+  elseif type(cmd) == 'string' and cmd:find('^E: ') then
+    -- Errored.
+    error(plugin.path)
+    error(cmd:sub(4))
+    return -1
+  end
+
+  if (plugin.rev or '') ~= '' then
+    __log(get_plugin_message(plugin, num, max, 'Locked'))
+  end
+
+  local result = __system_cd(cmd, plugin.path)
+  local status = _status()
+
+  if status~=0 then
+    error(plugin.path)
+    error(result)
+    return -1
+  end
+end
+local function async_get(async, process)
+  -- Check job status
+  local status = -1
+  if vim.g.job_pool[process.job+1].exitval then
+    async.eof = 1
+    status = vim.g.job_pool[process.job+1].exitval
+  end
+
+  local candidates = vim.g.job_pool[process.job+1].candidates or {}
+  local output
+  if async.eof==1 then
+    output = vim.fn.join(candidates, "\n")
+  else
+    output = vim.fn.join(slice(candidates, 1, #candidates-1), "\n")
+  end
+  if output ~= '' then
+    process.output = process.output .. output
+    process.start_time = vim.fn.localtime()
+    __log(__get_short_message(process.plugin, process.number,
+          process.max_plugins, output))
+  end
+  if async.eof==1 then
+    async.candidates = {}
+  else
+    async.candidates = {candidates[#candidates]}
+  end
+
+  local is_timeout = (vim.fn.localtime() - process.start_time)
+                     >= (process.plugin.timeout or vim.g['dein#install_process_timeout'])
+
+  local is_skip
+  if async.eof==1 then
+    is_timeout = 0
+    is_skip = 0
+  else
+    is_skip = 1
+  end
+
+  if is_timeout==1 then
+    vim.fn['dein#job#_job_stop'](process.job+1)
+    status = -1
+  end
+
+  return is_timeout, is_skip, status
+end
+local function check_output(context, process)
+  local is_timeout, is_skip, status
+  if context.async==1 then
+    is_timeout, is_skip, status = async_get(process.async, process)
+  else
+    is_timeout, is_skip, status = 0, 0, process.status
+  end
+
+  if is_skip==1 and is_timeout==0 then
+    return
+  end
+
+  local num = process.number
+  local max = context.max_plugins
+  local plugin = process.plugin
+
+  if vim.fn.isdirectory(plugin.path)==1
+         and (plugin.rev or '') ~= ''
+         and (plugin['local'] or 0)==0 then
+    -- Restore revision.
+    lock_revision(process, context)
+  end
+
+  local new_rev
+  if context.update_type == 'check_update' then
+    new_rev = get_revision_remote(plugin)
+  else
+    new_rev = get_revision_number(plugin)
+  end
+
+  if is_timeout==1 or status==1 then
+    __log(get_plugin_message(plugin, num, max, 'Error'))
+    error(plugin.path)
+    if process.installed==0 then
+      if vim.fn.isdirectory(plugin.path)==0 then
+        error('Maybe wrong username or repository.')
+      elseif vim.fn.isdirectory(plugin.path)==1 then
+        error('Remove the installed directory:' .. plugin.path)
+        _rm(plugin.path)
+      end
+    end
+
+    if is_timeout==1 then
+      error(vim.fn.strftime('Process timeout: (%Y/%m/%d %H:%M:%S)'))
+    else
+      error(vim.fn.split(process.output, '\n'))
+    end
+
+    table.insert(context.errored_plugins, plugin)
+  elseif process.rev == new_rev or (context.update_type == 'check_update' and new_rev == '') then
+    if context.update_type ~= 'check_update' then
+      __log(get_plugin_message(plugin, num, max, 'Same revision'))
+    end
+  else
+    __log(get_plugin_message(plugin, num, max, 'Updated'))
+
+    if context.update_type ~= 'check_update' then
+      local log_messages = vim.fn.split(get_updated_log_message(plugin, new_rev, process.rev), '\n')
+      plugin.commit_count = vim.fn.len(log_messages)
+      __log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
+    else
+      plugin.commit_count = 0
+    end
+
+    plugin.old_rev = process.rev
+    plugin.new_rev = new_rev
+
+    local type = _get_type(plugin.type)
+    -- TODO has_key(type, 'get_uri')
+    if type.name == 'git' then
+      plugin.uri = type:get_uri(plugin.repo, plugin)
+    else
+      plugin.uri = ''
+    end
+
+    local cwd = vim.fn.getcwd()
+    try {
+      function()
+        _cd(plugin.path)
+        _call_hook('post_update', {plugin})
+      end,
+      catch {
+        function(e)
+          print('caught error: ' .. e)
+        end
+      }
+    }
+    _cd(cwd)
+
+    if _build({plugin.name}) then
+      __log(get_plugin_message(plugin, num, max, 'Build failed'))
+      error(plugin.path)
+      -- Remove.
+      table.insert(context.errored_plugins, plugin)
+    else
+      table.insert(context.synced_plugins, plugin)
+    end
+  end
+
+  process.eof = 1
+end
+local function print_progress_message(msg)
+  local msg = _convert2list(msg)
+  local context = __global_context
+  if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
+    return
+  end
+
+  local progress_type = context.progress_type
+  if progress_type == 'tabline' then
+    vim.o.showtabline=2
+    vim.o.tabline = vim.fn.join(msg, "\n")
+  elseif progress_type == 'title' then
+    vim.o.title=true
+    vim.o.titlestring = vim.fn.join(msg, "\n")
+  elseif progress_type == 'echo' then
+    __echo(msg, 'echo')
+  end
+
+  __log(msg)
+
+  __progress = vim.fn.join(msg, "\n")
+end
+
+local function check_loop(context)
+  while context.number < context.max_plugins
+         and vim.fn.len(context.processes) < dein_install_max_processes do
+
+    local plugin = context.plugins[context.number+1]
+    __sync(plugin, context)
+
+    if context.async==0 then
+      print_progress_message(
+             __get_progress_message(plugin,
+               context.number, context.max_plugins))
+    end
+  end
+
+  for _, process in ipairs(context.processes) do
+    check_output(context, process)
+  end
+
+  -- Filter eof processes.
+  context.processes = vim.tbl_filter(function(v) return v.eof==0 end, context.processes)
+  return context
+end
 function __install_blocking(context)
   try {
     function()
       while true do
-        __check_loop(context)
+        check_loop(context)
 
         if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
           break
@@ -406,8 +689,8 @@ function _each(cmd, plugins)
 
   local global_context_save = __global_context
 
-  local context = __init_context(plugins, 'each', 0)
-  __init_variables(context)
+  local context = init_context(plugins, 'each', 0)
+  init_variables(context)
 
   local cwd = vim.fn.getcwd()
   local error = 0
@@ -423,7 +706,7 @@ function _each(cmd, plugins)
     end,
     catch {
       function(e)
-        __error(vim.v.exception .. ' ' .. vim.v.throwpoint)
+        error(vim.v.exception .. ' ' .. vim.v.throwpoint)
         error = 1
         print('caught error: ' .. e)
       end
@@ -436,7 +719,20 @@ function _each(cmd, plugins)
   return error
 end
 
-function __helptags()
+local function copy_files(plugins, directory)
+  local dir = ''
+  if directory ~= '' then
+    dir = '/' .. directory
+  end
+  local srcs = vim.tbl_filter(
+    function(v) return vim.fn.isdirectory(v)==1 end,
+    vim.tbl_map(function(v) return v.rtp .. dir end, vim.fn.copy(plugins)))
+  local stride = 50
+  for start=1, vim.fn.len(srcs), stride do
+    _copy_directories(slice(srcs, start, start+stride-1), _get_runtime_path() .. dir)
+  end
+end
+local function helptags()
   if dein._runtime_path == '' or dein._is_sudo then
     return ''
   end
@@ -447,28 +743,46 @@ function __helptags()
       if vim.fn.isdirectory(tags)==0 then
         vim.fn.mkdir(tags, 'p')
       end
-      __copy_files(vim.tbl_filter(function(v) return v.merged==0 end, vim.tbl_values(dein.get())), 'doc')
+      copy_files(vim.tbl_filter(function(v) return v.merged==0 end, vim.tbl_values(dein.get())), 'doc')
       vim.api.nvim_command('silent execute "helptags" '..vim.fn.string(vim.fn.fnameescape(tags)))
     end,
     catch {
       function(error)
         -- catch /^Vim(helptags):E151:/
         -- Ignore an error that occurs when there is no help file
-        __error('Error generating helptags:')
-        __error(vim.v.exception)
-        __error(vim.v.throwpoint)
+        error('Error generating helptags:')
+        error(vim.v.exception)
+        error(vim.v.throwpoint)
         print('caught error: ' .. error)
       end
     }
   }
 end
-function __update_loop(context)
+local function install_async(context)
+  if vim.fn.empty(context)==1 then
+    return
+  end
+
+  check_loop(context)
+
+  if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
+    __done(context)
+  elseif context.number ~= context.prev_number and context.number < vim.fn.len(context.plugins) then
+    local plugin = context.plugins[context.number+1]
+    print_progress_message(__get_progress_message(plugin,
+             context.number, context.max_plugins))
+    context.prev_number = context.number
+  end
+
+  return vim.fn.len(context.errored_plugins), context
+end
+local function update_loop(context)
   local errored = 0
   try {
     function()
       if vim.fn.has('vim_starting')==1 then
         while vim.fn.empty(__global_context)==0 do
-          errored, _ = __install_async(context)
+          errored, _ = install_async(context)
           vim.api.nvim_command('sleep 50ms')
           vim.api.nvim_command('redraw')
         end
@@ -478,8 +792,8 @@ function __update_loop(context)
     end,
     catch {
       function(error)
-        __error(vim.v.exception)
-        __error(vim.v.throwpoint)
+        error(vim.v.exception)
+        error(vim.v.throwpoint)
         print('caught error: ' .. error)
         errored = 1
       end
@@ -494,7 +808,7 @@ function _build(plugins)
       return vim.fn.isdirectory(v.path)==1 and vim.fn.has_key(v, 'build')==1
     end,
     _get_plugins(plugins))) do
-    __print_progress_message('Building: ' .. plugin.name)
+    print_progress_message('Building: ' .. plugin.name)
     if _each(plugin.build, plugin)==1 then
       error = 1
     end
@@ -534,7 +848,7 @@ local function generate_ftplugin()
   end
 
   -- Generate ftplugin.vim
-  local content = _get_default_ftplugin()
+  local content = get_default_ftplugin()
   table.insert(content, 'function! s:after_ftplugin()')
   for _,v in ipairs(ftplugin['_'] or {}) do table.insert(content, v) end
   table.insert(content, 'endfunction')
@@ -569,19 +883,6 @@ function _direct_install(repo, options)
   end
 end
 
-function __copy_files(plugins, directory)
-  local dir = ''
-  if directory ~= '' then
-    dir = '/' .. directory
-  end
-  local srcs = vim.tbl_filter(
-    function(v) return vim.fn.isdirectory(v)==1 end,
-    vim.tbl_map(function(v) return v.rtp .. dir end, vim.fn.copy(plugins)))
-  local stride = 50
-  for start=1, vim.fn.len(srcs), stride do
-    _copy_directories(slice(srcs, start, start+stride-1), _get_runtime_path() .. dir)
-  end
-end
 function _copy_directories(srcs, dest)
   if vim.fn.empty(srcs)==1 then
     return 0
@@ -617,7 +918,7 @@ function _copy_directories(srcs, dest)
 
     if status~=0 then
       _error('copy command failed.')
-      _error(__iconv(result, 'char', vim.o.encoding))
+      _error(iconv(result, 'char', vim.o.encoding))
       _error('cmdline: ' .. temp)
       _error('tempfile: ' .. vim.fn.string(lines))
     end
@@ -692,7 +993,7 @@ function _reinstall(plugins)
       end
 
       -- Reinstall.
-      __print_progress_message(vim.fn.printf('|%s| Reinstalling...', plugin.name))
+      print_progress_message(vim.fn.printf('|%s| Reinstalling...', plugin.name))
 
       if vim.fn.isdirectory(plugin.path)==1 then
         _rm(plugin.path)
@@ -709,10 +1010,6 @@ function __get_progress_message(plugin, number, max)
          vim.fn['repeat']('+', (math.modf(number*20/max))),
          vim.fn['repeat']('-', (20 - math.modf(number*20/max))),
          plugin.name)
-end
-function __get_plugin_message(plugin, number, max, message)
-  return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) |%-20s| %s',
-         number, max, plugin.name, message)
 end
 function __get_short_message(plugin, number, max, message)
   return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) %s', number, max, message)
@@ -739,12 +1036,6 @@ function __get_updated_message(context, plugins)
 
   return "Updated plugins:\n" .. vim.fn.join(vim.tbl_map(t, vim.fn.copy(plugins)), "\n")
 end
-function __init_variables(context)
-  __progress = ''
-  __global_context = context
-  var_log = {}
-  var_updates_log = {}
-end
 function __restore_view(context)
   if context.progress_type == 'tabline' then
     vim.o.showtabline = context.showtabline
@@ -753,57 +1044,6 @@ function __restore_view(context)
     vim.o.title = context.title
     vim.o.titlestring = context.titlestring
   end
-end
-function __init_context(plugins, update_type, async)
-  local context = {}
-  context.update_type = update_type
-  context.async = async
-  context.synced_plugins = {}
-  context.errored_plugins = {}
-  context.processes = {}
-  context.number = 0
-  context.prev_number = -1
-  context.plugins = plugins
-  context.max_plugins = vim.fn.len(context.plugins)
-  if vim.fn.has('vim_starting')==1 and dein_install_progress_type ~= 'none' then
-    context.progress_type = 'echo'
-  else
-    context.progress_type = dein_install_progress_type
-  end
-  if vim.fn.has('vim_starting')==1 and dein_install_message_type ~= 'none' then
-    context.message_type = 'echo'
-  else
-    context.message_type = dein_install_message_type
-  end
-  context.laststatus = vim.o.laststatus
-  context.showtabline = vim.o.showtabline
-  context.tabline = vim.o.tabline
-  context.title = vim.o.title
-  context.titlestring = vim.o.titlestring
-  return context
-end
-
-function __print_progress_message(msg)
-  local msg = _convert2list(msg)
-  local context = __global_context
-  if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
-    return
-  end
-
-  local progress_type = context.progress_type
-  if progress_type == 'tabline' then
-    vim.o.showtabline=2
-    vim.o.tabline = vim.fn.join(msg, "\n")
-  elseif progress_type == 'title' then
-    vim.o.title=true
-    vim.o.titlestring = vim.fn.join(msg, "\n")
-  elseif progress_type == 'echo' then
-    __echo(msg, 'echo')
-  end
-
-  __log(msg)
-
-  __progress = vim.fn.join(msg, "\n")
 end
 
 function __echo(expr, mode)
@@ -867,23 +1107,7 @@ function __log(msg)
   append_log_file(msg)
 end
 
-function __echo_mode(m, mode)
-  for _, m in ipairs(vim.fn.split(m, [[\r\?\n]], 1)) do
-    if vim.fn.has('vim_starting')==0 and mode~='error' then
-      m = __truncate_skipping(m, vim.o.columns - 1, vim.o.columns/3, '...')
-    end
-
-    if mode == 'error' then
-      vim.api.nvim_command(string.format("echohl WarningMsg | echomsg %s | echohl None", vim.fn.string(m)))
-    elseif mode == 'echomsg' then
-      vim.api.nvim_command(string.format("echomsg %s", vim.fn.string(m)))
-    else
-      vim.api.nvim_command(string.format("echo %s", vim.fn.string(m)))
-    end
-  end
-end
-
-local function __strwidthpart(str, width)
+local function strwidthpart(str, width)
   if width <= 0 then
     return ''
   end
@@ -897,22 +1121,7 @@ local function __strwidthpart(str, width)
 
   return ret
 end
-function __truncate_skipping(str, max, footer_width, separator)
-  local width = vim.fn.strwidth(str)
-  local ret
-  if width <= max then
-    ret = str
-  else
-    local header_width = max - vim.fn.strwidth(separator) - footer_width
-    ret = __strwidthpart(str, header_width) .. separator
-           .. __strwidthpart_reverse(str, footer_width)
-  end
-
-  return ret
-end
-
--- TODO local
-function __strwidthpart_reverse(str, width)
+local function strwidthpart_reverse(str, width)
   if width <= 0 then
     return ''
   end
@@ -926,6 +1135,35 @@ function __strwidthpart_reverse(str, width)
 
   return ret
 end
+local function truncate_skipping(str, max, footer_width, separator)
+  local width = vim.fn.strwidth(str)
+  local ret
+  if width <= max then
+    ret = str
+  else
+    local header_width = max - vim.fn.strwidth(separator) - footer_width
+    ret = strwidthpart(str, header_width) .. separator
+           .. strwidthpart_reverse(str, footer_width)
+  end
+
+  return ret
+end
+function __echo_mode(m, mode)
+  for _, m in ipairs(vim.fn.split(m, [[\r\?\n]], 1)) do
+    if vim.fn.has('vim_starting')==0 and mode~='error' then
+      m = truncate_skipping(m, vim.o.columns - 1, vim.o.columns/3, '...')
+    end
+
+    if mode == 'error' then
+      vim.api.nvim_command(string.format("echohl WarningMsg | echomsg %s | echohl None", vim.fn.string(m)))
+    elseif mode == 'echomsg' then
+      vim.api.nvim_command(string.format("echomsg %s", vim.fn.string(m)))
+    else
+      vim.api.nvim_command(string.format("echo %s", vim.fn.string(m)))
+    end
+  end
+end
+
 function _recache_runtimepath()
   if dein._is_sudo then
     return
@@ -938,14 +1176,14 @@ function _recache_runtimepath()
 
   local merged_plugins = vim.tbl_filter(function(v) return v.merged==1 end, vim.fn.copy(plugins))
 
-  __copy_files(vim.tbl_filter(function(v) return v.lazy~=0 end, vim.fn.copy(merged_plugins)), '')
+  copy_files(vim.tbl_filter(function(v) return v.lazy~=0 end, vim.fn.copy(merged_plugins)), '')
   -- Remove plugin directory
   _rm(_get_runtime_path() .. '/plugin')
   _rm(_get_runtime_path() .. '/after/plugin')
 
-  __copy_files(vim.tbl_filter(function(v) return v.lazy==0 end, vim.fn.copy(merged_plugins)), '')
+  copy_files(vim.tbl_filter(function(v) return v.lazy==0 end, vim.fn.copy(merged_plugins)), '')
 
-  __helptags()
+  helptags()
 
   generate_ftplugin()
 
@@ -987,13 +1225,13 @@ local function get_sync_command(plugin, update_type, number, max)
     return {'', ''}
   end
 
-  local message = __get_plugin_message(plugin, number, max, vim.fn.string(cmd))
+  local message = get_plugin_message(plugin, number, max, vim.fn.string(cmd))
 
   return {cmd, message}
 end
 function _update(plugins, update_type, async)
   if dein._is_sudo then
-    __error('update/install is disabled in sudo session.')
+    error('update/install is disabled in sudo session.')
     return
   end
 
@@ -1011,9 +1249,9 @@ function _update(plugins, update_type, async)
   end
 
   -- Set context.
-  local context = __init_context(plugins, update_type, async)
+  local context = init_context(plugins, update_type, async)
 
-  __init_variables(context)
+  init_variables(context)
 
   if vim.fn.empty(plugins)==1 then
     if update_type ~= 'check_update' then
@@ -1027,7 +1265,7 @@ function _update(plugins, update_type, async)
   __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 
   if async==0 or vim.fn.has('vim_starting')==1 then
-    return __update_loop(context)
+    return update_loop(context)
   end
 
   vim.api.nvim_exec([[
@@ -1042,60 +1280,6 @@ function _update(plugins, update_type, async)
   end
 
   vim.g.__timer = vim.fn.timer_start(1000, 'dein#install#_timer_handler', {['repeat']=-1})
-end
-function __iconv(expr, from, to)
-  if from == '' or to == '' or string.lower(from) == string.lower(to) then
-    return expr
-  end
-
-  if vim.tbl_islist(expr) then
-    return vim.tbl_map(function(v) return vim.fn.iconv(v, from, to) end, vim.fn.copy(expr))
-  else
-    local result = vim.fn.iconv(expr, from, to)
-    if result ~= '' then
-      return result
-    else
-      return expr
-    end
-  end
-end
-function __lock_revision(process, context)
-  local num = process.number
-  local max = context.max_plugins
-  local plugin = process.plugin
-
-  plugin.new_rev = get_revision_number(plugin)
-
-  local typ = _get_type(plugin['type'])
-  -- TODO !has_key(type, 'get_revision_lock_command')
-  if typ.name ~= 'git' then
-    return 0
-  end
-
-  local cmd = typ:get_revision_lock_command(plugin)
-
-  if vim.fn.empty(cmd)==1 or plugin.new_rev == (plugin.rev or '') then
-    -- Skipped.
-    return 0
-  elseif type(cmd) == 'string' and cmd:find('^E: ') then
-    -- Errored.
-    __error(plugin.path)
-    __error(cmd:sub(4))
-    return -1
-  end
-
-  if (plugin.rev or '') ~= '' then
-    __log(__get_plugin_message(plugin, num, max, 'Locked'))
-  end
-
-  local result = __system_cd(cmd, plugin.path)
-  local status = _status()
-
-  if status~=0 then
-    __error(plugin.path)
-    __error(result)
-    return -1
-  end
 end
 function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
@@ -1171,7 +1355,7 @@ function __init_process(plugin, context, cmd)
             -- The repository may be checked out.
             plugin.rev = ''
 
-            __lock_revision(process, context)
+            lock_revision(process, context)
           end,
           catch {
             function(e)
@@ -1206,7 +1390,7 @@ function __sync(plugin, context)
   -- if not plugin then return end
   if vim.fn.isdirectory(plugin.path)==1 and (plugin.frozen or 0)==1 then
     -- Skip frozen plugin
-    __log(__get_plugin_message(plugin, num, max, 'is frozen.'))
+    __log(get_plugin_message(plugin, num, max, 'is frozen.'))
     return
   end
 
@@ -1215,22 +1399,22 @@ function __sync(plugin, context)
 
   if vim.fn.empty(cmd)==1 then
     -- Skip
-    __log(__get_plugin_message(plugin, num, max, message))
+    __log(get_plugin_message(plugin, num, max, message))
     return
   end
 
   if type(cmd) == 'string' and cmd:find('^E: ') then
     -- Errored.
 
-    __print_progress_message(__get_plugin_message(
+    print_progress_message(get_plugin_message(
            plugin, num, max, 'Error'))
-    __error(cmd:sub(4))
+    error(cmd:sub(4))
     table.insert(context.errored_plugins, plugin)
     return
   end
 
   if context.async==0 then
-    __print_progress_message(message)
+    print_progress_message(message)
   end
 
   local process = __init_process(plugin, context, cmd)
@@ -1241,152 +1425,6 @@ function __sync(plugin, context)
   -- lua dein_log:flush()
   return context
 end
-local function async_get(async, process)
-  -- Check job status
-  local status = -1
-  if vim.g.job_pool[process.job+1].exitval then
-    async.eof = 1
-    status = vim.g.job_pool[process.job+1].exitval
-  end
-
-  local candidates = vim.g.job_pool[process.job+1].candidates or {}
-  local output
-  if async.eof==1 then
-    output = vim.fn.join(candidates, "\n")
-  else
-    output = vim.fn.join(slice(candidates, 1, #candidates-1), "\n")
-  end
-  if output ~= '' then
-    process.output = process.output .. output
-    process.start_time = vim.fn.localtime()
-    __log(__get_short_message(process.plugin, process.number,
-          process.max_plugins, output))
-  end
-  if async.eof==1 then
-    async.candidates = {}
-  else
-    async.candidates = {candidates[#candidates]}
-  end
-
-  local is_timeout = (vim.fn.localtime() - process.start_time)
-                     >= (process.plugin.timeout or vim.g['dein#install_process_timeout'])
-
-  local is_skip
-  if async.eof==1 then
-    is_timeout = 0
-    is_skip = 0
-  else
-    is_skip = 1
-  end
-
-  if is_timeout==1 then
-    vim.fn['dein#job#_job_stop'](process.job+1)
-    status = -1
-  end
-
-  return is_timeout, is_skip, status
-end
-local function check_output(context, process)
-  local is_timeout, is_skip, status
-  if context.async==1 then
-    is_timeout, is_skip, status = async_get(process.async, process)
-  else
-    is_timeout, is_skip, status = 0, 0, process.status
-  end
-
-  if is_skip==1 and is_timeout==0 then
-    return
-  end
-
-  local num = process.number
-  local max = context.max_plugins
-  local plugin = process.plugin
-
-  if vim.fn.isdirectory(plugin.path)==1
-         and (plugin.rev or '') ~= ''
-         and (plugin['local'] or 0)==0 then
-    -- Restore revision.
-    __lock_revision(process, context)
-  end
-
-  local new_rev
-  if context.update_type == 'check_update' then
-    new_rev = get_revision_remote(plugin)
-  else
-    new_rev = get_revision_number(plugin)
-  end
-
-  if is_timeout==1 or status==1 then
-    __log(__get_plugin_message(plugin, num, max, 'Error'))
-    __error(plugin.path)
-    if process.installed==0 then
-      if vim.fn.isdirectory(plugin.path)==0 then
-        __error('Maybe wrong username or repository.')
-      elseif vim.fn.isdirectory(plugin.path)==1 then
-        __error('Remove the installed directory:' .. plugin.path)
-        _rm(plugin.path)
-      end
-    end
-
-    if is_timeout==1 then
-      __error(vim.fn.strftime('Process timeout: (%Y/%m/%d %H:%M:%S)'))
-    else
-      __error(vim.fn.split(process.output, '\n'))
-    end
-
-    table.insert(context.errored_plugins, plugin)
-  elseif process.rev == new_rev or (context.update_type == 'check_update' and new_rev == '') then
-    if context.update_type ~= 'check_update' then
-      __log(__get_plugin_message(plugin, num, max, 'Same revision'))
-    end
-  else
-    __log(__get_plugin_message(plugin, num, max, 'Updated'))
-
-    if context.update_type ~= 'check_update' then
-      local log_messages = vim.fn.split(get_updated_log_message(plugin, new_rev, process.rev), '\n')
-      plugin.commit_count = vim.fn.len(log_messages)
-      __log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
-    else
-      plugin.commit_count = 0
-    end
-
-    plugin.old_rev = process.rev
-    plugin.new_rev = new_rev
-
-    local type = _get_type(plugin.type)
-    -- TODO has_key(type, 'get_uri')
-    if type.name == 'git' then
-      plugin.uri = type:get_uri(plugin.repo, plugin)
-    else
-      plugin.uri = ''
-    end
-
-    local cwd = vim.fn.getcwd()
-    try {
-      function()
-        _cd(plugin.path)
-        _call_hook('post_update', {plugin})
-      end,
-      catch {
-        function(e)
-          print('caught error: ' .. e)
-        end
-      }
-    }
-    _cd(cwd)
-
-    if _build({plugin.name}) then
-      __log(__get_plugin_message(plugin, num, max, 'Build failed'))
-      __error(plugin.path)
-      -- Remove.
-      table.insert(context.errored_plugins, plugin)
-    else
-      table.insert(context.synced_plugins, plugin)
-    end
-  end
-
-  process.eof = 1
-end
 function _polling()
   local save_guioptions
   if vim.fn.exists('+guioptions')==1 then
@@ -1395,52 +1433,12 @@ function _polling()
     vim.api.nvim_command('set guioptions-=!')
   end
 
-  local _, new_context = __install_async(__global_context)
+  local _, new_context = install_async(__global_context)
   __global_context = new_context
 
   if vim.fn.exists('+guioptions')==1 then
     vim.o.guioptions = save_guioptions
   end
-end
-function __check_loop(context)
-  while context.number < context.max_plugins
-         and vim.fn.len(context.processes) < dein_install_max_processes do
-
-    local plugin = context.plugins[context.number+1]
-    __sync(plugin, context)
-
-    if context.async==0 then
-      __print_progress_message(
-             __get_progress_message(plugin,
-               context.number, context.max_plugins))
-    end
-  end
-
-  for _, process in ipairs(context.processes) do
-    check_output(context, process)
-  end
-
-  -- Filter eof processes.
-  context.processes = vim.tbl_filter(function(v) return v.eof==0 end, context.processes)
-  return context
-end
-function __install_async(context)
-  if vim.fn.empty(context)==1 then
-    return
-  end
-
-  __check_loop(context)
-
-  if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
-    __done(context)
-  elseif context.number ~= context.prev_number and context.number < vim.fn.len(context.plugins) then
-    local plugin = context.plugins[context.number+1]
-    __print_progress_message(__get_progress_message(plugin,
-             context.number, context.max_plugins))
-    context.prev_number = context.number
-  end
-
-  return vim.fn.len(context.errored_plugins), context
 end
 function _get_progress()
   return __progress
