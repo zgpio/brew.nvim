@@ -272,7 +272,7 @@ end
 
 function _save_state(is_starting)
   if dein._block_level ~= 0 then
-    _error('Invalid dein#save_state() usage.')
+    _error('Invalid save_state() usage.')
     return 1
   end
 

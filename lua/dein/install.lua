@@ -874,8 +874,8 @@ function _direct_install(repo, options)
   _source({plugin.name})
 
   -- Add to direct_install.vim
-  local file = vim.fn['dein#get_direct_plugins_path']()
-  local line = vim.fn.printf('call dein#add(%s, %s)', vim.fn.string(repo), vim.fn.string(opts))
+  local file = dein.get_direct_plugins_path()
+  local line = vim.fn.printf('lua dein.add(%s, %s)', vim.fn.string(repo), vim.fn.string(opts))
   if vim.fn.filereadable(file)==0 then
     vim.fn.writefile({line}, file)
   else

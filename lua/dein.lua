@@ -73,8 +73,20 @@ function M.update(...)
   local args = {...}
   return _update((args[1] or {}), 'update', _is_async())
 end
+function M.build(...)
+  require 'dein/install'
+  local args = {...}
+  local plugins = {}
+  if #args > 0 then
+    plugins = args[1]
+  end
+  return _build(plugins)
+end
 function M.check_clean()
   return _check_clean()
+end
+function M.source(...)
+  return _source({...})
 end
 function M.check_install(...)
   require 'dein/util'
@@ -110,6 +122,101 @@ end
 function M.check_lazy_plugins()
   require 'dein/util'
   return _check_lazy_plugins()
+end
+function M.get_direct_plugins_path()
+  return (dein.cache_directory or dein._base_path).."/direct_install.vim"
+end
+function M.load_state(path, ...)
+  return load_state(path, {...})
+end
+function M.begin(path, ...)
+  require 'dein/util'
+  local args = {...}
+  return _begin(path, (args[1] or {}))
+end
+function M.End()
+  require 'dein/util'
+  return _end()
+end
+function M.load_toml(filename, ...)
+  require 'dein/parse'
+  local args = {...}
+  return _load_toml(filename, (args[1] or {}))
+end
+function M.save_state()
+  require 'dein/util'
+  return _save_state(vim.fn.has('vim_starting'))
+end
+function M.get_log()
+  require 'dein/install'
+  return vim.fn.join(_get_log(), "\n")
+end
+function M.get_progress()
+  require 'dein/install'
+  return _get_progress()
+end
+function M.each(command, ...)
+  require 'dein/install'
+  local args = {...}
+  local plugins = {}
+  if #args > 0 then
+    plugins = args[1]
+  end
+  return _each(command, plugins)
+end
+function M.load_dict(dict, ...)
+  require 'dein/parse'
+  local args = {...}
+  return _load_dict(dict, (args[1] or {}))
+end
+function M.add(repo, ...)
+  require 'dein/util'
+  local args = {...}
+  return _add(repo, (args[1] or {}))
+end
+function M.get_updates_log()
+  require 'dein/install'
+  return vim.fn.join(_get_updates_log(), "\n")
+end
+function M.clear_state()
+  require 'dein/util'
+  _clear_state()
+end
+function M.load_rollback(rollbackfile, ...)
+  require 'dein/install'
+  local args = {...}
+  local plugins = {}
+  if #args > 0 then
+    plugins = args[1]
+  end
+  _load_rollback(rollbackfile, plugins)
+end
+function M.save_rollback(rollbackfile, ...)
+  require 'dein/install'
+  local args = {...}
+  local plugins = {}
+  if #args > 0 then
+    plugins = args[1]
+  end
+  _save_rollback(rollbackfile, plugins)
+end
+function M.rollback(date, ...)
+  require 'dein/install'
+  local args = {...}
+  local plugins = {}
+  if #args > 0 then
+    plugins = args[1]
+  end
+  _rollback(date, plugins)
+end
+function M.Local(dir, ...)
+  require 'dein/parse'
+  local args = {...}
+  return _local(dir, (args[1] or {}), (args[2] or {'*'}))
+end
+function M.call_hook(hook_name, ...)
+  require 'dein/util'
+  return _call_hook(hook_name, {...})
 end
 function load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then
@@ -183,4 +290,5 @@ function is_sourced(name)
     and vim.fn.isdirectory(_plugins[name].path)==1
     and _plugins[name].sourced==1
 end
+dein = M
 return M
