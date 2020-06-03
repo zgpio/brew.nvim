@@ -14,19 +14,6 @@ function try(what)
   return result
 end
 
--- try {
---   function()
---     -- error('oops')
---     vim.api.nvim_command('echo "xxxxxx"')
---   end,
---
---   catch {
---     function(error)
---       print('caught error: ' .. error)
---       return 1
---     end
---   }
--- }
 function M._init()
   M._cache_version = 150
   M._merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
@@ -102,7 +89,7 @@ function load_state(path, ...)
         if vim.v.exception ~= 'Cache loading error' then
           _error('Loading state error: ' .. vim.v.exception)
         end
-        vim.fn['dein#clear_state']()
+        _clear_state()
         print('caught error: ' .. error)
         return 1
       end

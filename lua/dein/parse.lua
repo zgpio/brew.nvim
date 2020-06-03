@@ -74,7 +74,7 @@ function parse_lazy(plugin)
   end
   local event_plugins = dein._event_plugins
   -- TODO: https://github.com/neovim/neovim/issues/12048
-  event_plugins[true] = nil
+  assert(event_plugins[true]==nil)
   if plugin['on_event'] ~= nil then
     for i, event in ipairs(plugin.on_event) do
       if event_plugins[event] == nil then
@@ -181,7 +181,7 @@ end
 function merge_ftplugin(ftplugin)
   local _ftplugin = dein._ftplugin
   -- TODO
-  _ftplugin[true]=nil
+  assert(_ftplugin[true]==nil)
   for ft, val in pairs(ftplugin) do
     if _ftplugin[ft] == nil then
       _ftplugin[ft] = val
@@ -224,7 +224,6 @@ function _dict(plug)
     end
   end
 
-  require 'dein/util'
   plugin.path = _chomp(_expand(plugin.path))
   if (plugin.rev or '') ~= '' then
     -- Add revision path
@@ -348,7 +347,6 @@ function __check_type(repo, options)
   return plugin
 end
 function _local(localdir, options, includes)
-  require 'dein/util'
   local base = vim.fn.fnamemodify(_expand(localdir), ':p')
   local directories = {}
   for _, glob in ipairs(includes) do
