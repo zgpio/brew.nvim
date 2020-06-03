@@ -7,20 +7,7 @@ License: MIT license
 ==============================================================================
 CONTENTS 						*dein-contents*
 
-Introduction		|dein-introduction|
-Usage			|dein-usage|
-Install			|dein-install|
-Interface		|dein-interface|
-  Functions		  |dein-functions|
-  Variables		  |dein-variables|
-  Options		  |dein-options|
-  Toml			  |dein-toml|
-Unite Sources		|dein-unite-sources|
-Denite Sources		|dein-denite-sources|
-Configuration Examples	|dein-examples|
-FAQ			|dein-faq|
-Compatibility		|dein-compatibility|
-
+                                      Type |gO| to see the table of contents.
 
 ==============================================================================
 INTRODUCTION						*dein-introduction*
@@ -29,8 +16,6 @@ INTRODUCTION						*dein-introduction*
 scratch.
 
 Concepts are:
-
-* Faster than NeoBundle
 
 * Simple
 
@@ -225,12 +210,12 @@ dein#each({command}[, {plugins}])
 dein#end()
 		End dein configuration block.
 		You must not use the plugins in |dein#begin()| block.
-		If you enable |g:dein#auto_recache|, it executes
+		If you enable |dein.auto_recache|, it executes
 		|dein#recache_runtimepath()| automatically.
 		Note: 'runtimepath' is changed after |dein#end()|.
 
-							*dein#get()*
-dein#get([{plugin-name}])
+							*dein.get()*
+dein.get([{plugin-name}])
 		Get the plugin options dictionary for {plugin-name}.
 		If you omit {plugin-name}, dein will return the plugins
 		dictionary.  The key is the plugin name.  The value is the
@@ -414,13 +399,13 @@ dein#source([{plugins}])
 dein#tap({plugin-name})
 		Return non-zero if {plugin-name} exists and isn't
 		disabled.
-		It initializes |g:dein#name| and |g:dein#plugin| variables.
+		It initializes |g:dein#name| and |dein.plugin| variables.
 
 ------------------------------------------------------------------------------
 VARIABLES						*dein-variables*
 
-						*g:dein#auto_recache*
-g:dein#auto_recache
+						*dein.auto_recache*
+dein.auto_recache
 		If you set it to 1, call |dein#recache_runtimepath()|
 		automatically if necessary when saving the vimrc, toml file.
 		Note: It reloads your $MYVIMRC.
@@ -449,8 +434,8 @@ dein.enable_name_conversion
 
 		Defaults: "false"
 
-						*g:dein#enable_notification*
-g:dein#enable_notification
+						*dein.enable_notification*
+dein.enable_notification
 		If you set it to 1, dein uses the notification feature.
 		You need the following commands to use it.
 
@@ -519,47 +504,47 @@ g:dein#name
 		You can only use it in |dein#tap()| block.
 		Note: The variable is deprecated.
 
-						*g:dein#notification_icon*
-g:dein#notification_icon
+						*dein.notification_icon*
+dein.notification_icon
 		The notification icon path.
 
 		Default: ""
 
-						*g:dein#notification_time*
-g:dein#notification_time
+						*dein.notification_time*
+dein.notification_time
 		This is the time the notification should be displayed in
 		seconds.  For Linux and Windows only.
 
 		Default: 2
 
-							*g:dein#plugin*
-g:dein#plugin
+							*dein.plugin*
+dein.plugin
 		Current plugin.
 		You can use it in |dein#tap()| block or |dein-hooks|.
 
-						*g:dein#types#git#clone_depth*
-g:dein#types#git#clone_depth
+						*dein.types_git_clone_depth*
+dein.types_git_clone_depth
 		The default history depth for "git clone".
 		If it is 1, dein will use shallow clone feature.
 		See |dein-options-type__depth|.
 
 		Default: 0
 
-					*g:dein#types#git#command_path*
-g:dein#types#git#command_path
+					*dein.types_git_command_path*
+dein.types_git_command_path
 		The "git" command path used for git type.
 
 		Default: "git"
 
-					*g:dein#types#git#default_protocol*
-g:dein#types#git#default_protocol
+					*dein.types_git_default_protocol*
+dein.types_git_default_protocol
 		The default protocol used for git (github).
 		Note: It only accepts "https" or "ssh".
 
 		Default: "https"
 
-					*g:dein#types#git#pull_command*
-g:dein#types#git#pull_command
+					*dein.types_git_pull_command*
+dein.types_git_pull_command
 		The git command used to pull updates.
 
 		Default: "pull --ff --ff-only"
@@ -811,7 +796,7 @@ type		(String)
 						*dein-options-type__depth*
 type__depth		(Number)
 		The history depth for "git clone".
-		If omitted, |g:dein#types#git#clone_depth| is used.
+		If omitted, |dein.types_git_clone_depth| is used.
 		If it is than 0, dein clones the repository by shallow
 		clone. Shallow clone feature saves your repository clone time.
 		But it has problems in some repository.
@@ -830,7 +815,7 @@ HOOKS							*dein-hooks*
 		Note: The Function hooks cannot be cached.  You must
 		initialize it.
 
-		Note: You can use |g:dein#plugin| in the hooks.
+		Note: You can use |dein.plugin| in the hooks.
 		Note: The loading order is not guaranteed in non lazy plugins.
 		Note: The string is executed as Ex commands.
 
@@ -1111,7 +1096,7 @@ Or you can execute the autocmd manually.
 	call dein#add('Shougo/deoplete.nvim', {
 	\ 'hook_source':
 	\  'execute "doautocmd <nomodeline> User" "dein#source#".
-	\   g:dein#plugin.name'
+	\   dein.plugin.name'
 	\ })
 <
 But you must define the autocmd.
@@ -1234,7 +1219,7 @@ Q: Why I need to call |dein#recache_runtimepath()| manually after removing
 plugins?
 https://github.com/Shougo/dein.vim/issues/357
 
-A: You can use |g:dein#auto_recache| option instead.
+A: You can use |dein.auto_recache| option instead.
 Dein.vim has merge feature.  It copys the plugins into the merge directory.
 You can disable the feature by |dein-options-merged|.  It is like other plugin
 managers behavior.

@@ -2,14 +2,14 @@
 require 'dein/util'
 -- Global options definition.
 -- TODO load user config
-dein_types_git_command_path = 'git'
-dein_types_git_default_protocol = 'https'
-dein_types_git_clone_depth = 0
-dein_types_git_pull_command = 'pull --ff --ff-only'
+dein.types_git_command_path = 'git'
+dein.types_git_default_protocol = 'https'
+dein.types_git_clone_depth = 0
+dein.types_git_pull_command = 'pull --ff --ff-only'
 local M = {
   name='git',
-  command=dein_types_git_command_path,
-  executable=vim.fn.executable(dein_types_git_command_path),
+  command=dein.types_git_command_path,
+  executable=vim.fn.executable(dein.types_git_command_path),
 }
 
 local is_windows = _is_windows()
@@ -137,7 +137,7 @@ function M:get_uri(repo, options)
   if protocol == ''
          or vim.fn.match(repo, [[\<\%(gh\|github\|bb\|bitbucket\):\S\+]])~=-1
          or options.type__protocol then
-    protocol = options.type__protocol or dein_types_git_default_protocol
+    protocol = options.type__protocol or dein.types_git_default_protocol
   end
 
   if protocol ~= 'https' and protocol ~= 'ssh' then
@@ -165,7 +165,7 @@ function M:get_sync_command(plugin)
   if vim.fn.isdirectory(plugin.path)==0 then
     local commands = {self.command, 'clone', '--recursive'}
 
-    local depth = plugin.type__depth or dein_types_git_clone_depth
+    local depth = plugin.type__depth or dein.types_git_clone_depth
     if depth > 0 and (plugin.rev or '') == '' and self:get_uri(plugin.repo, plugin):find('^git@')==nil then
       table.insert(commands, '--depth=' .. depth)
     end
@@ -177,7 +177,7 @@ function M:get_sync_command(plugin)
   else
     local gcmd = self.command
 
-    local cmd = dein_types_git_pull_command
+    local cmd = dein.types_git_pull_command
     local submodule_cmd = gcmd .. ' submodule update --init --recursive'
     if _is_powershell() then
       cmd = cmd .. '; if ($?) { ' .. submodule_cmd .. ' }'

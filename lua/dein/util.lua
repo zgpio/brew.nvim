@@ -47,11 +47,6 @@ function __msg2list(expr)
     return vim.fn.split(expr, '\n')
   end
 end
-function _set_default(var, val)
-  if vim.g[var]==nil or type(vim.g[var]) ~= type(val) then
-    vim.g[var] = val
-  end
-end
 
 function _get_myvimrc()
   local vimrc = vim.env['MYVIMRC']
@@ -144,7 +139,7 @@ function _check_vimrcs()
 
   _clear_state()
 
-  if (vim.g['dein#auto_recache'] or 0)==1 then
+  if (dein.auto_recache or 0)==1 then
     a.nvim_command('silent source '.. _get_myvimrc())
 
     if _get_merged_plugins() ~= _load_merged_plugins() then
@@ -396,13 +391,6 @@ function _get_plugins(plugins)
   end
 end
 
--- function _set_default(var, val, ...)
---   if vim.fn.exists(var)==0 or type({var}) != type(val) then
---     let alternate_var = get(a:000, 0, '')
---     let {var} = exists(alternate_var) ? {alternate_var} : val
---   end
--- end
-
 function execute(expr)
   return vim.fn.execute(vim.split(expr, '\n'))
 end
@@ -491,28 +479,28 @@ function _check_install(plugins)
 end
 
 function _notify(msg)
-  _set_default('dein#enable_notification', 0)
-  _set_default('dein#notification_icon', '')
-  _set_default('dein#notification_time', 2)
+  dein.enable_notification = dein.enable_notification or 0
+  dein.notification_icon = dein.notification_icon or ''
+  dein.notification_time = dein.notification_time or 2
 
-  if vim.g['dein#enable_notification']==0 or msg == '' or vim.fn.has('vim_starting')==1 then
+  if dein.enable_notification==0 or msg == '' or vim.fn.has('vim_starting')==1 then
     M._error(msg)
     return
   end
 
-  local icon = _expand(vim.g['dein#notification_icon'])
+  local icon = _expand(dein.notification_icon)
 
   local title = '[dein]'
   local cmd = ''
   if vim.fn.executable('notify-send')==1 then
-    cmd = vim.fn.printf('notify-send --expire-time=%d', vim.g['dein#notification_time'] * 1000)
+    cmd = vim.fn.printf('notify-send --expire-time=%d', dein.notification_time * 1000)
     if icon ~= '' then
       cmd = cmd.. ' --icon=' .. vim.fn.string(icon)
     end
     cmd = cmd.. ' ' .. vim.fn.string(title) .. ' ' .. vim.fn.string(msg)
   elseif _is_windows() and vim.fn.executable('Snarl_CMD')==1 then
     cmd = vim.fn.printf('Snarl_CMD snShowMessage %d "%s" "%s"',
-           vim.g['dein#notification_time'], title, msg)
+           dein.notification_time, title, msg)
     if icon ~= '' then
       cmd = cmd.. ' "' .. icon .. '"'
     end
