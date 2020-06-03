@@ -382,7 +382,12 @@ function _load_toml(filename, default)
   local toml
   try {
     function()
-      toml = vim.fn['dein#toml#parse_file'](_expand(filename))
+      filename = _expand(filename)
+      local text = vim.fn.join(vim.fn.readfile(filename), "\n")
+      -- fileencoding is always utf8
+      text = vim.fn.iconv(text, 'utf8', vim.o.encoding)
+      TOML = require "toml"
+      toml = TOML.parse(text)
     end,
     catch {
       -- TODO catch /Text.TOML:/
