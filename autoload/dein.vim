@@ -28,33 +28,8 @@ endfunction
 function! dein#source(...) abort
   return v:lua._source(a:000)
 endfunction
-function! dein#check_install(...) abort
-  lua require 'dein/util'
-  return v:lua._check_install(get(a:000, 0, []))
-endfunction
-function! dein#check_clean() abort
-  return v:lua._check_clean()
-endfunction
-function! dein#install(...) abort
-  lua require 'dein/install'
-  return v:lua._update(get(a:000, 0, []),
-        \ 'install', v:lua._is_async())
-endfunction
-function! dein#check_update(...) abort
-  lua require 'dein/install'
-  return v:lua._update(get(a:000, 0, []),
-        \ 'check_update', v:lua._is_async())
-endfunction
-function! dein#direct_install(repo, ...) abort
-  lua require 'dein/install'
-  call v:lua._direct_install(a:repo, (a:0 ? a:1 : {}))
-endfunction
 function! dein#get_direct_plugins_path() abort
   return luaeval('(dein.cache_directory or dein._base_path).."/direct_install.vim"')
-endfunction
-function! dein#reinstall(plugins) abort
-  lua require 'dein/install'
-  call v:lua._reinstall(a:plugins)
 endfunction
 function! dein#rollback(date, ...) abort
   lua require 'dein/install'
@@ -68,21 +43,9 @@ function! dein#load_rollback(rollbackfile, ...) abort
   lua require 'dein/install'
   call v:lua._load_rollback(a:rollbackfile, (a:0 ? a:1 : []))
 endfunction
-function! dein#remote_plugins() abort
-  lua require 'dein/install'
-  return v:lua._remote_plugins()
-endfunction
-function! dein#recache_runtimepath() abort
-  lua require 'dein/install'
-  call v:lua._recache_runtimepath()
-endfunction
 function! dein#call_hook(hook_name, ...) abort
   lua require 'dein/util'
   return v:lua._call_hook(a:hook_name, a:000)
-endfunction
-function! dein#check_lazy_plugins() abort
-  lua require 'dein/util'
-  return v:lua._check_lazy_plugins()
 endfunction
 function! dein#load_toml(filename, ...) abort
   lua require 'dein/parse'

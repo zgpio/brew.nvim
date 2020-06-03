@@ -1188,7 +1188,8 @@ function _recache_runtimepath()
   merge_files(plugins, 'ftdetect')
   merge_files(plugins, 'after/ftdetect')
 
-  vim.api.nvim_command('silent call dein#remote_plugins()')
+  -- TODO: silent
+  _remote_plugins()
 
   _call_hook('post_source')
 
@@ -1291,7 +1292,7 @@ end
 function _remote_plugins()
   if vim.fn.has('vim_starting')==1 then
     -- Note: UpdateRemotePlugins is not defined in vim_starting
-    vim.api.nvim_command('autocmd dein VimEnter * silent call dein#remote_plugins()')
+    vim.api.nvim_command('autocmd dein VimEnter * silent lua dein.remote_plugins()')
     return
   end
 

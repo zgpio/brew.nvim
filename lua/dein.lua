@@ -63,10 +63,53 @@ function M.get(...)
     return (M._plugins[args[1]] or {})
   end
 end
+function M.install(...)
+  require 'dein/install'
+  local args = {...}
+  return _update((args[1] or {}), 'install', _is_async())
+end
 function M.update(...)
   require 'dein/install'
   local args = {...}
   return _update((args[1] or {}), 'update', _is_async())
+end
+function M.check_clean()
+  return _check_clean()
+end
+function M.check_install(...)
+  require 'dein/util'
+  local args = {...}
+  return _check_install((args[1] or {}))
+end
+function M.check_update(...)
+  require 'dein/install'
+  local args = {...}
+  return _update((args[1] or {}), 'check_update', _is_async())
+end
+function M.direct_install(repo, ...)
+  require 'dein/install'
+  local args = {...}
+  local opts = {}
+  if #args > 0 then
+    opts = args[1]
+  end
+  _direct_install(repo, opts)
+end
+function M.reinstall(plugins)
+  require 'dein/install'
+  _reinstall(plugins)
+end
+function M.remote_plugins()
+  require 'dein/install'
+  return _remote_plugins()
+end
+function M.recache_runtimepath()
+  require 'dein/install'
+  _recache_runtimepath()
+end
+function M.check_lazy_plugins()
+  require 'dein/util'
+  return _check_lazy_plugins()
 end
 function load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then

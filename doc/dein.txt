@@ -132,8 +132,8 @@ dein#call_hook({hook-name})
 		Note: If {hook-name} is "source", dein will call "source"
 		hooks in sourced plugins.
 
-							*dein#check_install()*
-dein#check_install({plugins})
+							*dein.check_install()*
+dein.check_install({plugins})
 		Check the plugins installation.
 		If {plugins} are not installed, it will return non-zero.
 		If {plugins} are invalid, it will return -1.
@@ -142,21 +142,21 @@ dein#check_install({plugins})
 		If you omit it, dein will check all plugins installation.
 		Note: You can disable the message by |:silent|.
 
-						*dein#check_lazy_plugins()*
-dein#check_lazy_plugins()
+						*dein.check_lazy_plugins()*
+dein.check_lazy_plugins()
 		Check the no meaning lazy plugins.  These plugins don't have
 		"plugin/" directory.
 
-							*dein#check_update()*
-dein#check_update([{plugins}])
+							*dein.check_update()*
+dein.check_update([{plugins}])
 		Check the plugins update asynchronously.
 		{plugins} is the plugins name list to check.
 		If you omit it, dein will check all plugins update.
 		Note: It does not return value instead of
-		|dein#check_install()|.
+		|dein.check_install()|.
 
-							*dein#check_clean()*
-dein#check_clean()
+							*dein.check_clean()*
+dein.check_clean()
 		Returns the non-used plugins directories.  You can write the
 		wrap command to remove them.
 
@@ -182,8 +182,8 @@ dein#config({options})
 	\ 'lazy' : 1, 'on_i' : 1,
 	\ })
 <
-						*dein#direct_install()*
-dein#direct_install({repo}[, {options}])
+						*dein.direct_install()*
+dein.direct_install({repo}[, {options}])
 		Direct install a plugin without editing the configuration.
 		The arguments are same with |dein#add()|.
 		It installs and sources the plugin.
@@ -191,7 +191,7 @@ dein#direct_install({repo}[, {options}])
 		|dein#get_direct_plugins_path()|.  You can load or edit it. >
 
 		" Try deoplete without the configuration.
-		call dein#direct_install('Shougo/deoplete.nvim')
+		call v:lua.dein.direct_install('Shougo/deoplete.nvim')
 <
 							*dein#disable()*
 dein#disable({plugins})
@@ -211,7 +211,7 @@ dein#end()
 		End dein configuration block.
 		You must not use the plugins in |dein#begin()| block.
 		If you enable |dein.auto_recache|, it executes
-		|dein#recache_runtimepath()| automatically.
+		|dein.recache_runtimepath()| automatically.
 		Note: 'runtimepath' is changed after |dein#end()|.
 
 							*dein.get()*
@@ -237,8 +237,8 @@ dein#get_progress()
 dein#get_updates_log()
 		Print previous update logs.
 
-							*dein#install()*
-dein#install([{plugins}])
+							*dein.install()*
+dein.install([{plugins}])
 		Install the plugins asynchronously.
 		{plugins} is the plugins name list.
 		If you omit it, dein will install all plugins.
@@ -336,13 +336,13 @@ dein#plugins2toml({plugins})
 		Returns the toml configurations for {plugins}
 		{plugins} is the plugins dictionary from |dein#get()|.
 
-							*dein#reinstall()*
-dein#reinstall({plugins})
+							*dein.reinstall()*
+dein.reinstall({plugins})
 		Reinstall the plugins.
 		{plugins} is the plugins name list.
 
-						*dein#remote_plugins()*
-dein#remote_plugins()
+						*dein.remote_plugins()*
+dein.remote_plugins()
 		Load not loaded neovim |remote-plugin| and execute
 		":UpdateRemotePlugins" command.
 		It is better than ":UpdateRemotePlugins" for dein.
@@ -355,8 +355,8 @@ dein#rollback({date}[, {plugins}])
 		{plugins} is the plugins name list.
 		Note: It is the dangerous command.
 
-						*dein#recache_runtimepath()*
-dein#recache_runtimepath()
+						*dein.recache_runtimepath()*
+dein.recache_runtimepath()
 		Re-make the dein runtimepath cache and execute |:helptags|.
 		It is called automatically after the installation.
 
@@ -406,7 +406,7 @@ VARIABLES						*dein-variables*
 
 						*dein.auto_recache*
 dein.auto_recache
-		If you set it to 1, call |dein#recache_runtimepath()|
+		If you set it to 1, call |dein.recache_runtimepath()|
 		automatically if necessary when saving the vimrc, toml file.
 		Note: It reloads your $MYVIMRC.
 
@@ -611,7 +611,7 @@ lazy		(Number)
 		Note: You should not specify the plugins which have no
 		"plugin/" directory as lazy load plugins.  It is meaningless
 		and just increases the overhead.  You can get the no meaning
-		lazy plugins by |dein#check_lazy_plugins()|.
+		lazy plugins by |dein.check_lazy_plugins()|.
 
 							*dein-options-merged*
 merged		(Number)
@@ -1036,10 +1036,10 @@ A: You should not build it manually.  Please use |dein-options-build| feature.
 <
 Q: Where is ":NeoBundleCheck" in dein features?
 
-A: You can use |dein#check_install()|.
+A: You can use |dein.check_install()|.
 >
-	if dein#check_install()
-	  call dein#install()
+	if v:lua.dein.check_install()
+	  call v:lua.dein.install()
 	endif
 <
 Q: I want to disable plugins.
@@ -1071,10 +1071,10 @@ name file.  But you can avoid the problem by |dein-options-merged|.
 Q: How to remove the disabled plugins?
 
 A: You can remove them like below.
-Note: You must call |dein#recache_runtimepath()| after the remove.
+Note: You must call |dein.recache_runtimepath()| after the remove.
 >
-	call map(dein#check_clean(), "delete(v:val, 'rf')")
-	call dein#recache_runtimepath()
+	call map(v:lua.dein.check_clean(), "delete(v:val, 'rf')")
+	lua dein.recache_runtimepath()
 <
 Q: How to use the script functions for hooks feature?
 
@@ -1101,7 +1101,7 @@ Or you can execute the autocmd manually.
 <
 But you must define the autocmd.
 
-Q: I don't want to call |dein#recache_runtimepath()| manually.
+Q: I don't want to call |dein.recache_runtimepath()| manually.
 A: Please specify your vimrc path to |dein#begin()| 2nd argument.
 It detects the vimrc changes.
 >
@@ -1215,7 +1215,7 @@ A: Please use |dein-options-hook_post_update|. >
 	endif
 	'''
 
-Q: Why I need to call |dein#recache_runtimepath()| manually after removing
+Q: Why I need to call |dein.recache_runtimepath()| manually after removing
 plugins?
 https://github.com/Shougo/dein.vim/issues/357
 

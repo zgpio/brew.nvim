@@ -144,7 +144,7 @@ function _check_vimrcs()
 
     if _get_merged_plugins() ~= _load_merged_plugins() then
       _notify('auto recached')
-      vim.fn['dein#recache_runtimepath']()
+      dein.recache_runtimepath()
     end
   end
 
