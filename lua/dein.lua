@@ -63,6 +63,11 @@ function M.get(...)
     return (M._plugins[args[1]] or {})
   end
 end
+function M.update(...)
+  require 'dein/install'
+  local args = {...}
+  return _update((args[1] or {}), 'update', _is_async())
+end
 function load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then
     M._init()

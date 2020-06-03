@@ -40,11 +40,6 @@ function! dein#install(...) abort
   return v:lua._update(get(a:000, 0, []),
         \ 'install', v:lua._is_async())
 endfunction
-function! dein#update(...) abort
-  lua require 'dein/install'
-  return v:lua._update(get(a:000, 0, []),
-        \ 'update', v:lua._is_async())
-endfunction
 function! dein#check_update(...) abort
   lua require 'dein/install'
   return v:lua._update(get(a:000, 0, []),

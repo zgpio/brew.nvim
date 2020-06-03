@@ -25,7 +25,7 @@ Concepts are:
 
 * No Vundle/NeoBundle compatibility
 
-* neovim/Vim8 asynchronous API installation support
+* neovim asynchronous API installation support
 
 * Local plugin support
 
@@ -44,7 +44,7 @@ Refer to the example:
 
 Run this command to update your plugins:
 >
-	:call dein#update()
+	:lua dein.update()
 <
 Note: The plugins are not updated automatically.
 
@@ -82,7 +82,7 @@ Example:
 <
 Now configure your bundles. (Refer to |dein-examples|)
 
-Call |dein#update()| function to install your plugins.
+Call |dein.update()| function to install your plugins.
 >
 If you need vim-plug like install UI, you can use dein-ui.vim.
 https://github.com/wsdjeg/dein-ui.vim
@@ -323,8 +323,8 @@ dein#local({directory}, [{options}, [{names}]])
 		call dein#local("~/.vim/bundle", {},
 		\ ['plugin1', 'plugin2', 'vim-*', '*.vim'])
 <
-							*dein#update()*
-dein#update([{plugins}])
+							*dein.update()*
+dein.update([{plugins}])
 		Install/Update the plugins.
 		{plugins} is the plugins name list.
 		If you omit it, dein will update all plugins.
@@ -1168,7 +1168,7 @@ performance will be bad.
 Q: I want to update from shell.
 
 A: >
-	$ vim -c "try | call dein#update() | finally | qall! | endtry" \
+	$ vim -c "try | call v:lua.dein.update() | finally | qall! | endtry" \
 	-N -u $VIMRC -U NONE -i NONE -V1 -e -s
 
 Q: I want to change the environment variable when build.
@@ -1198,7 +1198,7 @@ Q: I want to update dein.vim from shell command line.
 
 A: Please execute the command line like this. >
 	vim -N -u ~/.vim/init.vim -c \
-	"try | call dein#update() | finally | qall! | endtry" -V1 -es
+	"try | call v:lua.dein.update() | finally | qall! | endtry" -V1 -es
 
 Q: I want to set build conditions.
 

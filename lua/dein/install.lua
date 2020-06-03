@@ -37,42 +37,38 @@ local function iconv(expr, from, to)
   end
 end
 local function init_context(plugins, update_type, async)
-  local context = {}
-  context.update_type = update_type
-  context.async = async
-  context.synced_plugins = {}
-  context.errored_plugins = {}
-  context.processes = {}
-  context.number = 0
-  context.prev_number = -1
-  context.plugins = plugins
-  context.max_plugins = vim.fn.len(context.plugins)
+  local ctx = {}
+  ctx.update_type = update_type
+  ctx.async = async
+  ctx.synced_plugins = {}
+  ctx.errored_plugins = {}
+  ctx.processes = {}
+  ctx.number = 0
+  ctx.prev_number = -1
+  ctx.plugins = plugins
+  ctx.max_plugins = vim.fn.len(ctx.plugins)
   if vim.fn.has('vim_starting')==1 and dein.install_progress_type ~= 'none' then
-    context.progress_type = 'echo'
+    ctx.progress_type = 'echo'
   else
-    context.progress_type = dein.install_progress_type
+    ctx.progress_type = dein.install_progress_type
   end
   if vim.fn.has('vim_starting')==1 and dein.install_message_type ~= 'none' then
-    context.message_type = 'echo'
+    ctx.message_type = 'echo'
   else
-    context.message_type = dein.install_message_type
+    ctx.message_type = dein.install_message_type
   end
-  context.laststatus = vim.o.laststatus
-  context.showtabline = vim.o.showtabline
-  context.tabline = vim.o.tabline
-  context.title = vim.o.title
-  context.titlestring = vim.o.titlestring
-  return context
+  ctx.laststatus = vim.o.laststatus
+  ctx.showtabline = vim.o.showtabline
+  ctx.tabline = vim.o.tabline
+  ctx.title = vim.o.title
+  ctx.titlestring = vim.o.titlestring
+  return ctx
 end
 function _status()
   return vim.v.shell_error
 end
 function _is_async()
-  if dein.install_max_processes > 1 then
-    return 1
-  else
-    return 0
-  end
+  return dein.install_max_processes > 1
 end
 function __convert_args(args)
   local args = iconv(args, vim.o.encoding, 'char')
@@ -488,7 +484,7 @@ local function async_get(async, process)
 end
 local function check_output(context, process)
   local is_timeout, is_skip, status
-  if context.async==1 then
+  if context.async then
     is_timeout, is_skip, status = async_get(process.async, process)
   else
     is_timeout, is_skip, status = false, false, process.status
@@ -617,7 +613,7 @@ local function check_loop(context)
     local plugin = context.plugins[context.number+1]
     __sync(plugin, context)
 
-    if context.async==0 then
+    if context.async==false then
       print_progress_message(
              __get_progress_message(plugin,
                context.number, context.max_plugins))
@@ -1241,7 +1237,7 @@ function _update(plugins, update_type, async)
     plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, plugins)
   end
 
-  if async==1 and vim.fn.empty(__global_context)==0
+  if async and vim.fn.empty(__global_context)==0
     and vim.fn.confirm('The installation has not finished. Cancel now?', "yes\nNo", 2) ~= 1 then
     return
   end
@@ -1262,7 +1258,7 @@ function _update(plugins, update_type, async)
 
   __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 
-  if async==0 or vim.fn.has('vim_starting')==1 then
+  if async==false or vim.fn.has('vim_starting')==1 then
     return update_loop(context)
   end
 
@@ -1282,7 +1278,7 @@ end
 function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
 
-  if context.async==0 then
+  if context.async==false then
     process.output = _system(cmd)
     process.status = _status()
     return process
@@ -1410,7 +1406,7 @@ function __sync(plugin, context)
     return
   end
 
-  if context.async==0 then
+  if context.async==false then
     print_progress_message(message)
   end
 
