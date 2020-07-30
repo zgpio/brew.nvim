@@ -659,8 +659,9 @@ function _end()
   end
 
   dein._block_level = dein._block_level - 1
+  local vim_starting = vim.fn.has('vim_starting')==1
 
-  if vim.fn.has('vim_starting')==0 then
+  if not vim_starting then
     require 'dein/autoload'
     local plugins = vim.tbl_filter(
       function(v)
@@ -680,7 +681,7 @@ function _end()
   end
 
   local depends = {}
-  local sourced = vim.fn.has('vim_starting')==1 and (vim.fn.exists('&loadplugins')==0 or vim.o.loadplugins)
+  local sourced = vim_starting and (vim.fn.exists('&loadplugins')==0 or vim.o.loadplugins)
   local _plugins = dein._plugins
   for _, plugin in ipairs(
     vim.tbl_filter(function (x) return x.lazy==0 and x.sourced==0 and x.rtp~='' end,
@@ -721,7 +722,7 @@ function _end()
     end
   end
 
-  if vim.fn.has('vim_starting')==0 then
+  if not vim_starting then
     _call_hook('add')
     _call_hook('source')
     _call_hook('post_source')

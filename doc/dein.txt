@@ -1,4 +1,4 @@
-*dein.txt*	Dark powered Vim/Neovim plugin manager
+*dein.txt*	Neovim plugin manager powered by Lua
 
 Version: 2.1
 Author:  Shougo <Shougo.Matsu at gmail.com>
@@ -12,8 +12,7 @@ CONTENTS 						*dein-contents*
 ==============================================================================
 INTRODUCTION						*dein-introduction*
 
-*dein* is the dark powered Vim package manager.  It is created from full
-scratch.
+*dein* is the neovim plugin manager.
 
 Concepts are:
 
@@ -52,10 +51,8 @@ Note: The plugins are not updated automatically.
 INSTALL							*dein-install*
 
 Requirements:
-* Vim 8.0 or above or NeoVim.
+* NeoVim.
 * "git" command in $PATH (if you want to install github or vim.org plugins)
-
-Note: If you use Vim 7.4, please use dein.vim ver.1.5 instead.
 
 First of all, git clone the repository.
 
@@ -327,8 +324,7 @@ dein.update([{plugins}])
 		Install/Update the plugins.
 		{plugins} is the plugins name list.
 		If you omit it, dein will update all plugins.
-		Note: If you are using neovim or Vim 8.0+, it runs
-		asynchronously.
+		Note: It runs asynchronously.
 
 							*dein#plugins2toml()*
 dein#plugins2toml({plugins})
