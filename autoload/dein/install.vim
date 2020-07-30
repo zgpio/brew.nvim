@@ -7,10 +7,6 @@ endif
 " call luaeval('dein_log:write(vim.inspect(_A), "\n")', [string(s:Job)])
 " lua dein_log:flush()
 
-func dein#install#_timer_handler(timer)
-  call v:lua._polling()
-endf
-
 function! dein#install#_execute(command) abort
   let s:job_execute.candidates = []
 

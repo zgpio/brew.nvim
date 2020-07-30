@@ -1274,7 +1274,7 @@ function _update(plugins, update_type, async)
     vim.g.__timer=nil
   end
 
-  vim.g.__timer = vim.fn.timer_start(1000, 'dein#install#_timer_handler', {['repeat']=-1})
+  vim.g.__timer = vim.fn.timer_start(1000, _polling, {['repeat']=-1})
 end
 function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
