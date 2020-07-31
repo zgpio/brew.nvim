@@ -1,5 +1,6 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local util = require 'dein/util'
+local Job = require 'dein/job'
 
 -- Global options definition.
 dein.install_max_processes = dein.install_max_processes or 8
@@ -684,6 +685,28 @@ function __done(context)
   end
 end
 
+local job_execute = {}
+function job_execute_on_out(data)
+  for i, line in ipairs(data) do
+    print(line)
+  end
+
+  local candidates = job_execute.candidates
+  if vim.fn.empty(candidates)==1 then
+    table.insert(candidates, data[1])
+  else
+    -- TODO How to access the last element of the list
+    candidates[#candidates] = candidates[#candidates] .. data[1]
+  end
+  vim.list_extend(candidates, slice(data, 2))
+end
+function _execute(command)
+  job_execute.candidates = {}  -- list
+
+  local job = Job:start(__convert_args(command), {on_stdout=job_execute_on_out})
+
+  return job:wait(dein.install_process_timeout * 1000)
+end
 function _each(cmd, plugins)
   local plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, _get_plugins(plugins))
 
@@ -699,7 +722,7 @@ function _each(cmd, plugins)
       for _, plugin in ipairs(plugins) do
         _cd(plugin.path)
 
-        if vim.fn['dein#install#_execute'](cmd)~=0 then
+        if _execute(cmd)~=0 then
           error = 1
         end
       end
