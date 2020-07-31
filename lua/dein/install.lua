@@ -14,6 +14,7 @@ local __global_context = {}
 local var_log = {}
 local var_updates_log = {}
 local __progress = ''
+local __timer
 
 local function init_variables(context)
   __progress = ''
@@ -679,9 +680,9 @@ function __done(context)
       autocmd!
     augroup END
   ]], false)
-  if vim.fn.exists('g:__timer')==1 then
-    vim.fn.timer_stop(vim.g.__timer)
-    vim.g.__timer = nil
+  if __timer then
+    vim.fn.timer_stop(__timer)
+    __timer = nil
   end
 end
 
@@ -1292,12 +1293,12 @@ function _update(plugins, update_type, async)
     augroup END
   ]], false)
 
-  if vim.fn.exists('g:__timer')==1 then
-    vim.fn.timer_stop(vim.g.__timer)
-    vim.g.__timer=nil
+  if __timer then
+    vim.fn.timer_stop(__timer)
+    __timer = nil
   end
 
-  vim.g.__timer = vim.fn.timer_start(1000, _polling, {['repeat']=-1})
+  __timer = vim.fn.timer_start(1000, _polling, {['repeat']=-1})
 end
 function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()

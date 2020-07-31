@@ -1,18 +1,18 @@
-*dein.txt*	Neovim plugin manager powered by Lua
+*brew.txt*	Neovim plugin manager powered by Lua
 
-Version: 2.1
-Author:  Shougo <Shougo.Matsu at gmail.com>
+Version: 0.1
+Author:  zgpio <zgpio@qq.com>
 License: MIT license
 
 ==============================================================================
-CONTENTS 						*dein-contents*
+CONTENTS 						*brew-contents*
 
                                       Type |gO| to see the table of contents.
 
 ==============================================================================
-INTRODUCTION						*dein-introduction*
+INTRODUCTION						*brew-introduction*
 
-*dein* is the neovim plugin manager.
+*brew* is the neovim plugin manager.
 
 Concepts are:
 
@@ -21,8 +21,6 @@ Concepts are:
 * No commands, Functions only to simplify the implementation
 
 * Easy to test and maintain
-
-* No Vundle/NeoBundle compatibility
 
 * neovim asynchronous API installation support
 
@@ -36,54 +34,41 @@ Concepts are:
 
 
 ==============================================================================
-USAGE							*dein-usage*
+USAGE							*brew-usage*
 
 Refer to the example:
-|dein-examples|
+|brew-examples|
 
 Run this command to update your plugins:
 >
-	:lua dein.update()
+	:lua brew.update()
 <
 Note: The plugins are not updated automatically.
 
 ==============================================================================
-INSTALL							*dein-install*
+INSTALL							*brew-install*
 
 Requirements:
 * NeoVim.
-* "git" command in $PATH (if you want to install github or vim.org plugins)
+* "git" command in $PATH
 
-First of all, git clone the repository.
-
-Note: You must define the installation directory before to use dein.  It
-depends on your usage.
-For example, "~/.vim/bundles" or "~/.cache/dein" or "~/.local/share/dein".
-dein.vim does not define the default installation directory.
-You must not set the installation directory under "~/.vim/plugin" or
-"~/.config/nvim/plugin".
-
-Note: You need to have git installed.
+Step 1. git clone the repository.
 >
-	$ mkdir -p ~/.vim/bundle/repos/github.com/Shougo/dein.vim
-	$ git clone https://github.com/Shougo/dein.vim \
-	~/.vim/bundle/repos/github.com/Shougo/dein.vim
+	$ mkdir -p ~/.vim/bundle/repos/github.com/zgpio/brew.nvim
+	$ git clone https://github.com/zgpio/brew.vim \
+	    ~/.vim/bundle/repos/github.com/zgpio/brew.vim
 <
-And set up a path to the repository directory.
+Step 2. Add it to nvim runtimepath.
 >
-	set runtimepath+={path to dein directory}
+	set runtimepath+={path to brew directory}
 <
-Example:
->
-	set runtimepath+=~/.vim/bundle/repos/github.com/Shougo/dein.vim
-<
-Now configure your bundles. (Refer to |dein-examples|)
+Step 3. Configure your plugins. (Refer to |brew-examples|)
 
-Call |dein.update()| function to install your plugins.
->
-If you need vim-plug like install UI, you can use dein-ui.vim.
-https://github.com/wsdjeg/dein-ui.vim
+Call |brew.update()| function to install your plugins.
 
+Note: brew.nvim does not define the default installation directory.
+Recommended installation location:
+	"~/.vim/bundles" or "~/.cache/brew" or "~/.local/share/brew".
 
 ==============================================================================
 INTERFACE						*dein-interface*
@@ -937,28 +922,6 @@ TOML							*dein-toml*
 		'''
 
 ==============================================================================
-UNITE SOURCES						*dein-unite-sources*
-
-Here let me explain about a source for |unite| provided in dein.
-
-						*dein-unite-source-dein*
-dein
-		Nominates dein plugins as candidates.
-
-		Note:
-		If argument is bang(!), print plugins status.
-
-						*dein-unite-source-dein_log*
-dein_log
-		Print previous dein install logs.
-		And you can jump the diff URI in github.
-
-		If argument 1 is "!", the updated logs are displayed.
-
-		Source arguments:
-		1. "!"
-
-==============================================================================
 DENITE SOURCES						*dein-denite-sources*
 
 Here let me explain about a source for |denite| provided in dein.
@@ -980,9 +943,6 @@ dein/log
 ==============================================================================
 EXAMPLES						*dein-examples*
 >
-	if &compatible
-	  set nocompatible
-	endif
 	set runtimepath+={path to dein.vim directory}
 
 	if dein.load_state({path to plugin base path directory})
@@ -990,11 +950,7 @@ EXAMPLES						*dein-examples*
 
 	  dein.add({path to dein.vim directory})
 	  dein.add('Shougo/deoplete.nvim')
-	  if !has('nvim')
-	    dein.add('roxma/nvim-yarp')
-	    dein.add('roxma/vim-hug-neovim-rpc')
-	  endif
-	  ...
+	  " ...
 
 	  lua dein.end()
 	  lua dein.save_state()

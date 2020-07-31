@@ -1,6 +1,7 @@
 # brew.nvim
 
 TODO: Build Status
+
 NOTE: Under development, some features are broken
 
 brew.nvim is a Neovim plugin manager, rewrite dein with neovim builtin lua.
@@ -64,7 +65,7 @@ syntax enable
 3. Open nvim and install brew
 
 ```vim
-:call brew#install()
+:lua dein.install()
 ```
 
 ## Features
@@ -74,8 +75,6 @@ syntax enable
 - No commands, Functions only to simplify the implementation
 
 - Easy to test and maintain
-
-- No Vundle/NeoBundle compatibility
 
 - neovim asynchronous API installation support
 
