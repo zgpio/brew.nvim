@@ -98,7 +98,31 @@ function clear_runtimepath()
     vim.fn.mkdir(runtimepath, 'p')
   end
 end
-function __updates_log(msg)
+local function append_log_file(msg)
+  local fn = dein.install_log_filename
+  if not fn or fn=='' then
+    return
+  end
+  local logfile = _expand(fn)
+
+  -- Appends to log file.
+  if vim.fn.filereadable(logfile)==1 then
+    vim.fn.writefile(msg, logfile, 'a')
+    return
+  end
+
+  local dir = vim.fn.fnamemodify(logfile, ':h')
+  if vim.fn.isdirectory(dir)==0 then
+    vim.fn.mkdir(dir, 'p')
+  end
+  vim.fn.writefile(msg, logfile)
+end
+local function log(msg)
+  local msg = _convert2list(msg)
+  table.insert(var_log, msg)
+  append_log_file(msg)
+end
+local function __updates_log(msg)
   local msg = _convert2list(msg)
 
   table.insert(var_updates_log, msg)
@@ -172,25 +196,6 @@ function _load_rollback(rollbackfile, plugins)
 
   _recache_runtimepath()
   ERROR('Rollback to '..vim.fn.fnamemodify(rollbackfile, ':t')..' version.')
-end
-local function append_log_file(msg)
-  local fn = dein.install_log_filename
-  if not fn or fn=='' then
-    return
-  end
-  local logfile = _expand(fn)
-
-  -- Appends to log file.
-  if vim.fn.filereadable(logfile)==1 then
-    vim.fn.writefile(msg, logfile, 'a')
-    return
-  end
-
-  local dir = vim.fn.fnamemodify(logfile, ':h')
-  if vim.fn.isdirectory(dir)==0 then
-    vim.fn.mkdir(dir, 'p')
-  end
-  vim.fn.writefile(msg, logfile)
 end
 local function merge_files(plugins, directory)
   local files = {}
@@ -404,11 +409,6 @@ end
 local function get_plugin_message(plugin, number, max, message)
   return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) |%-20s| %s',
          number, max, plugin.name, message)
-end
-local function log(msg)
-  local msg = _convert2list(msg)
-  table.insert(var_log, msg)
-  append_log_file(msg)
 end
 
 local function lock_revision(process, context)
@@ -1477,6 +1477,10 @@ if _TEST then
   M._truncate_skipping = truncate_skipping
   M.__echo_mode = __echo_mode
   M._var_updates_log = var_updates_log
+  M.__updates_log = __updates_log
+  M._var_log = var_log
+  M._append_log_file = append_log_file
+  M._log = log
 end
 
 return M
