@@ -443,12 +443,12 @@ end
 local function async_get(async, process)
   -- Check job status
   local status = -1
-  if vim.g.job_pool[process.job+1].exitval then
+  if process.job.__exitval then
     async.eof = 1
-    status = vim.g.job_pool[process.job+1].exitval
+    status = process.job.__exitval
   end
 
-  local candidates = vim.g.job_pool[process.job+1].candidates or {}
+  local candidates = process.job.candidates or {}
   local output
   if async.eof==1 then
     output = vim.fn.join(candidates, "\n")
@@ -477,7 +477,7 @@ local function async_get(async, process)
   end
 
   if is_timeout then
-    vim.fn['dein#job#_job_stop'](process.job+1)
+    process.job:stop()
     status = -1
   end
 
@@ -1309,7 +1309,9 @@ function __init_job(process, context, cmd)
   end
 
   process.async = {eof=0}
-  process = vim.fn['dein#install#__init_job'](process, context, cmd)
+  process.job = Job:start(__convert_args(cmd), {})
+  process.job.candidates = {}
+  process.id = process.job.pid
   return process
 end
 function _remote_plugins()
