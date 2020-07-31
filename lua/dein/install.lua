@@ -1,6 +1,7 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local util = require 'dein/util'
 local Job = require 'dein/job'
+local M = {}
 
 -- Global options definition.
 dein.install_max_processes = dein.install_max_processes or 8
@@ -72,7 +73,7 @@ end
 function _is_async()
   return dein.install_max_processes > 1
 end
-function __convert_args(args)
+local function __convert_args(args)
   local args = iconv(args, vim.o.encoding, 'char')
   if not vim.tbl_islist(args) then
     local rv = vim.api.nvim_eval('split(&shell) + split(&shellcmdflag)')
@@ -97,6 +98,13 @@ function clear_runtimepath()
     vim.fn.mkdir(runtimepath, 'p')
   end
 end
+function __updates_log(msg)
+  local msg = _convert2list(msg)
+
+  table.insert(var_updates_log, msg)
+  log(msg)
+end
+
 local function ERROR(msg)
   local msg = _convert2list(msg)
   if vim.fn.empty(msg)==1 then
@@ -108,9 +116,9 @@ local function ERROR(msg)
 end
 
 function _system(command)
-  -- Todo: use job API instead for Vim8/neovim only
-  -- let job = s:Job.start()
-  -- let exitval = job.wait()
+  -- Todo: use job API instead
+  -- local job = Job:start()
+  -- local exitval = job:wait()
 
   local command = iconv(command, vim.o.encoding, 'char')
   local output = iconv(vim.fn.system(command), 'char', vim.o.encoding)
@@ -1118,13 +1126,6 @@ function __notify(msg)
   __progress = vim.fn.join(msg, "\n")
 end
 
-function __updates_log(msg)
-  local msg = _convert2list(msg)
-
-  table.insert(var_updates_log, msg)
-  log(msg)
-end
-
 local function strwidthpart(str, width)
   if width <= 0 then
     return ''
@@ -1155,16 +1156,12 @@ local function strwidthpart_reverse(str, width)
 end
 local function truncate_skipping(str, max, footer_width, separator)
   local width = vim.fn.strwidth(str)
-  local ret
   if width <= max then
-    ret = str
+    return str
   else
     local header_width = max - vim.fn.strwidth(separator) - footer_width
-    ret = strwidthpart(str, header_width) .. separator
-           .. strwidthpart_reverse(str, footer_width)
+    return strwidthpart(str, header_width) .. separator .. strwidthpart_reverse(str, footer_width)
   end
-
-  return ret
 end
 function __echo_mode(m, mode)
   for _, m in ipairs(vim.fn.split(m, [[\r\?\n]], 1)) do
@@ -1472,3 +1469,14 @@ end
 function _get_log()
   return var_log
 end
+
+if _TEST then
+  M.__convert_args = __convert_args
+  M._strwidthpart = strwidthpart
+  M._strwidthpart_reverse = strwidthpart_reverse
+  M._truncate_skipping = truncate_skipping
+  M.__echo_mode = __echo_mode
+  M._var_updates_log = var_updates_log
+end
+
+return M
