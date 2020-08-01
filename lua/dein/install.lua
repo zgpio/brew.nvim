@@ -790,23 +790,22 @@ local function helptags()
     }
   }
 end
-local function install_async(context)
-  if vim.fn.empty(context)==1 then
+local function install_async(ctx)
+  if vim.fn.empty(ctx)==1 then
     return
   end
 
-  check_loop(context)
+  check_loop(ctx)
 
-  if vim.fn.empty(context.processes)==1 and context.number == context.max_plugins then
-    __done(context)
-  elseif context.number ~= context.prev_number and context.number < vim.fn.len(context.plugins) then
-    local plugin = context.plugins[context.number+1]
-    print_progress_message(__get_progress_message(plugin,
-             context.number, context.max_plugins))
-    context.prev_number = context.number
+  if vim.fn.empty(ctx.processes)==1 and ctx.number == ctx.max_plugins then
+    __done(ctx)
+  elseif ctx.number ~= ctx.prev_number and ctx.number < vim.fn.len(ctx.plugins) then
+    local plugin = ctx.plugins[ctx.number+1]
+    print_progress_message(__get_progress_message(plugin, ctx.number, ctx.max_plugins))
+    ctx.prev_number = ctx.number
   end
 
-  return vim.fn.len(context.errored_plugins), context
+  return vim.fn.len(ctx.errored_plugins), ctx
 end
 local function update_loop(context)
   local errored = 0
@@ -1280,7 +1279,7 @@ function _update(plugins, update_type, async)
 
   __notify(vim.fn.strftime('Update started: (%Y/%m/%d %H:%M:%S)'))
 
-  if async==false or vim.fn.has('vim_starting')==1 then
+  if not async or vim.fn.has('vim_starting')==1 then
     return update_loop(context)
   end
 
@@ -1300,7 +1299,7 @@ end
 function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
 
-  if context.async==false then
+  if not context.async then
     process.output = _system(cmd)
     process.status = _status()
     return process
@@ -1481,6 +1480,10 @@ if _TEST then
   M._var_log = var_log
   M._append_log_file = append_log_file
   M._log = log
+  M._iconv = iconv
+  M._ERROR = ERROR
+  M._get_sync_command = get_sync_command
+  M._copy_directories = _copy_directories
 end
 
 return M
