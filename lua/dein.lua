@@ -126,9 +126,6 @@ end
 function M.get_direct_plugins_path()
   return (dein.cache_directory or dein._base_path).."/direct_install.vim"
 end
-function M.load_state(path, ...)
-  return load_state(path, {...})
-end
 function M.begin(path, ...)
   require 'dein/util'
   local args = {...}
@@ -218,11 +215,11 @@ function M.call_hook(hook_name, ...)
   require 'dein/util'
   return _call_hook(hook_name, {...})
 end
-function load_state(path, ...)
+function M.load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then
     M._init()
   end
-  local args = ...
+  local args = {...}
   local sourced
   if #args > 0 then
     sourced = args[1]
