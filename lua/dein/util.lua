@@ -36,7 +36,7 @@ function _is_powershell()
 end
 function _error(msg)
   for _, mes in ipairs(__msg2list(msg)) do
-    vim.api.nvim_command(string.format("echohl WarningMsg | echomsg '[dein] %s' | echohl None", mes))
+    a.nvim_command(string.format("echohl WarningMsg | echomsg '[dein] %s' | echohl None", mes))
   end
 end
 
@@ -397,9 +397,9 @@ end
 function M._error(msg)
   for i, mes in ipairs(msg2list(msg)) do
     local c = string.format('echomsg "[dein] %s"', mes)
-    vim.api.nvim_command('echohl WarningMsg')
-    vim.api.nvim_command(c)
-    vim.api.nvim_command('echohl None')
+    a.nvim_command('echohl WarningMsg')
+    a.nvim_command(c)
+    a.nvim_command('echohl None')
   end
 end
 function _split_rtp(rtp)
@@ -548,7 +548,7 @@ function _begin(path, vimrcs)
   end
 
   -- Reset variables
-  vim.api.nvim_exec([[
+  a.nvim_exec([[
     lua dein._plugins = {}
     lua dein._event_plugins = {}
     lua dein._ftplugin = {}
@@ -573,16 +573,16 @@ function _begin(path, vimrcs)
   -- Filetype off
   if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
     dein._off1 = 'filetype off'
-    vim.api.nvim_command(dein._off1)
+    a.nvim_command(dein._off1)
   end
   if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
     dein._off2 = 'filetype plugin indent off'
-    vim.api.nvim_command(dein._off2)
+    a.nvim_command(dein._off2)
   end
 
   if vim.fn.has('vim_starting')==0 then
-    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path))
-    vim.api.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path..'/after'))
+    a.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path))
+    a.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path..'/after'))
   end
 
   -- Insert dein runtimepath to the head in 'runtimepath'.
@@ -715,7 +715,7 @@ function _end()
   for event, plugins in pairs(_event_plugins) do
     if vim.fn.exists('##'..event) then
       local t = event .. ' *'
-      vim.api.nvim_command(
+      a.nvim_command(
         vim.fn.printf('autocmd dein-events %s lua _on_event("%s", %s)',
         t, event, vim.inspect(plugins))
       )
