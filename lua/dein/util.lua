@@ -121,6 +121,19 @@ function _check_clean()
   )
 end
 
+local function _get_merged_plugins()
+  local ftplugin_len = 0
+  local _ftplugin = dein._ftplugin
+  for _, ftplugin in ipairs(vim.tbl_values(_ftplugin)) do
+    ftplugin_len = ftplugin_len + #ftplugin
+  end
+  local _plugins = dein._plugins
+  local r1 = {dein._merged_format, vim.fn.string(ftplugin_len)}
+  local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), dein._merged_format))
+  vim.list_extend(r1, r2)
+  return r1
+end
+
 function _check_vimrcs()
   local time = vim.fn.getftime(_get_runtime_path())
   local ret = vim.tbl_isempty(vim.tbl_filter(
@@ -631,18 +644,6 @@ function _load_merged_plugins()
   local t = a.nvim_eval(merged[#merged])
   vim.list_extend(h, t)
   return h
-end
-function _get_merged_plugins()
-  local ftplugin_len = 0
-  local _ftplugin = dein._ftplugin
-  for _, ftplugin in ipairs(vim.tbl_values(_ftplugin)) do
-    ftplugin_len = ftplugin_len + #ftplugin
-  end
-  local _plugins = dein._plugins
-  local r1 = {dein._merged_format, vim.fn.string(ftplugin_len)}
-  local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), dein._merged_format))
-  vim.list_extend(r1, r2)
-  return r1
 end
 
 function _chomp(str)
