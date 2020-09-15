@@ -39,7 +39,7 @@ function M._init()
     and HOME ~= vim.fn.expand('~'..USER)
     and HOME == vim.fn.expand('~'..SUDO_USER))
 
-  vim.api.nvim_exec([[
+  a.nvim_exec([[
     augroup dein
       autocmd!
       autocmd FuncUndefined * call luaeval("require'dein/autoload'._on_func(_A)", expand('<afile>'))
@@ -234,7 +234,7 @@ function M.load_state(path, ...)
   if vim.fn.filereadable(state)==0 then return 1 end
   try {
     function()
-      vim.api.nvim_command('source ' .. vim.fn.fnameescape(state))
+      a.nvim_command('source ' .. vim.fn.fnameescape(state))
     end,
     catch {
       function(error)
@@ -285,7 +285,7 @@ function is_sourced(name)
   local _plugins = M._plugins
   return _plugins.name~=nil
     and vim.fn.isdirectory(_plugins[name].path)==1
-    and _plugins[name].sourced==1
+    and _plugins[name].sourced
 end
 dein = M
 return M

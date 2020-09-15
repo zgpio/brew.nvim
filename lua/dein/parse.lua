@@ -34,7 +34,7 @@ function _add(repo, options)
   local _plugins = dein._plugins
   local plugin = _dict(_init(repo, options))
   if (_plugins[plugin.name]~=nil
-        and _plugins[plugin.name].sourced==1)
+        and _plugins[plugin.name].sourced)
         or (plugin['if'] or 1)==0 then
     -- Skip already loaded or not enabled plugin.
     return {}
@@ -45,7 +45,7 @@ function _add(repo, options)
   end
 
   if _plugins[plugin.name]~=nil and _plugins[plugin.name].sourced==1 then
-    plugin.sourced = 1
+    plugin.sourced = true
   end
   _plugins[plugin.name] = plugin
   if plugin['hook_add']~=nil then
@@ -199,7 +199,7 @@ function merge_ftplugin(ftplugin)
 end
 
 function _dict(plug)
-  plugin = vim.tbl_extend('force', { rtp='', sourced=0 }, plug)
+  plugin = vim.tbl_extend('force', { rtp='', sourced=false }, plug)
 
   if plugin.name == nil then
     plugin.name = _name_conversion(plugin.repo)

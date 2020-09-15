@@ -1018,7 +1018,7 @@ function _reinstall(plugins)
   for _, plugin in ipairs(plugins) do
     repeat
       -- Remove the plugin
-      if plugin.type == 'none' or (plugin['local'] or 0)==1 or (plugin.sourced==1 and vim.fn.index({'dein'}, plugin.normalized_name) >= 0) then
+      if plugin.type == 'none' or (plugin['local'] or 0)==1 or (plugin.sourced and vim.fn.index({'dein'}, plugin.normalized_name) >= 0) then
         _error(vim.fn.printf('|%s| Cannot reinstall the plugin!', plugin.name))
         break
       end
@@ -1324,7 +1324,7 @@ function _remote_plugins()
 
   -- Load not loaded neovim remote plugins
   local remote_plugins = vim.tbl_filter(
-    function(v) return vim.fn.isdirectory(v.rtp .. '/rplugin')==1 and v.sourced==0 end,
+    function(v) return vim.fn.isdirectory(v.rtp .. '/rplugin')==1 and not v.sourced end,
     vim.tbl_values(dein.get()))
 
   require 'dein/autoload'

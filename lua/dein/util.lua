@@ -174,7 +174,7 @@ function _save_cache(vimrcs, is_state, is_starting)
 
   for _, plugin in ipairs(vim.tbl_values(plugins)) do
     if is_state == 0 then
-      plugin.sourced = 0
+      plugin.sourced = false
     end
     if plugin['orig_opts'] ~= nil then
       plugin['orig_opts'] = nil
@@ -208,7 +208,7 @@ function _call_hook(hook_name, ...)
   local plugins = vim.tbl_filter(
     function(x)
       return ((hook_name ~= 'source' and hook_name ~= 'post_source')
-        or x.sourced==1) and x[hook] ~= nil and vim.fn.isdirectory(x.path)==1
+        or x.sourced) and x[hook] ~= nil and vim.fn.isdirectory(x.path)==1
     end,
     _get_plugins(t)
   )
@@ -238,7 +238,7 @@ function _get_lazy_plugins()
   -- table.filter  https://gist.github.com/FGRibreau/3790217
   local rv = {}
   for _, t in ipairs(plugins) do
-    if t.sourced == 0 and t.rtp ~= '' then
+    if not t.sourced and t.rtp ~= '' then
       table.insert(rv, t)
     end
   end
@@ -666,7 +666,7 @@ function _end()
     require 'dein/autoload'
     local plugins = vim.tbl_filter(
       function(v)
-        return v.lazy==0 and v.sourced==0 and v.rtp ~= ''
+        return v.lazy==0 and not v.sourced and v.rtp ~= ''
       end,
       vim.tbl_values(dein._plugins)
     )
@@ -685,7 +685,7 @@ function _end()
   local sourced = vim_starting and (vim.fn.exists('&loadplugins')==0 or vim.o.loadplugins)
   local _plugins = dein._plugins
   for _, plugin in ipairs(
-    vim.tbl_filter(function (x) return x.lazy==0 and x.sourced==0 and x.rtp~='' end,
+    vim.tbl_filter(function (x) return x.lazy==0 and not x.sourced and x.rtp~='' end,
       vim.tbl_values(_plugins))) do
     -- Load dependencies
     if plugin['depends'] ~= nil then

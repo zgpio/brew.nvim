@@ -101,7 +101,7 @@ function _source(...)
 
   local sourced = {}
   for _, plugin in ipairs(plugins) do
-    if not vim.tbl_isempty(plugin) and plugin.sourced==0 and plugin.rtp ~= '' then
+    if not vim.tbl_isempty(plugin) and not plugin.sourced and plugin.rtp ~= '' then
       source_plugin(_plugins, rtps, index, plugin, sourced)
     end
   end
@@ -156,7 +156,7 @@ function _source(...)
 end
 --@param plugins plugin name list
 function _on_event(event, plugins)
-  local lazy_plugins = vim.tbl_filter(function(v) return v.sourced==0 end, _get_plugins(plugins))
+  local lazy_plugins = vim.tbl_filter(function(v) return not v.sourced end, _get_plugins(plugins))
   if vim.tbl_isempty(lazy_plugins) then
     a.nvim_command('autocmd! dein-events ' ..event)
     return
@@ -287,7 +287,7 @@ end
 -- TODO: review
 -- NOTE: 不访问全局变量
 function source_plugin(plugins, rtps, index, plugin, sourced)
-  if plugin.sourced == 1 or vim.tbl_contains(sourced, plugin) then
+  if plugin.sourced or vim.tbl_contains(sourced, plugin) then
     return
   end
 
@@ -305,10 +305,10 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
     end
   end
 
-  plugin.sourced = 1
+  plugin.sourced = true
 
   local lazy_plugins = vim.tbl_filter(
-    function(v) return v.sourced == 0 and v.rtp ~= '' end,
+    function(v) return not v.sourced and v.rtp ~= '' end,
     vim.tbl_values(plugins)
   )
   local sources = vim.tbl_filter(
