@@ -349,7 +349,7 @@ function _save_state(is_starting)
     (dein.cache_directory or dein._base_path) ..'/state_' .. dein._progname .. '.vim')
 end
 function _writefile(path, list)
-  if dein._is_sudo == 1 or (vim.fn.filewritable(_get_cache_path())==0) then
+  if dein._is_sudo or (vim.fn.filewritable(_get_cache_path())==0) then
     return 1
   end
 

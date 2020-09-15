@@ -26,7 +26,7 @@ function _init(repo, options)
   plugin = vim.tbl_extend('force', plugin, options)
   plugin.repo = repo
   if vim.fn.empty(options)==0 then
-    plugin.orig_opts = vim.fn.deepcopy(options)
+    plugin.orig_opts = vim.deepcopy(options)
   end
   return plugin
 end
@@ -240,7 +240,7 @@ function _dict(plug)
     plugin.rtp = _expand(plugin.rtp)
   end
   plugin.rtp = _chomp(plugin.rtp)
-  if dein._is_sudo==1 and not (plugin.trusted==1) then
+  if dein._is_sudo and not (plugin.trusted==1) then
     plugin.rtp = ''
   end
 
