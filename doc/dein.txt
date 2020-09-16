@@ -228,7 +228,7 @@ dein.install([{plugins}])
 							*dein.is_sourced()*
 dein.is_sourced({plugin-name})
 		Return non-zero if {plugin-name} exists and is sourced.
-		See |dein.source()| and |dein#tap()| as well.
+		See |dein.source()| and |dein.tap()| as well.
 
 							*dein.load_dict()*
 dein.load_dict({dict}, [{options}])
@@ -375,8 +375,8 @@ dein.source([{plugins}])
 		{plugins} is the plugins name list.
 		If you omit it, dein will source all plugins.
 
-							*dein#tap()*
-dein#tap({plugin-name})
+							*dein.tap()*
+dein.tap({plugin-name})
 		Return non-zero if {plugin-name} exists and isn't
 		disabled.
 		It initializes |g:dein#name| and |dein.plugin| variables.
@@ -481,7 +481,7 @@ dein.install_log_filename
                                                                  *g:dein#name*
 g:dein#name
 		Current plugin name.
-		You can only use it in |dein#tap()| block.
+		You can only use it in |dein.tap()| block.
 		Note: The variable is deprecated.
 
 						*dein.notification_icon*
@@ -500,7 +500,7 @@ dein.notification_time
 							*dein.plugin*
 dein.plugin
 		Current plugin.
-		You can use it in |dein#tap()| block or |dein-hooks|.
+		You can use it in |dein.tap()| block or |dein-hooks|.
 
 						*dein.types_git_clone_depth*
 dein.types_git_clone_depth

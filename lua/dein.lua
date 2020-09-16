@@ -273,7 +273,7 @@ function load_cache_raw(vimrcs)
   return {vim.fn.json_decode(list[2]), vim.fn.json_decode(list[3])}
 end
 
-function tap(name)
+function M.tap(name)
   local _plugins = M._plugins
   if _plugins.name==nil or vim.fn.isdirectory(_plugins[name].path)==0 then
     return 0
