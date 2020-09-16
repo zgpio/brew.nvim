@@ -281,7 +281,7 @@ function tap(name)
   M.plugin = _plugins[name]
   return 1
 end
-function is_sourced(name)
+function M.is_sourced(name)
   local _plugins = M._plugins
   return _plugins.name~=nil
     and vim.fn.isdirectory(_plugins[name].path)==1

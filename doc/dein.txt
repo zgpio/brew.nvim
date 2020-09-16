@@ -225,8 +225,8 @@ dein.install([{plugins}])
 		{plugins} is the plugins name list.
 		If you omit it, dein will install all plugins.
 
-							*dein#is_sourced()*
-dein#is_sourced({plugin-name})
+							*dein.is_sourced()*
+dein.is_sourced({plugin-name})
 		Return non-zero if {plugin-name} exists and is sourced.
 		See |dein.source()| and |dein#tap()| as well.
 
