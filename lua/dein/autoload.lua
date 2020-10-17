@@ -1,6 +1,7 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 require 'dein/util'
 local a = vim.api
+local C = vim.api.nvim_command
 local M = {}
 
 dein_log = io.open(vim.fn.expand('~/pmlog.txt'), 'a+')
@@ -9,7 +10,7 @@ function _dummy_complete(arglead, cmdline, cursorpos)
   local exists = vim.fn.exists(':'..command)
   if exists == 2 then
     -- Remove the dummy command.
-    a.nvim_command('silent! delcommand ' ..command)
+    C('silent! delcommand ' ..command)
   end
 
   -- Load plugins
@@ -116,7 +117,7 @@ function _source(...)
     for _, directory in ipairs({'plugin', 'after/plugin'}) do
       if vim.fn.isdirectory(plugin.rtp..'/'..directory)==1 then
         for _, file in ipairs(_globlist(plugin.rtp..'/'..directory..'/**/*.vim')) do
-          a.nvim_command('source ' .. vim.fn.fnameescape(file))
+          C('source ' .. vim.fn.fnameescape(file))
         end
       end
     end
@@ -125,15 +126,15 @@ function _source(...)
       local augroup = (plugin.augroup or plugin.normalized_name)
       if vim.fn.exists('#'..augroup..'#VimEnter')==1 then
         local c = 'silent doautocmd '.. augroup.. ' VimEnter'
-        a.nvim_command(c)
+        C(c)
       end
       if vim.fn.has('gui_running')==1 and vim.o.term == 'builtin_gui' and vim.fn.exists('#'..augroup..'#GUIEnter') then
         local c = 'silent doautocmd '.. augroup.. ' GUIEnter'
-        a.nvim_command(c)
+        C(c)
       end
       if vim.fn.exists('#'..augroup..'#BufRead')==1 then
         local c = 'silent doautocmd '.. augroup.. ' BufRead'
-        a.nvim_command(c)
+        C(c)
       end
     end
   end
@@ -147,7 +148,7 @@ function _source(...)
 
   if (is_reset==1 or filetype_before ~= filetype_after) and vim.o.ft ~= '' then
     -- Recall FileType autocmd
-    a.nvim_command('let &filetype = &filetype')
+    C('let &filetype = &filetype')
   end
 
   if vim.fn.has('vim_starting')==0 then
@@ -158,7 +159,7 @@ end
 function _on_event(event, plugins)
   local lazy_plugins = vim.tbl_filter(function(v) return not v.sourced end, _get_plugins(plugins))
   if vim.tbl_isempty(lazy_plugins) then
-    a.nvim_command('autocmd! dein-events ' ..event)
+    C('autocmd! dein-events ' ..event)
     return
   end
 
@@ -235,12 +236,12 @@ function source_events(event, plugins)
   else
     if vim.fn.exists('#BufReadCmd')==1 and event == 'BufNew' then
       -- For BufReadCmd plugins
-      a.nvim_command('silent doautocmd <nomodeline> BufReadCmd')
+      C('silent doautocmd <nomodeline> BufReadCmd')
     end
     if vim.fn.exists('#' .. event)==1 and prev_autocmd ~= new_autocmd then
-      a.nvim_command('doautocmd <nomodeline> ' .. event)
+      C('doautocmd <nomodeline> ' .. event)
     elseif vim.fn.exists('#User#' .. event)==1 then
-      a.nvim_command('doautocmd <nomodeline> User ' ..event)
+      C('doautocmd <nomodeline> User ' ..event)
     end
   end
 end
@@ -248,15 +249,15 @@ function reset_ftplugin()
   local filetype_state = vim.fn.execute('filetype')
 
   if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
-    a.nvim_command('filetype plugin indent off')
+    C('filetype plugin indent off')
   end
 
   if string.find(filetype_state, 'plugins:ON') then
-    a.nvim_command('silent! filetype plugin on')
+    C('silent! filetype plugin on')
   end
 
   if string.find(filetype_state, 'indent:ON') then
-    a.nvim_command('silent! filetype indent on')
+    C('silent! filetype indent on')
   end
 end
 
@@ -324,14 +325,14 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
 
   if plugin['dummy_commands'] ~= nil then
     for _, command in ipairs(plugin.dummy_commands) do
-      a.nvim_command('silent! delcommand '..command[1])
+      C('silent! delcommand '..command[1])
     end
     plugin.dummy_commands = {}
   end
 
   if plugin['dummy_mappings'] ~= nil then
     for _, map in ipairs(plugin.dummy_mappings) do
-      a.nvim_command('silent! '..map[1]..'unmap '..map[2])
+      C('silent! '..map[1]..'unmap '..map[2])
     end
     plugin.dummy_mappings = {}
   end
@@ -392,7 +393,7 @@ function _on_map(mapping, name, mode)
 
   if mode == 'o' and vim.v.operator == 'c' then
     -- Note: This is the dirty hack.
-    a.nvim_command(mapargrec(mapping .. input, mode):match(':<C%-U>(.*)<CR>'))
+    C(mapargrec(mapping .. input, mode):match(':<C%-U>(.*)<CR>'))
   else
     while mapping:find('<[%a%d_-]+>') do
       -- ('<LeaDer>'):gsub('<[lL][eE][aA][dD][eE][rR]>', vim.g.mapleader)

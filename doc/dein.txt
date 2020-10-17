@@ -326,7 +326,6 @@ dein.remote_plugins()
 		Load not loaded neovim |remote-plugin| and execute
 		":UpdateRemotePlugins" command.
 		It is better than ":UpdateRemotePlugins" for dein.
-		Note: It is valid only in neovim.
 
 							*dein.rollback()*
 dein.rollback({date}[, {plugins}])
@@ -459,7 +458,6 @@ dein.install_progress_type
 			Displayed in the 'tabline'.
 		"title":
 			Displayed in the 'titlestring'.
-			Note: It is neovim only support
 
 		Defaults: "echo"
 
