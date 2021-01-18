@@ -281,8 +281,9 @@ function _dict(plug)
       and plugin['local']==nil
       and plugin['build']==nil
       and plugin['if']==nil
+      and plugin['hook_post_update']==nil
       and vim.fn.stridx(plugin.rtp, dein._base_path) == 0
-    if plugin.merged then plugin.merged = 1 else plugin.merged = 0 end
+    plugin.merged = plugin.merged and 1 or 0
   end
 
   if plugin['if']~=nil and type(plugin['if']) == 'string' then
