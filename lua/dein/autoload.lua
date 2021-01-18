@@ -124,17 +124,15 @@ function _source(...)
 
     if vim.fn.has('vim_starting')==0 then
       local augroup = (plugin.augroup or plugin.normalized_name)
-      if vim.fn.exists('#'..augroup..'#VimEnter')==1 then
-        local c = 'silent doautocmd '.. augroup.. ' VimEnter'
-        C(c)
+      local events = {'VimEnter', 'BufRead', 'BufEnter', 'BufWinEnter', 'WinEnter'}
+      if vim.fn.has('gui_running')==1 and vim.o.term == 'builtin_gui' then
+        table.insert(events, 'GUIEnter')
       end
-      if vim.fn.has('gui_running')==1 and vim.o.term == 'builtin_gui' and vim.fn.exists('#'..augroup..'#GUIEnter') then
-        local c = 'silent doautocmd '.. augroup.. ' GUIEnter'
-        C(c)
-      end
-      if vim.fn.exists('#'..augroup..'#BufRead')==1 then
-        local c = 'silent doautocmd '.. augroup.. ' BufRead'
-        C(c)
+      for _, event in ipairs(events) do
+        if vim.fn.exists('#'..augroup..'#'..event)==1 then
+          local c = 'silent doautocmd '..augroup..' '.. event
+          C(c)
+        end
       end
     end
   end
