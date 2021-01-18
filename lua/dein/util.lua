@@ -405,7 +405,7 @@ function _get_plugins(plugins)
 end
 
 function execute(expr)
-  return vim.fn.execute(vim.split(expr, '\n'))
+  return vim.fn.execute(vim.split(expr, '\n'), '')
 end
 function M._error(msg)
   for i, mes in ipairs(msg2list(msg)) do
