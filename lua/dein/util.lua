@@ -561,12 +561,12 @@ function _begin(path, vimrcs)
   end
 
   -- Reset variables
-  a.nvim_exec([[
-    lua dein._plugins = {}
-    lua dein._event_plugins = {}
-    lua dein._ftplugin = {}
-    lua dein._hook_add = ''
-  ]], true)
+  if vim.fn.has('vim_starting')==1 then
+    dein._plugins = {}
+    dein._event_plugins = {}
+    dein._ftplugin = {}
+    dein._hook_add = ''
+  end
 
   if path == '' or dein._block_level ~= 0 then
     M._error('Invalid begin/end block usage.')
@@ -583,17 +583,17 @@ function _begin(path, vimrcs)
   dein._vimrcs = _get_vimrcs(vimrcs)
   dein._hook_add = ''
 
-  -- Filetype off
-  if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
-    dein._off1 = 'filetype off'
-    a.nvim_command(dein._off1)
-  end
-  if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
-    dein._off2 = 'filetype plugin indent off'
-    a.nvim_command(dein._off2)
-  end
-
-  if vim.fn.has('vim_starting')==0 then
+  if vim.fn.has('vim_starting')==1 then
+    -- Filetype off
+    if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
+      dein._off1 = 'filetype off'
+      a.nvim_command(dein._off1)
+    end
+    if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
+      dein._off2 = 'filetype plugin indent off'
+      a.nvim_command(dein._off2)
+    end
+  else
     a.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path))
     a.nvim_command('set rtp-='..vim.fn.fnameescape(dein._runtime_path..'/after'))
   end
