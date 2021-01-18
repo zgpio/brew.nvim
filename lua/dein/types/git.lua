@@ -182,12 +182,7 @@ function M:get_sync_command(plugin)
     if _is_powershell() then
       cmd = cmd .. '; if ($?) { ' .. submodule_cmd .. ' }'
     else
-      local AND
-      if _is_fish() then
-        AND = '; and '
-      else
-        AND = ' && '
-      end
+      local AND = _is_fish() and '; and ' or ' && '
       cmd = cmd .. AND .. submodule_cmd
     end
 
@@ -256,9 +251,7 @@ function M:get_log_command(plugin, new_rev, old_rev)
   local is_not_ancestor = _system(
          self.command .. ' merge-base '
          .. old_rev .. ' ' .. new_rev) == old_rev
-  local t
-  if is_not_ancestor then t = ''
-  else t = '^' end
+  local t = is_not_ancestor and '' or '^'
   return string.format(self.command ..
          ' log %s%s..%s --graph --no-show-signature' ..
          ' --pretty=format:"%%h [%%cr] %%s"',

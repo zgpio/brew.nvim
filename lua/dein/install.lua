@@ -341,13 +341,8 @@ function _cd(path)
 
   try {
     function()
-      local d
-      if vim.fn.haslocaldir()==1 then
-        d = 'lcd'
-      else
-        d = 'cd'
-      end
-      vim.api.nvim_command('noautocmd execute '..vim.fn.string(d..vim.fn.fnameescape(path)))
+      local d = (vim.fn.haslocaldir()==1) and 'lcd' or 'cd'
+      vim.api.nvim_command('noautocmd execute '..vim.fn.string(d..' '..vim.fn.fnameescape(path)))
     end,
     catch {
       function(e)
@@ -387,12 +382,7 @@ function _rm(path)
     cmdline = vim.fn.substitute(cmdline, '/', '\\\\', 'g')
   end
 
-  local rm_command
-  if _is_windows() then
-    rm_command = 'cmd /C rmdir /S /Q'
-  else
-    rm_command = 'rm -rf'
-  end
+  local rm_command = _is_windows() and 'cmd /C rmdir /S /Q' or 'rm -rf'
   cmdline = rm_command .. cmdline
   local result = vim.fn.system(cmdline)
   if vim.v.shell_error~=0 then
@@ -470,11 +460,7 @@ local function async_get(async, process)
     log(__get_short_message(process.plugin, process.number,
           process.max_plugins, output))
   end
-  if async.eof==1 then
-    async.candidates = {}
-  else
-    async.candidates = {candidates[#candidates]}
-  end
+  async.candidates = (async.eof==1) and {} or {candidates[#candidates]}
 
   local is_timeout = (vim.fn.localtime() - process.start_time)
                      >= (process.plugin.timeout or dein.install_process_timeout)
