@@ -564,9 +564,9 @@ function _begin(path, vimrcs)
   if vim.fn.has('vim_starting')==1 then
     dein._plugins = {}
     dein._event_plugins = {}
-    dein._ftplugin = {}
-    dein._hook_add = ''
   end
+  dein._ftplugin = {}
+  dein._hook_add = ''
 
   if path == '' or dein._block_level ~= 0 then
     M._error('Invalid begin/end block usage.')
