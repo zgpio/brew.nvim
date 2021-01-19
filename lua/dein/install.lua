@@ -297,6 +297,13 @@ local function get_revision_number(plugin)
     return ''
   end
 
+  if type.get_revision_number ~= nil then
+    return type:get_revision_number(plugin)
+  end
+  if type.get_revision_number_command == nil then
+    return ''
+  end
+
   local cmd = type:get_revision_number_command(plugin)
   if vim.fn.empty(cmd)==1 then
     return ''

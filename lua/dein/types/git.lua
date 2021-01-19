@@ -55,7 +55,7 @@ local function is_git_dir(path)
     -- as the path. Any CR or NLs are stripped off the end of the file.
     local buf = vim.fn.join(vim.fn.readfile(path, 'b'), "\n")
     local matches = vim.fn.matchlist(buf, [[\C^gitdir: \(\_.*[^\r\n]\)[\r\n]*$]])
-    if vim.fn.empty(matches)==1 then
+    if vim.tbl_isempty(matches) then
       return 0
     end
     local p = vim.fn.fnamemodify(path, ':h')
@@ -101,12 +101,13 @@ local function is_git_dir(path)
   -- those edge cases.
   return 1
 end
-function M:get_revision_number_command(plugin)
-  if self.executable==0 then
-    return {}
+function M:get_revision_number(plugin)
+  local rev = get_revision(plugin.path)
+  if rev == nil then
+    return ''
   end
 
-  return {self.command, 'rev-parse', 'HEAD'}
+  return rev
 end
 
 function M:get_uri(repo, options)
@@ -279,6 +280,101 @@ function M:init(repo, options)
   directory = vim.fn.substitute(directory, ':', '/', 'g')
 
   return { ['type']='git', ['path']=dein._base_path..'/repos/'..directory }
+end
+
+-- From minpac plugin manager
+-- https://github.com/k-takata/minpac
+function isroot(dir)
+  if dir:find('^/') or (is_windows and vim.fn.match(dir, [[\c^\%(\\\|[A-Z]:\)]])) ~= -1 then
+    return true
+  end
+  return false
+end
+function get_gitdir(dir)
+  local gitdir = dir .. '/.git'
+  if vim.fn.isdirectory(gitdir)==1 then
+    return gitdir
+  elseif vim.fn.filereadable(gitdir)==1 then
+    local line
+    try {
+      function()
+        line = vim.fn.readfile(gitdir)[1]
+      end,
+      catch { function(error) end }
+    }
+    if line == nil then
+      return ''
+    end
+    if line:find('^gitdir: ') then
+      local p = line:sub(9)
+      if isroot(p) then
+        gitdir = p
+      else
+        gitdir = dir .. '/' .. p
+      end
+      if vim.fn.isdirectory(gitdir)==1 then
+        return gitdir
+      end
+    end
+  end
+  return ''
+end
+function get_revision(dir)
+  local gitdir = get_gitdir(dir)
+  if gitdir == '' then
+    return nil
+  end
+  local rev
+  try {
+    function()
+      local line = vim.fn.readfile(gitdir .. '/HEAD')[1]
+      if line:find('^ref: ') then
+        local ref = line:sub(6)
+        if vim.fn.filereadable(gitdir .. '/' .. ref)==1 then
+          rev = vim.fn.readfile(gitdir .. '/' .. ref)[1]
+        else
+          rev = nil
+          for _, line in ipairs(vim.fn.readfile(gitdir .. '/packed-refs')) do
+            if line:find(' '..ref) then
+              rev = vim.fn.substitute(line, [[^\([0-9a-f]*\) ]], [[\1]], '')
+              break
+            end
+          end
+        end
+      else
+        rev = line
+      end
+    end,
+    catch {
+      function(error)
+        rev = nil
+      end
+    }
+  }
+  return rev
+end
+function get_branch(dir)
+  local gitdir = get_gitdir(dir)
+  if gitdir == '' then
+    return nil
+  end
+  local rv
+  try {
+    function()
+      local line = vim.fn.readfile(gitdir .. '/HEAD')[1]
+      if line:find('^ref: refs/heads/') then
+        rv = line:sub(17)
+      else
+        rv = ''
+      end
+    end,
+    catch {
+      function(error)
+        rv = nil
+      end
+    }
+  }
+  return rv
 end
 
 if _TEST then
