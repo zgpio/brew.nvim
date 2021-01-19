@@ -929,10 +929,9 @@ function _copy_directories(srcs, dest)
     result = _system(temp)
     vim.fn.delete(temp)
 
-    -- For some baffling reason robocopy almost always returns between 1 and 3
-    -- upon success
+    -- Robocopy returns between 0 and 7 upon success
     status = _status()
-    if status <= 3 then
+    if status <= 7 then
       status = 0
     end
 
