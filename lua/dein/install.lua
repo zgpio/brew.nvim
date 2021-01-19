@@ -10,6 +10,7 @@ dein.install_progress_type = dein.install_progress_type or 'echo'
 dein.install_message_type = dein.install_message_type or 'echo'
 dein.install_process_timeout = dein.install_process_timeout or 120
 dein.install_log_filename = dein.install_log_filename or ''
+dein.install_github_api_token = dein.install_github_api_token or ''
 
 -- Variables
 local __global_context = {}
@@ -247,27 +248,7 @@ local function get_default_ftplugin()
     [[]],
   }
 end
-local function get_revision_remote(plugin)
-  local type = _get_type(plugin.type)
 
-  -- TODO !has_key(type, 'get_revision_remote_command')
-  if isdir(plugin.path)==0 or type.name ~= 'git' then
-    return ''
-  end
-
-  local cmd = type:get_revision_remote_command(plugin)
-  if vim.fn.empty(cmd)==1 then
-    return ''
-  end
-
-  local rev = __system_cd(cmd, plugin.path)
-  -- If rev contains spaces, it is error message
-  if rev:find('%s')==nil then
-    return rev
-  else
-    return ''
-  end
-end
 local function get_updated_log_message(plugin, new_rev, old_rev)
   local type = _get_type(plugin.type)
 
@@ -508,12 +489,7 @@ local function check_output(context, process)
     lock_revision(process, context)
   end
 
-  local new_rev
-  if context.update_type == 'check_update' then
-    new_rev = get_revision_remote(plugin)
-  else
-    new_rev = get_revision_number(plugin)
-  end
+  local new_rev = get_revision_number(plugin)
 
   if is_timeout or status==1 then
     log(get_plugin_message(plugin, num, max, 'Error'))
@@ -534,20 +510,14 @@ local function check_output(context, process)
     end
 
     table.insert(context.errored_plugins, plugin)
-  elseif process.rev == new_rev or (context.update_type == 'check_update' and new_rev == '') then
-    if context.update_type ~= 'check_update' then
-      log(get_plugin_message(plugin, num, max, 'Same revision'))
-    end
+  elseif process.rev == new_rev then
+    log(get_plugin_message(plugin, num, max, 'Same revision'))
   else
     log(get_plugin_message(plugin, num, max, 'Updated'))
 
-    if context.update_type ~= 'check_update' then
-      local log_messages = vim.fn.split(get_updated_log_message(plugin, new_rev, process.rev), '\n')
-      plugin.commit_count = vim.fn.len(log_messages)
-      log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
-    else
-      plugin.commit_count = 0
-    end
+    local log_messages = vim.fn.split(get_updated_log_message(plugin, new_rev, process.rev), '\n')
+    plugin.commit_count = vim.fn.len(log_messages)
+    log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
 
     plugin.old_rev = process.rev
     plugin.new_rev = new_rev
@@ -662,9 +632,7 @@ function __done(context)
     __notify(__get_errored_message(context.errored_plugins))
   end
 
-  if context.update_type ~= 'check_update' then
-    _recache_runtimepath()
-  end
+  _recache_runtimepath()
 
   if vim.fn.empty(context.synced_plugins)==0 then
     _call_hook('done_update', {context.synced_plugins})
@@ -1007,6 +975,8 @@ function __get_errored_message(plugins)
   return msg
 end
 
+function _check_update(plugins, async)
+end
 function _reinstall(plugins)
   local plugins = _get_plugins(plugins)
 
@@ -1053,7 +1023,7 @@ function __get_updated_message(context, plugins)
       changes = string.format('(%d changes)', v.commit_count)
     end
     local updated = ''
-    if context.update_type ~= 'check_update' and v.old_rev ~= '' and v.uri:find('^%a%w*://github.com/') then
+    if v.old_rev ~= '' and v.uri:find('^%a%w*://github.com/') then
       updated = "\n" .. string.format('    %s/compare/%s...%s',
         vim.fn.substitute(vim.fn.substitute(v.uri, [[\.git$]], '', ''), [[^\h\w*:]], 'https:', ''), v.old_rev, v.new_rev)
     end
@@ -1222,10 +1192,7 @@ local function get_sync_command(plugin, update_type, number, max)
   local type = _get_type(plugin.type)
   local cmd
 
-  -- TODO has_key(type, 'get_fetch_remote_command')
-  if update_type == 'check_update' and type.name == 'git' then
-    cmd = type:get_fetch_remote_command(plugin)
-  elseif type.name == 'git' then  -- TODO has_key(type, 'get_sync_command')
+  if type.get_sync_command ~= nil then
     cmd = type:get_sync_command(plugin)
   else
     return '', ''
@@ -1249,8 +1216,6 @@ function _update(plugins, update_type, async)
 
   if update_type == 'install' then
     plugins = vim.tbl_filter(function(v) return isdir(v.path)==0 end, plugins)
-  elseif update_type == 'check_update' then
-    plugins = vim.tbl_filter(function(v) return isdir(v.path)==1 end, plugins)
   end
 
   if async and vim.fn.empty(__global_context)==0
@@ -1264,10 +1229,8 @@ function _update(plugins, update_type, async)
   init_variables(context)
 
   if vim.fn.empty(plugins)==1 then
-    if update_type ~= 'check_update' then
-      __notify('Target plugins are not found.')
-      __notify('You may have used the wrong plugin name, or all of the plugins are already installed.')
-    end
+    __notify('Target plugins are not found.')
+    __notify('You may have used the wrong plugin name, or all of the plugins are already installed.')
     __global_context = {}
     return
   end

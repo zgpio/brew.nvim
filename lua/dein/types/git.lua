@@ -223,25 +223,7 @@ function M:get_rollback_command(plugin, rev)
 
   return {self.command, 'reset', '--hard', rev}
 end
-function M:get_revision_remote_command(plugin)
-  if self.executable==0 then
-    return {}
-  end
 
-  local rev = plugin.rev or ''
-  if rev == '' then
-    rev = 'HEAD'
-  end
-
-  return {self.command, 'ls-remote', 'origin', rev}
-end
-function M:get_fetch_remote_command(plugin)
-  if self.executable==0 then
-    return {}
-  end
-
-  return {self.command, 'fetch', 'origin'}
-end
 function M:get_log_command(plugin, new_rev, old_rev)
   if self.executable==0 or new_rev == '' or old_rev == '' then
     return {}
