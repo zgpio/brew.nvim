@@ -365,19 +365,22 @@ function _rm(path)
     return
   end
 
-  -- Todo: use :python3 instead.
-
-  -- Note: delete rf is broken
-  -- if has('patch-7.4.1120')
-  --   try
-  --     call delete(a:path, 'rf')
-  --   catch
-  --     ERROR('Error deleting directory: ' . a:path)
-  --     ERROR(v:exception)
-  --     ERROR(v:throwpoint)
-  --   endtry
-  --   return
-  -- endif
+  -- Note: delete rf is broken before Vim 8.1.1378
+  if vim.fn.has('patch-8.1.1378')==1 then
+    try {
+      function()
+        vim.fn.delete(path, 'rf')
+      end,
+      catch {
+        function(e)
+          ERROR('Error deleting directory: ' . path)
+          ERROR(vim.v.exception)
+          ERROR(vim.v.throwpoint)
+        end
+      }
+    }
+    return
+  end
 
   -- Note: In Windows, ['rmdir', '/S', '/Q'] does not work.
   -- After Vim 8.0.928, double quote escape does not work in job.  Too bad.
