@@ -1,6 +1,7 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local util = require 'dein/util'
 local Job = require 'dein/job'
+local isdir = vim.fn.isdirectory
 local M = {}
 
 -- Global options definition.
@@ -93,7 +94,7 @@ function clear_runtimepath()
   -- Remove runtime path
   _rm(runtimepath)
 
-  if vim.fn.isdirectory(runtimepath)==0 then
+  if isdir(runtimepath)==0 then
     -- Create runtime path
     vim.fn.mkdir(runtimepath, 'p')
   end
@@ -112,7 +113,7 @@ local function append_log_file(msg)
   end
 
   local dir = vim.fn.fnamemodify(logfile, ':h')
-  if vim.fn.isdirectory(dir)==0 then
+  if isdir(dir)==0 then
     vim.fn.mkdir(dir, 'p')
   end
   vim.fn.writefile(msg, logfile)
@@ -201,7 +202,7 @@ local function merge_files(plugins, directory)
   local files = {}
   for _, plugin in ipairs(plugins) do
     local t = vim.tbl_filter(
-      function(v) return vim.fn.isdirectory(v)==0 end,
+      function(v) return isdir(v)==0 end,
       vim.fn.globpath(plugin.rtp, directory..'/**', 1, 1)
     )
     for _, file in ipairs(t) do
@@ -250,7 +251,7 @@ local function get_revision_remote(plugin)
   local type = _get_type(plugin.type)
 
   -- TODO !has_key(type, 'get_revision_remote_command')
-  if vim.fn.isdirectory(plugin.path)==0 or type.name ~= 'git' then
+  if isdir(plugin.path)==0 or type.name ~= 'git' then
     return ''
   end
 
@@ -290,7 +291,7 @@ local function get_updated_log_message(plugin, new_rev, old_rev)
   end
 end
 local function get_revision_number(plugin)
-  if vim.fn.isdirectory(plugin.path)==0 then
+  if isdir(plugin.path)==0 then
     return ''
   end
 
@@ -340,7 +341,7 @@ function __system_cd(command, path)
 end
 -- Helper functions
 function _cd(path)
-  if vim.fn.isdirectory(path)==0 then
+  if isdir(path)==0 then
     return
   end
 
@@ -361,7 +362,7 @@ function _cd(path)
   }
 end
 function _rm(path)
-  if vim.fn.isdirectory(path)==0 and vim.fn.filereadable(path)==0 then
+  if isdir(path)==0 and vim.fn.filereadable(path)==0 then
     return
   end
 
@@ -414,8 +415,6 @@ local function lock_revision(process, context)
   local max = context.max_plugins
   local plugin = process.plugin
 
-  plugin.new_rev = get_revision_number(plugin)
-
   local typ = _get_type(plugin['type'])
   -- TODO !has_key(type, 'get_revision_lock_command')
   if typ.name ~= 'git' then
@@ -424,7 +423,7 @@ local function lock_revision(process, context)
 
   local cmd = typ:get_revision_lock_command(plugin)
 
-  if vim.fn.empty(cmd)==1 or plugin.new_rev == (plugin.rev or '') then
+  if vim.fn.empty(cmd)==1 then
     -- Skipped.
     return 0
   elseif type(cmd) == 'string' and cmd:find('^E: ') then
@@ -502,7 +501,7 @@ local function check_output(context, process)
   local max = context.max_plugins
   local plugin = process.plugin
 
-  if vim.fn.isdirectory(plugin.path)==1
+  if isdir(plugin.path)==1
          and (plugin.rev or '') ~= ''
          and (plugin['local'] or 0)==0 then
     -- Restore revision.
@@ -520,9 +519,9 @@ local function check_output(context, process)
     log(get_plugin_message(plugin, num, max, 'Error'))
     ERROR(plugin.path)
     if process.installed==0 then
-      if vim.fn.isdirectory(plugin.path)==0 then
+      if isdir(plugin.path)==0 then
         ERROR('Maybe wrong username or repository.')
-      elseif vim.fn.isdirectory(plugin.path)==1 then
+      elseif isdir(plugin.path)==1 then
         ERROR('Remove the installed directory:' .. plugin.path)
         _rm(plugin.path)
       end
@@ -714,7 +713,7 @@ function _execute(command)
   return job:wait(dein.install_process_timeout * 1000)
 end
 function _each(cmd, plugins)
-  local plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, _get_plugins(plugins))
+  local plugins = vim.tbl_filter(function(v) return isdir(v.path)==1 end, _get_plugins(plugins))
 
   local global_context_save = __global_context
 
@@ -754,7 +753,7 @@ local function copy_files(plugins, directory)
     dir = '/' .. directory
   end
   local srcs = vim.tbl_filter(
-    function(v) return vim.fn.isdirectory(v)==1 end,
+    function(v) return isdir(v)==1 end,
     vim.tbl_map(function(v) return v.rtp .. dir end, vim.fn.copy(plugins)))
   local stride = 50
   for start=1, vim.fn.len(srcs), stride do
@@ -769,7 +768,7 @@ local function helptags()
   try {
     function()
       local tags = _get_runtime_path() .. '/doc'
-      if vim.fn.isdirectory(tags)==0 then
+      if isdir(tags)==0 then
         vim.fn.mkdir(tags, 'p')
       end
       copy_files(vim.tbl_filter(function(v) return v.merged==0 end, vim.tbl_values(dein.get())), 'doc')
@@ -833,7 +832,7 @@ function _build(plugins)
   local error = 0
   for _, plugin in ipairs(vim.tbl_filter(
     function(v)
-      return vim.fn.isdirectory(v.path)==1 and v.build~=nil
+      return isdir(v.path)==1 and v.build~=nil
     end,
     _get_plugins(plugins))) do
     print_progress_message('Building: ' .. plugin.name)
@@ -846,7 +845,7 @@ end
 local function generate_ftplugin()
   -- Create after/ftplugin
   local after = _get_runtime_path() .. '/after/ftplugin'
-  if vim.fn.isdirectory(after)==0 then
+  if isdir(after)==0 then
     vim.fn.mkdir(after, 'p')
   end
 
@@ -991,7 +990,7 @@ function __list_directory(directory)
 end
 function __get_rollback_directory()
   local parent = string.format('%s/rollbacks/%s', _get_cache_path(), dein._progname)
-  if vim.fn.isdirectory(parent)==0 then
+  if isdir(parent)==0 then
     vim.fn.mkdir(parent, 'p')
   end
   return parent
@@ -1022,7 +1021,7 @@ function _reinstall(plugins)
       -- Reinstall.
       print_progress_message(vim.fn.printf('|%s| Reinstalling...', plugin.name))
 
-      if vim.fn.isdirectory(plugin.path)==1 then
+      if isdir(plugin.path)==1 then
         _rm(plugin.path)
       end
     until true
@@ -1249,9 +1248,9 @@ function _update(plugins, update_type, async)
   local plugins = _get_plugins(plugins)
 
   if update_type == 'install' then
-    plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==0 end, plugins)
+    plugins = vim.tbl_filter(function(v) return isdir(v.path)==0 end, plugins)
   elseif update_type == 'check_update' then
-    plugins = vim.tbl_filter(function(v) return vim.fn.isdirectory(v.path)==1 end, plugins)
+    plugins = vim.tbl_filter(function(v) return isdir(v.path)==1 end, plugins)
   end
 
   if async and vim.fn.empty(__global_context)==0
@@ -1320,7 +1319,7 @@ function _remote_plugins()
 
   -- Load not loaded neovim remote plugins
   local remote_plugins = vim.tbl_filter(
-    function(v) return vim.fn.isdirectory(v.rtp .. '/rplugin')==1 and not v.sourced end,
+    function(v) return isdir(v.rtp .. '/rplugin')==1 and not v.sourced end,
     vim.tbl_values(dein.get()))
 
   require 'dein/autoload'
@@ -1357,11 +1356,11 @@ function __init_process(plugin, context, cmd)
         output='',
         status=-1,
         eof=0,
-        installed=vim.fn.isdirectory(plugin.path),
+        installed=isdir(plugin.path),
       }
 
-      if vim.fn.isdirectory(plugin.path)==1 and (plugin['local'] or 0)==0 then
-        local rev_save = plugin.rev or ''
+      local rev_save = plugin.rev or ''
+      if isdir(plugin.path)==1 and (plugin['local'] or 0)==0 and rev_save~='' then
         try {
           function()
             -- Force checkout HEAD revision.
@@ -1401,7 +1400,7 @@ function __sync(plugin, context)
   max = context.max_plugins
 
   -- if not plugin then return end
-  if vim.fn.isdirectory(plugin.path)==1 and (plugin.frozen or 0)==1 then
+  if isdir(plugin.path)==1 and (plugin.frozen or 0)==1 then
     -- Skip frozen plugin
     log(get_plugin_message(plugin, num, max, 'is frozen.'))
     return
