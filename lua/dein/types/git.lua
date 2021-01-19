@@ -284,7 +284,7 @@ end
 
 -- From minpac plugin manager
 -- https://github.com/k-takata/minpac
-function isroot(dir)
+function isabsolute(dir)
   if dir:find('^/') or (is_windows and vim.fn.match(dir, [[\c^\%(\\\|[A-Z]:\)]])) ~= -1 then
     return true
   end
@@ -294,27 +294,24 @@ function get_gitdir(dir)
   local gitdir = dir .. '/.git'
   if vim.fn.isdirectory(gitdir)==1 then
     return gitdir
-  elseif vim.fn.filereadable(gitdir)==1 then
-    local line
-    try {
-      function()
-        line = vim.fn.readfile(gitdir)[1]
-      end,
-      catch { function(error) end }
-    }
-    if line == nil then
-      return ''
+  end
+  local line
+  try {
+    function()
+      line = vim.fn.readfile(gitdir)[1]
+    end,
+    catch { function(error) end }
+  }
+  if line == nil then
+    return ''
+  end
+  if line:find('^gitdir: ') then
+    gitdir = line:sub(9)
+    if not isabsolute(gitdir) then
+      gitdir = dir .. '/' .. gitdir
     end
-    if line:find('^gitdir: ') then
-      local p = line:sub(9)
-      if isroot(p) then
-        gitdir = p
-      else
-        gitdir = dir .. '/' .. p
-      end
-      if vim.fn.isdirectory(gitdir)==1 then
-        return gitdir
-      end
+    if vim.fn.isdirectory(gitdir)==1 then
+      return gitdir
     end
   end
   return ''
@@ -332,17 +329,13 @@ function get_revision(dir)
         local ref = line:sub(6)
         if vim.fn.filereadable(gitdir .. '/' .. ref)==1 then
           rev = vim.fn.readfile(gitdir .. '/' .. ref)[1]
-        else
-          rev = nil
-          for _, line in ipairs(vim.fn.readfile(gitdir .. '/packed-refs')) do
-            if line:find(' '..ref) then
-              rev = vim.fn.substitute(line, [[^\([0-9a-f]*\) ]], [[\1]], '')
-              break
-            end
+        end
+        for _, line in ipairs(vim.fn.readfile(gitdir .. '/packed-refs')) do
+          if line:find(' '..ref) then
+            rev = vim.fn.substitute(line, [[^\([0-9a-f]*\) ]], [[\1]], '')
+            break
           end
         end
-      else
-        rev = line
       end
     end,
     catch {
