@@ -290,13 +290,11 @@ local function get_updated_log_message(plugin, new_rev, old_rev)
   end
 end
 local function get_revision_number(plugin)
-  local type = _get_type(plugin.type)
-
-  -- TODO !has_key(type, 'get_revision_number_command')
-  if vim.fn.isdirectory(plugin.path)==0 or type.name ~= 'git' then
+  if vim.fn.isdirectory(plugin.path)==0 then
     return ''
   end
 
+  local type = _get_type(plugin.type)
   if type.get_revision_number ~= nil then
     return type:get_revision_number(plugin)
   end
