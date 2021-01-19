@@ -11,6 +11,7 @@ dein.install_message_type = dein.install_message_type or 'echo'
 dein.install_process_timeout = dein.install_process_timeout or 120
 dein.install_log_filename = dein.install_log_filename or ''
 dein.install_github_api_token = dein.install_github_api_token or ''
+dein.install_curl_command = dein.install_curl_command or 'curl'
 
 -- Variables
 local __global_context = {}
@@ -355,7 +356,7 @@ function _rm(path)
       end,
       catch {
         function(e)
-          ERROR('Error deleting directory: ' . path)
+          ERROR('Error deleting directory: ' .. path)
           ERROR(vim.v.exception)
           ERROR(vim.v.throwpoint)
         end
@@ -975,7 +976,58 @@ function __get_errored_message(plugins)
   return msg
 end
 
+local job_check_update = {}
+function job_check_update_on_out(data)
+  local candidates = job_check_update.candidates
+  if vim.tbl_isempty(candidates) then
+    table.insert(candidates, data[1])
+  else
+    candidates[#candidates] = candidates[#candidates] .. data[1]
+  end
+  vim.list_extend(candidates, slice(data, 2))
+end
+function job_check_update_execute(cmd)
+  job_check_update.candidates = {}
+
+  local job = Job:start(__convert_args(cmd), {on_stdout=job_check_update_on_out})
+
+  return job:wait(dein.install_process_timeout * 1000)
+end
 function _check_update(plugins, async)
+  if dein.install_github_api_token == '' then
+    ERROR('You need to set dein.install_github_api_token to check updated plugins.')
+    return
+  end
+  if vim.fn.executable(dein.install_curl_command)==0 then
+    ERROR('curl must be executable to check updated plugins.')
+    return
+  end
+
+  local query_max = 100
+  local repos = vim.tbl_map(function(v) return 'repo:' .. v.repo end, _get_plugins(plugins))
+  local results = {}
+  for index = 0, #repos, query_max do
+    local query = vim.fn.join(slice(repos, index, index + query_max))
+
+    local commands = {
+      dein.install_curl_command, '-H', 'Authorization: bearer ' ..
+      dein.install_github_api_token,
+      '-X', 'POST', '-d',
+      '{ "query": "query { search(query: \"' .. query ..
+      '\", type: REPOSITORY, first:100) { edges { node ' ..
+      '{ ... on Repository { pushedAt nameWithOwner } }  } } }" }',
+      'https://api.github.com/graphql'
+    }
+    job_check_update_execute(commands)
+
+    local result = job_check_update.candidates
+    if not vim.tbl_isempty(result) then
+      local json = vim.fn.json_decode(result[1])
+      table.insert(results, json['data']['search']['edges'])
+    end
+  end
+
+  print(vim.inspect(results))
 end
 function _reinstall(plugins)
   local plugins = _get_plugins(plugins)
