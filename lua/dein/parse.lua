@@ -40,20 +40,19 @@ function _add(repo, options)
     return {}
   end
 
-  if plugin.lazy==1 and plugin.rtp ~= '' then
-    plugin = parse_lazy(plugin)
+  if plugin.rtp ~= '' then
+    if plugin.lazy==1 then
+      plugin = parse_lazy(plugin)
+    end
+    if plugin['hook_add']~=nil then
+      _execute_hook(plugin, plugin.hook_add)
+    end
+    if plugin['ftplugin']~=nil then
+      merge_ftplugin(plugin.ftplugin)
+    end
   end
 
-  if _plugins[plugin.name]~=nil and _plugins[plugin.name].sourced==1 then
-    plugin.sourced = true
-  end
   _plugins[plugin.name] = plugin
-  if plugin['hook_add']~=nil then
-    _execute_hook(plugin, plugin.hook_add)
-  end
-  if plugin['ftplugin']~=nil then
-    merge_ftplugin(plugin.ftplugin)
-  end
   dein._plugins = _plugins
   return plugin
 end
