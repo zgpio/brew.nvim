@@ -664,6 +664,9 @@ function __done(context)
     _source(vim.tbl_map(function(v) return v.name end, vim.fn.copy(context.synced_plugins)))
   end
 
+  vim.api.nvim_command('redraw')
+  vim.api.nvim_command('echo ""')
+
   __notify(vim.fn.strftime('Done: (%Y/%m/%d %H:%M:%S)'))
 
   -- Disable installation handler
@@ -1280,7 +1283,7 @@ function _update(plugins, update_type, async)
     __timer = nil
   end
 
-  __timer = vim.fn.timer_start(1000, _polling, {['repeat']=-1})
+  __timer = vim.fn.timer_start(100, _polling, {['repeat']=-1})
 end
 function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
