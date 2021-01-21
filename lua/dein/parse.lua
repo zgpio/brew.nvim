@@ -173,9 +173,6 @@ end
 function set_dein_hook_add(s)
   dein._hook_add = s
 end
-function add_dein_vimrcs(s)
-  table.insert(dein._vimrcs, s)
-end
 
 function merge_ftplugin(ftplugin)
   local _ftplugin = dein._ftplugin
@@ -427,7 +424,7 @@ function _load_toml(filename, default)
   end
 
   -- Add to dein._vimrcs
-  add_dein_vimrcs(_expand(filename))
+  table.insert(dein._vimrcs, _expand(filename))
 end
 function _load_dict(dict, default)
   for repo, options in pairs(dict) do
