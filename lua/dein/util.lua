@@ -27,12 +27,12 @@ end
 
 function _is_fish()
   require 'dein/install'
-  return _is_async()==true and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
+  return _is_async() and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
 end
 function _is_powershell()
   require 'dein/install'
   local t = vim.fn.fnamemodify(vim.o.shell, ':t:r')
-  return _is_async()==true and (t == 'powershell' or t == 'pwsh')
+  return _is_async() and (t == 'powershell' or t == 'pwsh')
 end
 function _error(msg)
   for _, mes in ipairs(__msg2list(msg)) do

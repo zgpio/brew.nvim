@@ -76,6 +76,7 @@ end
 function _is_async()
   return dein.install_max_processes > 1
 end
+-- FIXME: The logic is different from the `:h jobstart`
 local function __convert_args(args)
   local args = iconv(args, vim.o.encoding, 'char')
   if not vim.tbl_islist(args) then
@@ -1316,7 +1317,7 @@ function __init_job(process, context, cmd)
   end
 
   process.async = {eof=0}
-  process.job = Job:start(__convert_args(cmd), {})
+  process.job = Job:start(cmd, {})
   process.job.candidates = {}
   process.id = process.job.pid
   return process
