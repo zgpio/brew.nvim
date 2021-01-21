@@ -718,10 +718,7 @@ function _each(cmd, plugins)
 end
 
 local function copy_files(plugins, directory)
-  local dir = ''
-  if directory ~= '' then
-    dir = '/' .. directory
-  end
+  local dir = (directory == '') and '' or ('/' .. directory)
   local srcs = vim.tbl_filter(
     function(v) return isdir(v)==1 end,
     vim.tbl_map(function(v) return v.rtp .. dir end, vim.fn.copy(plugins)))
@@ -822,10 +819,7 @@ local function generate_ftplugin()
   -- Merge dein._ftplugin
   local ftplugin = {}
   for key, string in pairs(dein._ftplugin) do
-    local fts = {'_'}
-    if key ~= '_' then
-      fts = vim.fn.split(key, '_')
-    end
+    local fts = (key == '_') and {'_'} or vim.fn.split(key, '_')
     for _, ft in ipairs(fts) do
       if not ftplugin.ft then
         if ft == '_' then
@@ -1433,8 +1427,7 @@ function __sync(plugin, context)
   if type(cmd) == 'string' and cmd:find('^E: ') then
     -- Errored.
 
-    print_progress_message(get_plugin_message(
-           plugin, num, max, 'Error'))
+    print_progress_message(get_plugin_message(plugin, num, max, 'Error'))
     ERROR(cmd:sub(4))
     table.insert(context.errored_plugins, plugin)
     return
