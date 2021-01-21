@@ -169,10 +169,6 @@ function generate_dummy_mappings(plugin)
     end
   end
 end
--- TODO: 临时的
-function set_dein_hook_add(s)
-  dein._hook_add = s
-end
 
 function merge_ftplugin(ftplugin)
   local _ftplugin = dein._ftplugin
@@ -405,7 +401,7 @@ function _load_toml(filename, default)
   -- Parse.
   if toml.hook_add then
     local pattern = [[\n\s*\\\|\%(^\|\n\)\s*"[^\n]*]]
-    set_dein_hook_add(dein._hook_add .. "\n" .. vim.fn.substitute(toml.hook_add, pattern, '', 'g'))
+    dein._hook_add = dein._hook_add .. "\n" .. vim.fn.substitute(toml.hook_add, pattern, '', 'g')
   end
   if toml.ftplugin then
     merge_ftplugin(toml.ftplugin)
