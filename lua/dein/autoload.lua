@@ -28,7 +28,7 @@ function _on_pre_cmd(name)
     function(v)
       local s = string.gsub(v.normalized_name:lower(), '[_-]', '')
       return vim.tbl_contains(
-        vim.tbl_map(function(v) return v:lower() end, vim.deepcopy(v.on_cmd or {})), name)
+        vim.tbl_map(function(x) return x:lower() end, vim.deepcopy(v.on_cmd or {})), name)
         or vim.fn.stridx(name:lower(), s) == 0
     end,
     _get_lazy_plugins()
@@ -161,15 +161,20 @@ function _on_event(event, plugins)
     return
   end
 
-  local plugins = vim.tbl_filter(
+  -- TODO: support on_if=true
+  lazy_plugins = vim.tbl_filter(
     function(v)
       return v.on_if==nil or vim.fn.eval(v.on_if)==1
     end,
     lazy_plugins
   )
 
-  source_events(event, plugins)
+  source_events(event, lazy_plugins)
 end
+
+--@param name plugin name
+--@param bang
+-- _on_cmd('SSave', 'vim-startify', <q-args>,  expand('<bang>'), expand('<line1>'), expand('<line2>'))
 function _on_cmd(command, name, args, bang, line1, line2)
   _source({name})
 
@@ -189,15 +194,16 @@ function _on_cmd(command, name, args, bang, line1, line2)
 
   try {
     function()
-      local cmd = string.format('execute ' .. vim.fn.string(range .. command .. bang ..' '.. args))
+      local cmd = 'execute ' .. vim.fn.string(range .. command .. bang ..' '.. args)
       vim.api.nvim_command(cmd)
     end,
     catch {
       function(e)
         -- TODO catch /^Vim\%((\a\+)\)\=:E481/
         -- E481: No range allowed
-        -- execute command bang args
-        print('caught error: ' .. e)
+        local cmd = 'execute ' .. vim.fn.string(command .. bang ..' '.. args)
+        vim.api.nvim_command(cmd)
+        -- print('caught error: ' .. e)
       end
     }
   }
@@ -205,6 +211,7 @@ end
 
 function M._on_func(name)
   local function_prefix = vim.fn.substitute(name, '[^#]*$', '', '')
+  -- TODO: remove vital
   if function_prefix:find('^dein#') or function_prefix:find('^vital#') or vim.fn.has('vim_starting')==1 then
     return
   end
