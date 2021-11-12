@@ -253,11 +253,11 @@ end
 function reset_ftplugin()
   local filetype_state = vim.fn.execute('filetype')
 
-  if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
+  if vim.b.did_indent or vim.b.did_ftplugin then
     C('filetype plugin indent off')
   end
 
-  if string.find(filetype_state, 'plugins:ON') then
+  if string.find(filetype_state, 'plugin:ON') then
     C('silent! filetype plugin on')
   end
 

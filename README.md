@@ -2,8 +2,6 @@
 
 TODO: Build Status
 
-NOTE: Under development, some features are broken
-
 brew.nvim is a Neovim plugin manager, rewrite dein with neovim builtin lua.
 
 <!-- vim-markdown-toc GFM -->
