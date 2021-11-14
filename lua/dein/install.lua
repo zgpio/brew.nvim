@@ -1008,7 +1008,7 @@ function _check_update(plugins, force, async)
       __get_progress_message('', index, #plugins))
 
     local query = ''
-    for plug_index in index,
+    for plug_index = index,
         math.min(index + query_max, #plugins) do
       local plugin_names = vim.fn.split(plugins[plug_index].repo, '/')
       if vim.fn.len(plugin_names) >= 2 then
