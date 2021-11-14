@@ -96,7 +96,7 @@ end
 function M.check_update(...)
   require 'dein/install'
   local args = {...}
-  return _check_update({}, (args[1] or false), _is_async())
+  return _check_update((args[2] or {}), (args[1] or false), _is_async())
 end
 function M.direct_install(repo, ...)
   require 'dein/install'
