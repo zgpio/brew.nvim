@@ -1042,7 +1042,10 @@ function _check_update(plugins, async)
     end
   end
 
-  if vim.tbl_isempty(updated) then return end
+  if vim.tbl_isempty(updated) then
+    _notify(vim.fn.strftime('Done: (%Y/%m/%d %H:%M:%S)'))
+    return
+  end
 
   _notify('Updated plugins: ' ..
     vim.inspect(vim.tbl_map(function(v) return v.name end, updated)))
