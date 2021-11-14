@@ -590,7 +590,7 @@ local function check_loop(context)
 
     if context.async==false then
       print_progress_message(
-             __get_progress_message(plugin,
+             __get_progress_message(plugin.name,
                context.number, context.max_plugins))
     end
   end
@@ -764,7 +764,7 @@ local function install_async(ctx)
     __done(ctx)
   elseif ctx.number ~= ctx.prev_number and ctx.number < vim.fn.len(ctx.plugins) then
     local plugin = ctx.plugins[ctx.number+1]
-    print_progress_message(__get_progress_message(plugin, ctx.number, ctx.max_plugins))
+    print_progress_message(__get_progress_message(plugin.name, ctx.number, ctx.max_plugins))
     ctx.prev_number = ctx.number
   end
 
@@ -998,12 +998,17 @@ function _check_update(plugins, async)
     return
   end
 
+  __global_context.progress_type = 'echo'
   local query_max = 100
   plugins = _get_plugins(plugins)
   local repos = vim.tbl_map(function(v) return 'repo:' .. v.repo end, plugins)
   local results = {}
   for index = 0, #repos, query_max do
     local query = vim.fn.join(slice(repos, index, index + query_max))
+
+    vim.api.nvim_command('redraw')
+    print_progress_message(
+      __get_progress_message('', index, vim.fn.len(repos)))
 
     local commands = {
       dein.install_curl_command, '-H', 'Authorization: bearer ' ..
@@ -1087,13 +1092,12 @@ function _reinstall(plugins)
 
   _update(_convert2list(plugins), 'install', 0)
 end
-function __get_progress_message(plugin, number, max)
-  -- FIXME 去掉math.modf外的圆括号会报错 E118: Too many arguments for function: repeat
+function __get_progress_message(name, number, max)
   return vim.fn.printf('(%'..vim.fn.len(max)..'d/%'..vim.fn.len(max)..'d) [%s%s] %s',
          number, max,
          vim.fn['repeat']('+', (math.modf(number*20/max))),
          vim.fn['repeat']('-', (20 - math.modf(number*20/max))),
-         plugin.name)
+         name)
 end
 function __get_short_message(plugin, number, max, message)
   return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) %s', number, max, message)
