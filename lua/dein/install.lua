@@ -1050,7 +1050,6 @@ function _check_update(plugins, async)
     local git_path = plugin.path .. '/.git'
     if vim.fn.isdirectory(plugin.path) == 0
       or (check_pushed[plugin.repo]~=nil
-        and vim.fn.isdirectory(git_path)==1
         and vim.fn.getftime(git_path) < check_pushed[plugin.repo]) then
       table.insert(updated, plugin)
     end
