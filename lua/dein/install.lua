@@ -1033,14 +1033,19 @@ function _check_update(plugins, async)
   -- Compare with .git directory updated time.
   local updated = {}
   for _, plugin in ipairs(plugins) do
-    if check_pushed[plugin.repo] ~= nil
-      and vim.fn.isdirectory(plugin.path .. '/.git')
-      and vim.fn.getftime(plugin.path .. '/.git') < check_pushed[plugin.repo] then
+    local git_path = plugin.path .. '/.git'
+    if vim.fn.isdirectory(plugin.path) == 0
+      or (check_pushed[plugin.repo]~=nil
+        and vim.fn.isdirectory(git_path)==1
+        and vim.fn.getftime(git_path) < check_pushed[plugin.repo]) then
       table.insert(updated, plugin)
     end
   end
 
-  print(vim.inspect(updated))
+  if vim.tbl_isempty(updated) then return end
+
+  _notify('Updated plugins: ' ..
+    vim.inspect(vim.tbl_map(function(v) return v.name end, updated)))
 end
 function _reinstall(plugins)
   local plugins = _get_plugins(plugins)
