@@ -1056,6 +1056,9 @@ function _check_update(plugins, async)
   end
 
   vim.api.nvim_command('redraw | echo ""')
+  -- Clear global context
+  __global_context = {}
+
   if vim.tbl_isempty(updated) then
     _notify(vim.fn.strftime('Done: (%Y/%m/%d %H:%M:%S)'))
     return
