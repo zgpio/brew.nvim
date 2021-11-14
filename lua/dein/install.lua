@@ -999,7 +999,8 @@ function _check_update(plugins, async)
   end
 
   local query_max = 100
-  local repos = vim.tbl_map(function(v) return 'repo:' .. v.repo end, _get_plugins(plugins))
+  plugins = _get_plugins(plugins)
+  local repos = vim.tbl_map(function(v) return 'repo:' .. v.repo end, plugins)
   local results = {}
   for index = 0, #repos, query_max do
     local query = vim.fn.join(slice(repos, index, index + query_max))
@@ -1018,11 +1019,28 @@ function _check_update(plugins, async)
     local result = job_check_update.candidates
     if not vim.tbl_isempty(result) then
       local json = vim.fn.json_decode(result[1])
-      table.insert(results, json['data']['search']['edges'])
+      table.insert(results, vim.tbl_map(function(v) return v['node'] end, json['data']['search']['edges']))
     end
   end
 
-  print(vim.inspect(results))
+  -- Get pushed time.
+  local check_pushed = {}
+  for _, node in ipairs(results) do
+    check_pushed[node['nameWithOwner']] =
+      vim.fn.strptime('%Y-%m-%dT%H:%M:%SZ', node['pushedAt'])
+  end
+
+  -- Compare with .git directory updated time.
+  local updated = {}
+  for _, plugin in ipairs(plugins) do
+    if check_pushed[plugin.repo] ~= nil
+      and vim.fn.isdirectory(plugin.path .. '/.git')
+      and vim.fn.getftime(plugin.path .. '/.git') < check_pushed[plugin.repo] then
+      table.insert(updated, plugin)
+    end
+  end
+
+  print(vim.inspect(updated))
 end
 function _reinstall(plugins)
   local plugins = _get_plugins(plugins)
