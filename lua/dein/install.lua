@@ -1001,22 +1001,32 @@ function _check_update(plugins, force, async)
   __global_context.progress_type = 'echo'
   local query_max = 100
   plugins = _get_plugins(plugins)
-  local repos = vim.tbl_map(function(v) return 'repo:' .. v.repo end, plugins)
   local results = {}
-  for index = 0, #repos, query_max do
-    local query = vim.fn.join(slice(repos, index, index + query_max))
-
+  for index = 1, #plugins, query_max do
     vim.api.nvim_command('redraw')
     print_progress_message(
-      __get_progress_message('', index, vim.fn.len(repos)))
+      __get_progress_message('', index, #plugins))
+
+    local query = ''
+    for plug_index in index,
+        math.min(index + query_max, #plugins) do
+      local plugin_names = vim.fn.split(plugins[plug_index].repo, '/')
+      if vim.fn.len(plugin_names) >= 2 then
+        -- Invalid repository name when < 2.
+
+        -- Note: "repository" API is faster than "search" API
+        query = query .. vim.fn.printf(
+          'a%d:repository(owner:\"%s\", name: \"%s\")' ..
+          '{ pushedAt nameWithOwner }',
+          plug_index, plugin_names[#plugin_names - 1], plugin_names[#plugin_names])
+      end
+    end
 
     local commands = {
       dein.install_curl_command, '-H', 'Authorization: bearer ' ..
       dein.install_github_api_token,
       '-X', 'POST', '-d',
-      '{ "query": "query { search(query: \"' .. query ..
-      '\", type: REPOSITORY, first:100) { edges { node ' ..
-      '{ ... on Repository { pushedAt nameWithOwner } }  } } }" }',
+      '{ "query": "query {' .. query .. '}" }',
       'https://api.github.com/graphql'
     }
     job_check_update_execute(commands)
@@ -1026,7 +1036,13 @@ function _check_update(plugins, force, async)
       try {
         function()
           local json = vim.fn.json_decode(result[1])
-          table.insert(results, vim.tbl_map(function(v) return v['node'] end, json['data']['search']['edges']))
+          table.insert(results,
+            vim.tbl_filter(
+              function(v)
+                return type(v) == "table" and v.pushedAt ~= nil
+              end,
+              vim.tbl_values(json['data'])
+            ))
         end,
         catch {
           function(e)
