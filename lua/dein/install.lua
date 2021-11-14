@@ -667,7 +667,7 @@ function job_execute_on_out(data)
   end
 
   local candidates = job_execute.candidates
-  if vim.fn.empty(candidates)==1 then
+  if vim.tbl_isempty(candidates) then
     table.insert(candidates, data[1])
   else
     -- TODO How to access the last element of the list
