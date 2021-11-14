@@ -12,7 +12,7 @@ function Job:start(args, opt)
     options.cwd = opt.cwd
   end
   if opt.on_stdout then
-    options.on_stdout = function(job_id, data, event) opt.on_stdout(data) end
+    options.on_stdout = function(job_id, data, event) opt.on_stdout(job_id, data, event) end
   end
   if opt.on_stderr then
     options.on_stderr = function(job_id, data, event)

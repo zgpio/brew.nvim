@@ -661,7 +661,7 @@ function __done(context)
 end
 
 local job_execute = {}
-function job_execute_on_out(data)
+function job_execute_on_out(job_id, data, event)
   for i, line in ipairs(data) do
     print(line)
   end
@@ -971,9 +971,7 @@ function __get_errored_message(plugins)
   return msg
 end
 
-local job_check_update = {}
-function job_check_update_on_out(data)
-  local candidates = job_check_update.candidates
+function job_check_update_on_out(job_id, data, event, candidates)
   if vim.tbl_isempty(candidates) then
     table.insert(candidates, data[1])
   else
@@ -981,13 +979,7 @@ function job_check_update_on_out(data)
   end
   vim.list_extend(candidates, slice(data, 2))
 end
-function job_check_update_execute(cmd)
-  job_check_update.candidates = {}
 
-  local job = Job:start(__convert_args(cmd), {on_stdout=job_check_update_on_out})
-
-  return job:wait(dein.install_process_timeout * 1000)
-end
 function _check_update(plugins, force, async)
   if dein.install_github_api_token == '' then
     ERROR('You need to set dein.install_github_api_token to check updated plugins.')
@@ -1001,7 +993,7 @@ function _check_update(plugins, force, async)
   __global_context.progress_type = 'echo'
   local query_max = 100
   plugins = _get_plugins(plugins)
-  local results = {}
+  local processes = {}
   for index = 1, #plugins, query_max do
     vim.api.nvim_command('redraw')
     print_progress_message(
@@ -1029,13 +1021,25 @@ function _check_update(plugins, force, async)
       '{ "query": "query {' .. query .. '}" }',
       'https://api.github.com/graphql'
     }
-    job_check_update_execute(commands)
 
-    local result = job_check_update.candidates
-    if not vim.tbl_isempty(result) then
+    local process = {candidates={}}
+    local job = Job:start(__convert_args(commands), {
+      on_stdout=function(job_id, data, event)
+        job_check_update_on_out(job_id, data, event, process.candidates) end
+      })
+    process.job = job
+
+    table.insert(processes, process)
+  end
+
+  -- Get outputs
+  local results = {}
+  for _, process in ipairs(processes) do
+    process.job:wait(dein.install_process_timeout * 1000)
+    if not vim.tbl_isempty(process.candidates) then
       try {
         function()
-          local json = vim.fn.json_decode(result[1])
+          local json = vim.fn.json_decode(process.candidates[1])
           table.insert(results,
             vim.tbl_filter(
               function(v)
@@ -1046,7 +1050,7 @@ function _check_update(plugins, force, async)
         end,
         catch {
           function(e)
-            ERROR('json output decode error: ' .. vim.fn.string(result))
+            ERROR('json output decode error: ' .. vim.fn.string(process.candidates))
           end
         }
       }

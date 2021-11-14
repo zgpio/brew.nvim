@@ -32,7 +32,7 @@ job1.options.private_var = 1
 assert(job2.options.private_var ~= 1)
 
 
-local job3 = Job:start({'cat'}, {on_stdout=function(data)
+local job3 = Job:start({'cat'}, {on_stdout=function(job_id, data, event)
   local str = vim.fn.join(data, " ")
   print(str)
 end})
@@ -42,10 +42,12 @@ local is_windows = vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1
 
 local job4
 if is_windows then
-    job4 = Job:start({'ping', 'localhost'}, {on_stdout=function(data) print(vim.inspect(data)) end})
+    job4 = Job:start({'ping', 'localhost'}, {on_stdout=function(job_id, data, event) print(vim.inspect(data)) end})
 else
-    job4 = Job:start({'ping', 'baidu.com', '-c', '1'}, {on_stdout=function(data) print(vim.inspect(data)) end})
+    job4 = Job:start({'ping', 'baidu.com', '-c', '1'}, {on_stdout=function(job_id, data, event) print(vim.inspect(data)) end})
 end
 assert(job4:status())
 assert(job4:wait()==0)  -- test job wait
 assert(job4:status()==false)
+
+local job5 = Job:start({'ping', 'localhost', '&&', 'ping', 'localhost'}, {on_exit=function(exitval) print("exit code:", exitval) end})
