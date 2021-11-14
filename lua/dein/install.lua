@@ -1018,8 +1018,17 @@ function _check_update(plugins, async)
 
     local result = job_check_update.candidates
     if not vim.tbl_isempty(result) then
-      local json = vim.fn.json_decode(result[1])
-      table.insert(results, vim.tbl_map(function(v) return v['node'] end, json['data']['search']['edges']))
+      try {
+        function()
+          local json = vim.fn.json_decode(result[1])
+          table.insert(results, vim.tbl_map(function(v) return v['node'] end, json['data']['search']['edges']))
+        end,
+        catch {
+          function(e)
+            ERROR('json output decode error: ' .. vim.fn.string(result))
+          end
+        }
+      }
     end
   end
 
@@ -1048,7 +1057,7 @@ function _check_update(plugins, async)
   end
 
   _notify('Updated plugins: ' ..
-    vim.inspect(vim.tbl_map(function(v) return v.name end, updated)))
+    vim.fn.string(vim.tbl_map(function(v) return v.name end, updated)))
   if vim.fn.confirm('Updated plugins are exists. Install now?',
     "yes\nno", 2) ~= 1 then
     return
