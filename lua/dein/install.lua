@@ -1046,6 +1046,12 @@ function _check_update(plugins, async)
 
   _notify('Updated plugins: ' ..
     vim.inspect(vim.tbl_map(function(v) return v.name end, updated)))
+  if vim.fn.confirm('Updated plugins are exists. Install now?',
+    "yes\nno", 2) ~= 1 then
+    return
+  end
+
+  _update(updated, 'update', async)
 end
 function _reinstall(plugins)
   local plugins = _get_plugins(plugins)
