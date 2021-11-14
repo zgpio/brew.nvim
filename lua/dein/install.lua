@@ -988,7 +988,7 @@ function job_check_update_execute(cmd)
 
   return job:wait(dein.install_process_timeout * 1000)
 end
-function _check_update(plugins, async)
+function _check_update(plugins, force, async)
   if dein.install_github_api_token == '' then
     ERROR('You need to set dein.install_github_api_token to check updated plugins.')
     return
@@ -1066,7 +1066,7 @@ function _check_update(plugins, async)
 
   _notify('Updated plugins: ' ..
     vim.fn.string(vim.tbl_map(function(v) return v.name end, updated)))
-  if vim.fn.confirm('Updated plugins are exists. Update now?',
+  if not force and vim.fn.confirm('Updated plugins are exists. Update now?',
     "yes\nno", 2) ~= 1 then
     return
   end
