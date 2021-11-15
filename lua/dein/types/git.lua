@@ -266,6 +266,7 @@ end
 
 -- From minpac plugin manager
 -- https://github.com/k-takata/minpac
+-- https://github.com/junegunn/vim-plug/pull/937
 function isabsolute(dir)
   if dir:find('^/') or (is_windows and vim.fn.match(dir, [[\c^\%(\\\|[A-Z]:\)]])) ~= -1 then
     return true
@@ -298,10 +299,48 @@ function get_gitdir(dir)
   end
   return ''
 end
-function get_revision(dir)
+function git_get_remote_origin_url(dir)
   local gitdir = get_gitdir(dir)
   if gitdir == '' then
-    return nil
+    return ''
+  end
+  local rv = ''
+  try {
+    function()
+      local lines = vim.fn.readfile(gitdir .. '/config')
+      local n, ll, url = 1, vim.fn.len(lines), ''
+      while n <= ll do
+        local line = vim.fn.trim(lines[n])
+        n = n + 1
+        if vim.fn.stridx(line, '[remote "origin"]') == 0 then
+          while n <= ll do
+            line = vim.fn.trim(lines[n])
+            if line == '[' then
+              break
+            end
+            url = vim.fn.matchstr(line, [[^url\s*=\s*\zs[^ #]\+]])
+            if vim.fn.empty(url) == 0 then
+              break
+            end
+            n = n + 1
+          end
+          n = n + 1
+        end
+      end
+      rv = url
+    end,
+    catch {
+      function(error)
+      end
+    }
+  }
+  return rv
+end
+
+function git_get_revision(dir)
+  local gitdir = get_gitdir(dir)
+  if gitdir == '' then
+    return ''
   end
   local rev
   try {
@@ -319,19 +358,20 @@ function get_revision(dir)
           end
         end
       end
+      rev = line
     end,
     catch {
       function(error)
-        rev = nil
+        rev = ''
       end
     }
   }
   return rev
 end
-function get_branch(dir)
+function git_get_branch(dir)
   local gitdir = get_gitdir(dir)
   if gitdir == '' then
-    return nil
+    return ''
   end
   local rv
   try {
@@ -340,12 +380,12 @@ function get_branch(dir)
       if line:find('^ref: refs/heads/') then
         rv = line:sub(17)
       else
-        rv = ''
+        rv = 'HEAD'
       end
     end,
     catch {
       function(error)
-        rv = nil
+        rv = ''
       end
     }
   }
