@@ -102,7 +102,7 @@ local function is_git_dir(path)
   return 1
 end
 function M:get_revision_number(plugin)
-  local rev = get_revision(plugin.path)
+  local rev = git_get_revision(plugin.path)
   if rev == nil then
     return ''
   end
