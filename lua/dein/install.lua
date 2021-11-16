@@ -1064,14 +1064,23 @@ function _check_update(plugins, force, async)
       vim.fn.strptime('%Y-%m-%dT%H:%M:%SZ', node['pushedAt'])
   end
 
+  -- Get the last updated time by rollbackfile timestamp.
+  -- Note: .git timestamp may be changed by git commands.
+  local rollbacks = vim.fn.reverse(vim.fn.sort(_globlist(
+    __get_rollback_directory() .. '/*')))
+  local rollback_time = vim.fn.empty(rollbacks)==1 and -1 or vim.fn.getftime(rollbacks[1])
+
   -- Compare with .git directory updated time.
   local updated = {}
   for _, plugin in ipairs(plugins) do
-    local git_path = plugin.path .. '/.git'
-    if vim.fn.isdirectory(plugin.path) == 0
-      or (check_pushed[plugin.repo]~=nil
-        and vim.fn.getftime(git_path) < check_pushed[plugin.repo]) then
-      table.insert(updated, plugin)
+    if check_pushed[plugin.repo]~=nil then
+      local git_path = plugin.path .. '/.git'
+      local repo_time = (vim.fn.isdirectory(plugin.path)==1
+        and vim.fn.getftime(git_path) or -1)
+
+      if math.min(repo_time, rollback_time) < check_pushed[plugin.repo] then
+        table.insert(updated, plugin)
+      end
     end
   end
 
