@@ -445,7 +445,7 @@ local function async_get(async, process)
     output = vim.fn.join(slice(candidates, 1, #candidates-1), "\n")
   end
   if output ~= '' then
-    process.output = process.output .. output
+    process.output = output
     process.start_time = vim.fn.localtime()
     log(__get_short_message(process.plugin, process.number,
           process.max_plugins, output))
