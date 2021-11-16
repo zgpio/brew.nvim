@@ -162,7 +162,7 @@ function _rollback(date, plugins)
   _load_rollback(rollbacks[0], plugins)
 end
 local function check_rollback(plugin)
-  return plugin['local']==nil and (plugin.frozen or 0)==0 and (plugin.rev or '') == ''
+  return plugin['local']==nil and (plugin.frozen or 0)==0
 end
 function _save_rollback(rollbackfile, plugins)
   local revisions = {}
