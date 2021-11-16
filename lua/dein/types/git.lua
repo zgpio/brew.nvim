@@ -173,16 +173,23 @@ function M:get_sync_command(plugin)
   else
     local gcmd = self.command
 
-    local cmd = dein.types_git_pull_command
+    local fetch_cmd = gcmd .. ' fetch'
+    local remote_origin_cmd = gcmd .. ' remote set-head origin -a'
+    local pull_cmd = gcmd .. ' ' .. dein.types_git_pull_command
     local submodule_cmd = gcmd .. ' submodule update --init --recursive'
+    local cmd
     if _is_powershell() then
+      cmd = fetch_cmd
+      cmd = cmd .. '; if ($?) { ' .. remote_origin_cmd .. ' }'
+      cmd = cmd .. '; if ($?) { ' .. pull_cmd .. ' }'
       cmd = cmd .. '; if ($?) { ' .. submodule_cmd .. ' }'
     else
       local AND = _is_fish() and '; and ' or ' && '
-      cmd = cmd .. AND .. submodule_cmd
+      cmd = vim.fn.join({
+        fetch_cmd, remote_origin_cmd, pull_cmd, submodule_cmd}, AND)
     end
 
-    return gcmd .. ' ' .. cmd
+    return cmd
   end
 end
 function M:get_revision_lock_command(plugin)
