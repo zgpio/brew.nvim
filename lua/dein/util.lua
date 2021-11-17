@@ -342,6 +342,13 @@ function _save_state(is_starting)
     if plugin.hook_add~=nil and type(plugin.hook_add) == 'string' then
       vim.list_extend(lines, skipempty(plugin.hook_add))
     end
+
+    -- Invalid hooks detection
+    for k, v in pairs(plugin) do
+      if vim.fn.stridx(k, 'hook_') == 0 and type(v) ~= 'string' then
+        _error(vim.fn.printf('%s: "%s" must be string', plugin.name, k))
+      end
+    end
   end
 
   -- Add events
