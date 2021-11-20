@@ -319,7 +319,7 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
   )
   local sources = vim.tbl_filter(
     function(v)
-      return vim.tbl_contains((v['on_source'] or {}), plugin.name)
+      return vim.tbl_contains((v.on_source or {}), plugin.name)
     end,
     lazy_plugins
   )
@@ -328,14 +328,14 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
     source_plugin(plugins, rtps, index, on_source, sourced)
   end
 
-  if plugin['dummy_commands'] ~= nil then
+  if plugin.dummy_commands ~= nil then
     for _, command in ipairs(plugin.dummy_commands) do
       C('silent! delcommand '..command[1])
     end
     plugin.dummy_commands = {}
   end
 
-  if plugin['dummy_mappings'] ~= nil then
+  if plugin.dummy_mappings ~= nil then
     for _, map in ipairs(plugin.dummy_mappings) do
       C('silent! '..map[1]..'unmap '..map[2])
     end

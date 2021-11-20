@@ -1424,13 +1424,13 @@ function __init_process(plugin, context, cmd)
   local process = {}
 
   local cwd = vim.fn.getcwd()
-  local lang_save = vim.env['LANG']
-  local prompt_save = vim.env['GIT_TERMINAL_PROMPT']
+  local lang_save = vim.env.LANG
+  local prompt_save = vim.env.GIT_TERMINAL_PROMPT
   try {
     function()
-      vim.env['LANG'] = 'C'
+      vim.env.LANG = 'C'
       -- Disable git prompt (git version >= 2.3.0)
-      vim.env['GIT_TERMINAL_PROMPT'] = 0
+      vim.env.GIT_TERMINAL_PROMPT = 0
 
       _cd(plugin.path)
 
@@ -1475,8 +1475,8 @@ function __init_process(plugin, context, cmd)
     }
   }
 
-  vim.env['LANG'] = lang_save
-  vim.env['GIT_TERMINAL_PROMPT'] = prompt_save
+  vim.env.LANG = lang_save
+  vim.env.GIT_TERMINAL_PROMPT = prompt_save
   _cd(cwd)
 
   return process

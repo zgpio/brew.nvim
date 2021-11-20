@@ -10,8 +10,8 @@ function M.init(repo, options)
   end
 
   local directory = vim.fn.substitute(vim.fn.fnamemodify(repo, ':h'), [[\.git$]], '', '')
-  local directory = vim.fn.substitute(directory, [[^https:/\+\|^git@]], '', '')
-  local directory = vim.fn.substitute(directory, ':', '/', 'g')
+  directory = vim.fn.substitute(directory, [[^https:/\+\|^git@]], '', '')
+  directory = vim.fn.substitute(directory, ':', '/', 'g')
 
   return { ['name']=_name_conversion(repo), ['type']='raw',
           ['path']=dein._base_path..'/repos/'..directory }
