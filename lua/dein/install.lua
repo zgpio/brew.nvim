@@ -1337,7 +1337,7 @@ function _update(plugins, update_type, async)
     return
   end
 
-  local plugins = _get_plugins(plugins)
+  plugins = _get_plugins(plugins)
 
   if update_type == 'install' then
     plugins = vim.tbl_filter(function(v) return isdir(v.path)==0 end, plugins)
@@ -1484,8 +1484,8 @@ end
 function __sync(plugin, context)
   context.number = context.number + 1
 
-  num = context.number
-  max = context.max_plugins
+  local num = context.number
+  local max = context.max_plugins
 
   -- if not plugin then return end
   if isdir(plugin.path)==1 and (plugin.frozen or 0)==1 then
@@ -1494,7 +1494,7 @@ function __sync(plugin, context)
     return
   end
 
-  cmd, message = get_sync_command(plugin, context.update_type, context.number, context.max_plugins)
+  local cmd, message = get_sync_command(plugin, context.update_type, context.number, context.max_plugins)
 
   if vim.fn.empty(cmd)==1 then
     -- Skip
