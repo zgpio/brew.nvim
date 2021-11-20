@@ -7,7 +7,7 @@ function Job:start(args, opt)
   self.__index = self
 
   local options = {}
-  local opt = opt or {}
+  opt = opt or {}
   if opt.cwd then
     options.cwd = opt.cwd
   end

@@ -75,7 +75,7 @@ function parse_lazy(plugin)
   -- TODO: https://github.com/neovim/neovim/issues/12048
   assert(event_plugins[true]==nil)
   if plugin.on_event ~= nil then
-    for i, event in ipairs(plugin.on_event) do
+    for _, event in ipairs(plugin.on_event) do
       if event_plugins[event] == nil then
         event_plugins[event] = {plugin.name}
       else
@@ -97,7 +97,7 @@ end
 
 function generate_dummy_commands(plugin)
   plugin.dummy_commands = {}
-  for i, name in ipairs(plugin.on_cmd) do
+  for _, name in ipairs(plugin.on_cmd) do
     -- Define dummy commands.
     local raw_cmd = 'command -complete=customlist,v:lua._dummy_complete -bang -bar -range -nargs=* ' .. name
       .. vim.fn.printf(" call v:lua._on_cmd(%s, %s, <q-args>, expand('<bang>'), expand('<line1>'), expand('<line2>'))",
@@ -120,7 +120,7 @@ function generate_dummy_mappings(plugin)
   plugin.dummy_mappings = {}
   local items = {}
   if vim.tbl_islist(plugin.on_map) then
-    for i, map in ipairs(plugin.on_map) do
+    for _, map in ipairs(plugin.on_map) do
       if vim.tbl_islist(map) then
         table.insert(items, {vim.split(map[1], ''), table.slice(map, 2)})
       else
@@ -137,7 +137,7 @@ function generate_dummy_mappings(plugin)
     end
   end
 
-  for i, item in ipairs(items) do
+  for _, item in ipairs(items) do
     local modes, mappings = unpack(item)
     if mappings[1] == '<Plug>' then
       -- Use plugin name.
@@ -148,11 +148,11 @@ function generate_dummy_mappings(plugin)
       end
     end
 
-    for i, mapping in ipairs(mappings) do
+    for _, mapping in ipairs(mappings) do
       -- Define dummy mappings.
       local prefix = string.format('v:lua._on_map("%s", "%s",',
         mapping:gsub('<', '<lt>'), plugin.name)
-      for i, mode in ipairs(modes) do
+      for _, mode in ipairs(modes) do
         local t
         if mode == 'c' then
           t = [[ \<C-r>=]]
@@ -191,7 +191,7 @@ function merge_ftplugin(ftplugin)
 end
 
 function _dict(plug)
-  plugin = vim.tbl_extend('force', { rtp='', sourced=false }, plug)
+  local plugin = vim.tbl_extend('force', { rtp='', sourced=false }, plug)
 
   if plugin.name == nil then
     plugin.name = _name_conversion(plugin.repo)

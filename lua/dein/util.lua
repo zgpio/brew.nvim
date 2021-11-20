@@ -683,7 +683,7 @@ function _end()
   end
 
   -- Add runtimepath
-  rtps = _split_rtp(vim.o.rtp)
+  local rtps = _split_rtp(vim.o.rtp)
   local index = vim.fn.index(rtps, dein._runtime_path)
   if index < 0 then
     M._error('Invalid runtimepath.')
@@ -740,8 +740,8 @@ function _end()
 end
 
 function _download(uri, outpath)
+  local c
   if dein.download_command==nil then
-    local c
     if vim.fn.executable('curl')==1 then
       c = 'curl --silent --location --output'
     elseif vim.fn.executable('wget')==1 then
