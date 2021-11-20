@@ -44,10 +44,10 @@ function _add(repo, options)
     if plugin.lazy==1 then
       plugin = parse_lazy(plugin)
     end
-    if plugin['hook_add']~=nil then
+    if plugin.hook_add~=nil then
       _execute_hook(plugin, plugin.hook_add)
     end
-    if plugin['ftplugin']~=nil then
+    if plugin.ftplugin~=nil then
       merge_ftplugin(plugin.ftplugin)
     end
   end
@@ -58,23 +58,23 @@ function _add(repo, options)
 end
 function parse_lazy(plugin)
   -- Auto convert2list.
-  for i, key in ipairs({'on_ft', 'on_path', 'on_cmd', 'on_func', 'on_map',
+  for _, key in ipairs({'on_ft', 'on_path', 'on_cmd', 'on_func', 'on_map',
       'on_source', 'on_event'}) do
     if plugin[key] ~= nil and type(plugin[key]) ~= 'table' then
         plugin[key] = {plugin[key]}
     end
   end
 
-  if plugin['on_i'] ~= nil and plugin['on_i'] ~= 0 then
+  if plugin.on_i ~= nil and plugin.on_i ~= 0 then
     plugin.on_event = {'InsertEnter'}
   end
-  if plugin['on_idle'] ~= nil and plugin['on_idle'] ~= 0 then
+  if plugin.on_idle ~= nil and plugin.on_idle ~= 0 then
     plugin.on_event = {'FocusLost', 'CursorHold'}
   end
   local event_plugins = dein._event_plugins
   -- TODO: https://github.com/neovim/neovim/issues/12048
   assert(event_plugins[true]==nil)
-  if plugin['on_event'] ~= nil then
+  if plugin.on_event ~= nil then
     for i, event in ipairs(plugin.on_event) do
       if event_plugins[event] == nil then
         event_plugins[event] = {plugin.name}
@@ -86,10 +86,10 @@ function parse_lazy(plugin)
   end
   dein._event_plugins = event_plugins
 
-  if plugin['on_cmd'] ~= nil then
+  if plugin.on_cmd ~= nil then
     generate_dummy_commands(plugin)
   end
-  if plugin['on_map'] ~= nil then
+  if plugin.on_map ~= nil then
     generate_dummy_mappings(plugin)
   end
   return plugin
@@ -357,11 +357,11 @@ function _local(localdir, options, includes)
   end
 
   for _, dir in ipairs(_uniq(directories)) do
-    local options = vim.tbl_extend('force', {
+    options = vim.tbl_extend('force', {
       ['repo']=dir,
       ['local']=1,
       ['path']=dir,
-      ['name']=fnamemodify(dir, ':t')
+      ['name']=vim.fn.fnamemodify(dir, ':t')
     }, options)
 
     if dein._plugins[options.name] then

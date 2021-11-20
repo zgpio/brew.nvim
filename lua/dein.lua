@@ -60,7 +60,7 @@ function M.get(...)
   if vim.tbl_isempty(args) then
     return vim.deepcopy(M._plugins)
   else
-    return (M._plugins[args[1]] or {})
+    return (vim.deepcopy(M._plugins[args[1]]) or {})
   end
 end
 function M.install(...)
