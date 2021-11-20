@@ -271,9 +271,9 @@ function _dict(plug)
     plugin.merged = plugin.lazy==0
       and plugin.normalized_name ~= 'dein'
       and plugin['local']==nil
-      and plugin['build']==nil
+      and plugin.build==nil
       and plugin['if']==nil
-      and plugin['hook_post_update']==nil
+      and plugin.hook_post_update==nil
       and vim.fn.stridx(plugin.rtp, dein._base_path) == 0
     plugin.merged = plugin.merged and 1 or 0
   end
@@ -302,7 +302,7 @@ function _get_types()
   if types == nil then
     -- Load types.
     types = {}
-    local fl = vim.fn.split(vim.fn.globpath(vim.o.rtp, 'lua/dein/types/*.lua', 1), '\n')
+    local fl = vim.split(vim.fn.globpath(vim.o.rtp, 'lua/dein/types/*.lua', 1), '\n')
     for _, typ in ipairs(vim.tbl_map(
       function(v)
         return require('dein/types/'..vim.fn.fnamemodify(v, ':t:r'))
@@ -315,7 +315,7 @@ function _get_types()
   return types
 end
 function _name_conversion(path)
-  return vim.fn.fnamemodify(vim.fn.get(vim.fn.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
+  return vim.fn.fnamemodify(vim.fn.get(vim.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
 end
 
 function __check_type(repo, options)

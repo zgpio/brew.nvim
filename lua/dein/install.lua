@@ -508,7 +508,7 @@ local function check_output(context, process)
     if is_timeout then
       ERROR(vim.fn.strftime('Process timeout: (%Y/%m/%d %H:%M:%S)'))
     else
-      ERROR(vim.fn.split(process.output, '\n'))
+      ERROR(vim.split(process.output, '\n'))
     end
 
     table.insert(context.errored_plugins, plugin)
@@ -819,7 +819,7 @@ local function generate_ftplugin()
   -- Merge dein._ftplugin
   local ftplugin = {}
   for key, string in pairs(dein._ftplugin) do
-    local fts = (key == '_') and {'_'} or vim.fn.split(key, '_')
+    local fts = (key == '_') and {'_'} or vim.split(key, '_')
     for _, ft in ipairs(fts) do
       if not ftplugin.ft then
         if ft == '_' then

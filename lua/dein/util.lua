@@ -44,7 +44,7 @@ function __msg2list(expr)
   if vim.tbl_islist(expr) then
     return expr
   else
-    return vim.fn.split(expr, '\n')
+    return vim.split(expr, '\n')
   end
 end
 
@@ -117,7 +117,7 @@ function _check_clean()
     function(v)
       return vim.fn.isdirectory(v) and vim.fn.fnamemodify(v, ':t') ~= 'dein.vim' and vim.fn.index(plugins_directories, v) < 0
     end,
-    vim.fn.split(path, "\n")
+    vim.split(path, "\n")
   )
 end
 
@@ -434,7 +434,7 @@ function M._error(msg)
 end
 function _split_rtp(rtp)
   if vim.fn.stridx(rtp, [[\,]]) < 0 then
-    return vim.fn.split(rtp, ',')
+    return vim.split(rtp, ',')
   end
 
   local split = vim.fn.split(rtp, [[\\\@<!\%(\\\\\)*\zs,]])
