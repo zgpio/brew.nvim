@@ -122,19 +122,19 @@ local function append_log_file(msg)
   vim.fn.writefile(msg, logfile)
 end
 local function log(msg)
-  local msg = _convert2list(msg)
+  msg = _convert2list(msg)
   table.insert(var_log, msg)
   append_log_file(msg)
 end
 local function __updates_log(msg)
-  local msg = _convert2list(msg)
+  msg = _convert2list(msg)
 
   table.insert(var_updates_log, msg)
   log(msg)
 end
 
 local function ERROR(msg)
-  local msg = _convert2list(msg)
+  msg = _convert2list(msg)
   if vim.fn.empty(msg)==1 then
     return
   end
@@ -148,7 +148,7 @@ function _system(command)
   -- local job = Job:start()
   -- local exitval = job:wait()
 
-  local command = iconv(command, vim.o.encoding, 'char')
+  command = iconv(command, vim.o.encoding, 'char')
   local output = iconv(vim.fn.system(command), 'char', vim.o.encoding)
   return vim.fn.substitute(output, '\n$', '', '')
 end
@@ -178,7 +178,7 @@ end
 function _load_rollback(rollbackfile, plugins)
   local revisions = vim.fn.json_decode(vim.fn.readfile(rollbackfile)[0])
 
-  local plugins = _get_plugins(plugins)
+  plugins = _get_plugins(plugins)
   -- TODO has_key(v:lua._get_type(v:val.type), 'get_rollback_command')
   plugins = vim.tbl_filter(
     function(v)
@@ -1201,7 +1201,7 @@ function __echo(expr, mode)
   vim.o.ruler = ruler_save
 end
 function __notify(msg)
-  local msg = _convert2list(msg)
+  msg = _convert2list(msg)
   local context = __global_context
   if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
     return
