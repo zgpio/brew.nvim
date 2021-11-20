@@ -980,6 +980,9 @@ function job_check_update_on_out(job_id, data, event, candidates)
   vim.list_extend(candidates, slice(data, 2))
 end
 
+local WIN_QUERY = [[a%d:repository(owner:\\""%s\\"", name:\\""%s\\""){ pushedAt nameWithOwner }]]
+local LIN_QUERY = [[a%d:repository(owner:\"%s\", name:\"%s\"){ pushedAt nameWithOwner }]]
+local QUERY = _is_windows() and WIN_QUERY or LIN_QUERY
 function _check_update(plugins, force, async)
   if dein.install_github_api_token == '' then
     ERROR('You need to set dein.install_github_api_token to check updated plugins.')
@@ -1002,28 +1005,28 @@ function _check_update(plugins, force, async)
     local query = ''
     for plug_index = index,
         math.min(index + query_max, #plugins) do
-      local plugin_names = vim.fn.split(plugins[plug_index].repo, '/')
-      if vim.fn.len(plugin_names) >= 2 then
+      local plugin_names = vim.split(plugins[plug_index].repo, '/')
+      local gitee = string.find(plugins[plug_index].repo, 'gitee')
+      if not gitee and vim.fn.len(plugin_names) >= 2 then
         -- Invalid repository name when < 2.
 
         -- Note: "repository" API is faster than "search" API
-        query = query .. vim.fn.printf(
-          'a%d:repository(owner:\"%s\", name: \"%s\")' ..
-          '{ pushedAt nameWithOwner }',
+        query = query .. vim.fn.printf(QUERY,
           plug_index, plugin_names[#plugin_names - 1], plugin_names[#plugin_names])
       end
     end
 
     local commands = {
-      dein.install_curl_command, '-H', 'Authorization: bearer ' ..
-      dein.install_github_api_token,
+      dein.install_curl_command, '-H', '"Authorization: bearer ' ..
+      dein.install_github_api_token..'"',
       '-X', 'POST', '-d',
-      '{ "query": "query {' .. query .. '}" }',
+      '"{ ""query"": ""query {' .. query .. '}"" }"',
       'https://api.github.com/graphql'
     }
+    commands = vim.fn.join(commands, ' ')
 
     local process = {candidates={}}
-    local job = Job:start(__convert_args(commands), {
+    local job = Job:start(commands, {
       on_stdout=function(job_id, data, event)
         job_check_update_on_out(job_id, data, event, process.candidates) end
       })
@@ -1040,17 +1043,13 @@ function _check_update(plugins, force, async)
       try {
         function()
           local json = vim.fn.json_decode(process.candidates[1])
-          table.insert(results,
-            vim.tbl_filter(
-              function(v)
-                return type(v) == "table" and v.pushedAt ~= nil
-              end,
-              vim.tbl_values(json['data'])
-            ))
+          results = vim.tbl_extend('keep', results,
+            util.map_filter(json['data'], function(k, v)
+                return type(v) == "table" and v.pushedAt ~= nil end))
         end,
         catch {
           function(e)
-            ERROR('json output decode error: ' .. vim.fn.string(process.candidates))
+            ERROR('json output decode error: ' .. vim.fn.string(process.candidates) .. e)
           end
         }
       }
@@ -1059,9 +1058,11 @@ function _check_update(plugins, force, async)
 
   -- Get pushed time.
   local check_pushed = {}
-  for _, node in ipairs(results) do
-    check_pushed[node['nameWithOwner']] =
-      vim.fn.strptime('%Y-%m-%dT%H:%M:%SZ', node['pushedAt'])
+  for _, node in pairs(results) do
+    if node ~= nil then
+      check_pushed[node.nameWithOwner] =
+        vim.fn.strptime('%Y-%m-%dT%H:%M:%SZ', node.pushedAt)
+    end
   end
 
   -- Get the last updated time by rollbackfile timestamp.

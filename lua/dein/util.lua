@@ -414,6 +414,16 @@ end
 function execute(expr)
   return vim.fn.execute(vim.split(expr, '\n'), '')
 end
+function M.map_filter(t, filterIter)
+  local rv = {}
+
+  for k, v in pairs(t) do
+    if filterIter(k, v) then rv[k] = v end
+  end
+
+  return rv
+end
+
 function M._error(msg)
   for i, mes in ipairs(msg2list(msg)) do
     local c = string.format('echomsg "[dein] %s"', mes)
