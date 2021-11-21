@@ -3,6 +3,7 @@ _G._TEST = true
 package.loaded["dein/types/git"] = nil
 local git = require "dein/types/git"
 
+print(git_get_revision([[C:\Users\zgp\vtest\.cache\dein\repos\gitee.com\zgpio\auto-pairs]]))
 print(vim.inspect(git))
 assert(git._join_paths('aaa', 'bbbbbbb')=='aaa/bbbbbbb')
 print(git._join_paths('aaa', '/bbbbbbb'))

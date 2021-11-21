@@ -169,7 +169,7 @@ end
 function M.add(repo, ...)
   require 'dein/util'
   local args = {...}
-  return _add(repo, (args[1] or {}))
+  return _add(repo, (args[1] or {}), false)
 end
 function M.get_updates_log()
   require 'dein/install'

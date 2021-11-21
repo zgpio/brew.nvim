@@ -30,13 +30,21 @@ function _init(repo, options)
   end
   return plugin
 end
-function _add(repo, options)
+function _add(repo, options, overwrite)
+  if nil == overwrite then
+      overwrite = true
+  end
   local _plugins = dein._plugins
   local plugin = _dict(_init(repo, options))
-  if (_plugins[plugin.name]~=nil
-        and _plugins[plugin.name].sourced)
-        or (plugin['if'] or 1)==0 then
+  local plugin_check = (_plugins[plugin.name] or {})
+  if (plugin_check.sourced or 0)==1 or (plugin['if'] or 1)==0 then
     -- Skip already loaded or not enabled plugin.
+    return {}
+  end
+
+  -- Duplicated plugins check
+  if not overwrite and vim.fn.empty(plugin_check)==0 then
+    _error(vim.fn.printf('Plugin name "%s" is already defined.', plugin.name))
     return {}
   end
 

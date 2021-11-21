@@ -834,7 +834,7 @@ local function generate_ftplugin()
              }
         end
       end
-      for _,v in ipairs(vim.fn.split(string, '\n')) do table.insert(ftplugin[ft], v) end
+      for _,v in ipairs(vim.split(string, '\n')) do table.insert(ftplugin[ft], v) end
     end
   end
 
