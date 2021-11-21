@@ -92,7 +92,7 @@ function _execute_hook(plugin, hook)
       -- TODO 恢复 g:dein#plugin 提供的功能
       dein.plugin = plugin
       if type(hook) == 'string' then
-        vim.fn.execute(vim.fn.split(hook, '\n'))
+        vim.fn.execute(vim.split(hook, '\n'))
       else
         vim.fn.call(hook, {})
       end
@@ -594,11 +594,11 @@ function _begin(path, vimrcs)
 
   if vim.fn.has('vim_starting')==1 then
     -- Filetype off
-    if vim.fn.exists('g:did_load_filetypes')==1 or vim.fn.has('nvim')==1 then
+    if vim.g.did_load_filetypes~=nil or vim.fn.has('nvim')==1 then
       dein._off1 = 'filetype off'
       a.nvim_command(dein._off1)
     end
-    if vim.fn.exists('b:did_indent')==1 or vim.fn.exists('b:did_ftplugin')==1 then
+    if vim.b.did_indent~=nil or vim.b.did_ftplugin~=nil then
       dein._off2 = 'filetype plugin indent off'
       a.nvim_command(dein._off2)
     end
@@ -609,7 +609,7 @@ function _begin(path, vimrcs)
 
   -- Insert dein runtimepath to the head in 'runtimepath'.
   local rtps = _split_rtp(vim.o.rtp)
-  local idx = vim.fn.index(rtps, vim.env['VIMRUNTIME'])
+  local idx = vim.fn.index(rtps, vim.env.VIMRUNTIME)
   if idx < 0 then
     M._error('Invalid runtimepath.')
     return 1
@@ -697,7 +697,7 @@ function _end()
     vim.tbl_filter(function (x) return x.lazy==0 and not x.sourced and x.rtp~='' end,
       vim.tbl_values(_plugins))) do
     -- Load dependencies
-    if plugin['depends'] ~= nil then
+    if plugin.depends ~= nil then
       depends = depends + plugin.depends
     end
 
