@@ -49,7 +49,7 @@ function __msg2list(expr)
 end
 
 function _get_myvimrc()
-  local vimrc = vim.env['MYVIMRC']
+  local vimrc = vim.env.MYVIMRC
   if vimrc == '' then
     vimrc = vim.fn.matchstr(vim.fn.split(vim.fn.execute('scriptnames'), '\n')[0], [[^\s*\d\+:\s\zs.*]])
   end
@@ -99,8 +99,7 @@ function _execute_hook(plugin, hook)
     end,
     catch {
       function(error)
-        _error(
-               'Error occurred while executing hook: ' ..
+        _error('Error occurred while executing hook: ' ..
                vim.fn.get(plugin, 'name', ''))
         _error(vim.v.exception)
 
@@ -289,9 +288,15 @@ function _save_state(is_starting)
     return 1
   end
 
-  if _get_cache_path() == '' or is_starting == 0 then
+  if _get_cache_path() == '' or is_starting == 0 or dein._is_sudo then
     -- Ignore
     return 1
+  end
+
+  if dein.auto_recache == 1 then
+    _notify('auto recached')
+    require 'dein/install'
+    _recache_runtimepath()
   end
 
   dein._vimrcs = _uniq(dein._vimrcs)
