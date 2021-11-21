@@ -344,7 +344,7 @@ function git_get_revision(dir)
   if gitdir == '' then
     return ''
   end
-  local rev
+  local rev = ''
   try {
     function()
       local line = vim.fn.readfile(gitdir .. '/HEAD')[1]
@@ -352,11 +352,12 @@ function git_get_revision(dir)
         local ref = line:sub(6)
         if vim.fn.filereadable(gitdir .. '/' .. ref)==1 then
           rev = vim.fn.readfile(gitdir .. '/' .. ref)[1]
+          return
         end
-        for _, line in ipairs(vim.fn.readfile(gitdir .. '/packed-refs')) do
-          if line:find(' '..ref) then
-            rev = vim.fn.substitute(line, [[^\([0-9a-f]*\) ]], [[\1]], '')
-            break
+        for _, ln in ipairs(vim.fn.readfile(gitdir .. '/packed-refs')) do
+          if ln:find(' '..ref) then
+            rev = vim.fn.substitute(ln, [[^\([0-9a-f]*\) ]], [[\1]], '')
+            return
           end
         end
       end
@@ -364,7 +365,7 @@ function git_get_revision(dir)
     end,
     catch {
       function(error)
-        rev = ''
+        print(error)
       end
     }
   }

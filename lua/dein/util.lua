@@ -331,10 +331,10 @@ function _save_state(is_starting)
 
   -- Add dummy mappings/commands
   for _, plugin in ipairs(_get_lazy_plugins()) do
-    for _, command in ipairs(plugin['dummy_commands'] or {}) do
+    for _, command in ipairs(plugin.dummy_commands or {}) do
       table.insert(lines, 'silent! ' .. command[2])
     end
-    for _, mapping in ipairs(plugin['dummy_mappings'] or {}) do
+    for _, mapping in ipairs(plugin.dummy_mappings or {}) do
       table.insert(lines, 'silent! ' .. mapping[3])
     end
   end
@@ -392,7 +392,6 @@ function skipempty(string)
 end
 
 function _get_plugins(plugins)
-  local rv = {}
   if vim.tbl_isempty(plugins) then
     return vim.tbl_values(dein.get())
   else
