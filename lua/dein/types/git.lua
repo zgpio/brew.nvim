@@ -159,7 +159,7 @@ function M:get_uri(repo, options)
 end
 function M:get_sync_command(plugin)
   if vim.fn.isdirectory(plugin.path)==0 then
-    local commands = {self.command, 'clone', '--recursive'}
+    local commands = {self.command, '-c', 'credential.helper=', 'clone', '--recursive'}
 
     local depth = plugin.type__depth or dein.types_git_clone_depth
     if depth > 0 and (plugin.rev or '') == '' and self:get_uri(plugin.repo, plugin):find('^git@')==nil then
@@ -173,7 +173,7 @@ function M:get_sync_command(plugin)
   else
     local gcmd = self.command
 
-    local fetch_cmd = gcmd .. ' fetch'
+    local fetch_cmd = gcmd .. ' -c credential.helper= fetch '
     local remote_origin_cmd = gcmd .. ' remote set-head origin -a'
     local pull_cmd = gcmd .. ' ' .. dein.types_git_pull_command
     local submodule_cmd = gcmd .. ' submodule update --init --recursive'
