@@ -154,10 +154,8 @@ function _check_vimrcs()
   if (dein.auto_recache or 0)==1 then
     a.nvim_command('silent source '.. _get_myvimrc())
 
-    if _get_merged_plugins() ~= _load_merged_plugins() then
-      _notify('auto recached')
-      dein.recache_runtimepath()
-    end
+    _notify('auto recached')
+    dein.recache_runtimepath()
   end
 
   return 1
