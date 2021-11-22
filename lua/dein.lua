@@ -42,7 +42,10 @@ function M._init()
   a.nvim_exec([[
     augroup dein
       autocmd!
-      autocmd FuncUndefined * call luaeval("require'dein/autoload'._on_func(_A)", expand('<afile>'))
+      autocmd FuncUndefined *
+          \ if stridx(expand('<afile>'), 'remote#') != 0 |
+          \   call luaeval("require'dein/autoload'._on_func(_A)", expand('<afile>')) |
+          \ endif
       autocmd BufRead *? lua _on_default_event('BufRead')
       autocmd BufNew,BufNewFile *? lua _on_default_event('BufNew')
       autocmd VimEnter *? lua _on_default_event('VimEnter')
