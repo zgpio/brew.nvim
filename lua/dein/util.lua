@@ -151,13 +151,6 @@ function _check_vimrcs()
 
   _clear_state()
 
-  if (dein.auto_recache or 0)==1 then
-    a.nvim_command('silent source '.. _get_myvimrc())
-
-    _notify('auto recached')
-    dein.recache_runtimepath()
-  end
-
   return 1
 end
 function _save_cache(vimrcs, is_state, is_starting)
@@ -291,7 +284,7 @@ function _save_state(is_starting)
     return 1
   end
 
-  if dein.auto_recache == 1 then
+  if (dein.auto_recache or 0) == 1 then
     _notify('auto recached')
     require 'dein/install'
     _recache_runtimepath()
