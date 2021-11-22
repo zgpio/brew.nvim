@@ -38,6 +38,12 @@ function M._init()
   M._is_sudo = (SUDO_USER~=nil and USER ~= SUDO_USER
     and HOME ~= vim.fn.expand('~'..USER)
     and HOME == vim.fn.expand('~'..SUDO_USER))
+  M._loaded_rplugins = false
+
+  if (M.lazy_rplugins or false) then
+    -- Disable remote plugin loading
+    vim.g.loaded_remote_plugins = 1
+  end
 
   a.nvim_exec([[
     augroup dein

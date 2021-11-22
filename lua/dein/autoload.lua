@@ -348,6 +348,16 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
       rtps = _add_after(rtps, plugin.rtp..'/after')
     end
   end
+
+  if (dein.lazy_rplugins or false) and not dein._loaded_rplugins
+         and vim.fn.isdirectory(plugin.rtp..'/rplugin')==1 then
+    -- Enable remote plugin
+    vim.g.loaded_remote_plugins = nil
+
+    vim.api.nvim_command('runtime! plugin/rplugin.vim')
+
+    M._loaded_rplugins = true
+  end
 end
 
 function get_input()
