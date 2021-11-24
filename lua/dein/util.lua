@@ -361,6 +361,15 @@ function _save_state(is_starting)
     end
   end
 
+  -- Add inline vimrcs
+  for _, vimrc in ipairs(dein.inline_vimrcs or {}) do
+    vim.list_extend(lines,
+      vim.tbl_filter(
+        function(v) return not (v:find('^%s*"') or v:find('^%s$')) end,
+        vim.fn.readfile(_expand(vimrc))
+      ))
+  end
+
   vim.fn.writefile(lines,
     (dein.cache_directory or dein._base_path) ..'/state_' .. dein._progname .. '.vim')
 end
@@ -725,6 +734,10 @@ function _end()
         t, event, vim.inspect(plugins))
       )
     end
+  end
+
+  for _, vimrc in ipairs(dein.inline_vimrcs or {}) do
+    vim.api.nvim_command("source ".._expand(vimrc))
   end
 
   if not vim_starting then
