@@ -11,6 +11,9 @@ function Job:start(args, opt)
   if opt.cwd then
     options.cwd = opt.cwd
   end
+  if opt.env then
+    options.env = opt.env
+  end
   if opt.on_stdout then
     options.on_stdout = function(job_id, data, event) opt.on_stdout(job_id, data, event) end
   end
