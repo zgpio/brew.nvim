@@ -44,8 +44,12 @@ function _add(repo, options, overwrite)
 
   -- Duplicated plugins check
   if not overwrite and vim.fn.empty(plugin_check)==0 then
-    _error(vim.fn.printf('Plugin name "%s" is already defined.', plugin.name))
-    return {}
+    -- Only warning when starting and different options
+    local orig_opts = dein._plugins[plugin.name]['orig_opts'] or {}
+    if vim.fn.has('vim_starting')==1 and orig_opts ~= (plugin.orig_opts or {}) then
+      _error(vim.fn.printf('Plugin name "%s" is already defined.', plugin.name))
+      return {}
+    end
   end
 
   if plugin.rtp ~= '' then
