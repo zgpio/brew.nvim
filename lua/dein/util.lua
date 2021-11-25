@@ -6,6 +6,8 @@ local is_mac = (not is_windows) and vim.fn.has('win32unix') == 0
   and (vim.fn.has('mac')==1 or vim.fn.has('macunix')==1 or vim.fn.has('gui_macvim')==1
     or (vim.fn.isdirectory('/proc')==0 and vim.fn.executable('sw_vers')==1))
 
+local _merged_length = 3
+
 function _is_windows()
   return is_windows
 end
@@ -127,8 +129,9 @@ local function _get_merged_plugins()
     ftplugin_len = ftplugin_len + #ftplugin
   end
   local _plugins = dein._plugins
+  local _merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
   local r1 = {dein._merged_format, vim.fn.string(ftplugin_len)}
-  local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), dein._merged_format))
+  local r2 = vim.fn.sort(vim.fn.map(vim.tbl_values(_plugins), _merged_format))
   vim.list_extend(r1, r2)
   return r1
 end
@@ -638,8 +641,8 @@ function slice(tbl, first, last, step)
 end
 function _save_merged_plugins()
   local merged = _get_merged_plugins()
-  local h = slice(merged, 1, dein._merged_length - 1)
-  local t = slice(merged, dein._merged_length)
+  local h = slice(merged, 1, _merged_length - 1)
+  local t = slice(merged, _merged_length)
   vim.list_extend(h, {vim.fn.string(t)})
   vim.fn.writefile(h, _get_cache_path() .. '/merged')
 end
@@ -649,11 +652,11 @@ function _load_merged_plugins()
     return {}
   end
   local merged = vim.fn.readfile(path)
-  if #merged ~= dein._merged_length then
+  if #merged ~= _merged_length then
     return {}
   end
   -- TODO sandbox
-  local h = slice(merged, 1, dein._merged_length - 1)
+  local h = slice(merged, 1, _merged_length - 1)
   local t = a.nvim_eval(merged[#merged])
   vim.list_extend(h, t)
   return h

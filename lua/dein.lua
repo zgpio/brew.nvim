@@ -15,10 +15,8 @@ function try(what)
 end
 
 function M._init()
-  M._cache_version = 150
-  M._merged_format = "{'repo': v:val.repo, 'rev': get(v:val, 'rev', '')}"
-  M._merged_length = 3
   M.plugin = {}
+  M._cache_version = 150
   M._plugins = {}
   M._cache_path = ''
   M._base_path = ''
