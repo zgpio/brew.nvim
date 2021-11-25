@@ -345,7 +345,7 @@ function _save_state(is_starting)
     -- Invalid hooks detection
     for k, v in pairs(plugin) do
       if vim.fn.stridx(k, 'hook_') == 0 and type(v) ~= 'string' then
-        _error(vim.fn.printf('%s: "%s" must be string', plugin.name, k))
+        _error(vim.fn.printf('%s: "%s" must be string to save state', plugin.name, k))
       end
     end
   end
