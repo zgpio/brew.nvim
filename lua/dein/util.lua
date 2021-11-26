@@ -169,8 +169,8 @@ function _save_cache(vimrcs, is_state, is_starting)
     if is_state == 0 then
       plugin.sourced = false
     end
-    if plugin['orig_opts'] ~= nil then
-      plugin['orig_opts'] = nil
+    if plugin.orig_opts ~= nil then
+      plugin.orig_opts = nil
     end
 
     -- Hooks

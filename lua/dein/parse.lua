@@ -2,6 +2,7 @@
 require 'dein/util'
 -- Global options definition.
 dein.enable_name_conversion = dein.enable_name_conversion or false
+dein.default_options = dein.default_options or {}
 
 function unique(items)
   local flags = {}
@@ -24,6 +25,9 @@ function _init(repo, options)
     plugin = __check_type(repo, options)
   end
   plugin = vim.tbl_extend('force', plugin, options)
+  if not vim.tbl_isempty(dein.default_options) then
+    plugin = vim.tbl_extend('keep', plugin, dein.default_options)
+  end
   plugin.repo = repo
   if vim.fn.empty(options)==0 then
     plugin.orig_opts = vim.deepcopy(options)
@@ -37,19 +41,24 @@ function _add(repo, options, overwrite)
   local _plugins = dein._plugins
   local plugin = _dict(_init(repo, options))
   local plugin_check = (_plugins[plugin.name] or {})
+  overwrite = options.overwrite or overwrite
   if (plugin_check.sourced or 0)==1 or (plugin['if'] or 1)==0 then
     -- Skip already loaded or not enabled plugin.
     return {}
   end
 
   -- Duplicated plugins check
-  if not overwrite and vim.fn.empty(plugin_check)==0 then
-    -- Only warning when starting and different options
-    local orig_opts = dein._plugins[plugin.name]['orig_opts'] or {}
-    if vim.fn.has('vim_starting')==1 and orig_opts ~= (plugin.orig_opts or {}) then
-      _error(vim.fn.printf('Plugin name "%s" is already defined.', plugin.name))
+  if vim.fn.empty(plugin_check)==0 then
+    if not overwrite then
+      -- Only warning when starting
+      if vim.fn.has('vim_starting')==1 then
+        _error(vim.fn.printf('Plugin name "%s" is already defined.', plugin.name))
+      end
       return {}
     end
+
+    -- Overwrite
+    plugin = vim.tbl_extend('keep', plugin, vim.fn.copy(dein._plugins[plugin.name]))
   end
 
   if plugin.rtp ~= '' then
