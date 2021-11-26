@@ -597,6 +597,9 @@ function _begin(path, vimrcs)
   _get_runtime_path()
   _get_cache_path()
   dein._vimrcs = _get_vimrcs(vimrcs)
+  if dein.inline_vimrcs~=nil then
+    dein._vimrcs = vim.tbl_extend('keep', dein._vimrcs, dein.inline_vimrcs)
+  end
   dein._hook_add = ''
 
   if vim.fn.has('vim_starting')==1 then
