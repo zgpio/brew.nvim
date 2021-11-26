@@ -58,7 +58,10 @@ function _add(repo, options, overwrite)
     end
 
     -- Overwrite
-    plugin = vim.tbl_extend('keep', plugin, vim.fn.copy(dein._plugins[plugin.name]))
+    -- Note: reparse is needed.
+    options = vim.tbl_extend('keep', options,
+      (dein._plugins[plugin.name]['orig_opts'] or {}))
+    plugin = _dict(_init(repo, options))
   end
 
   if plugin.rtp ~= '' then
