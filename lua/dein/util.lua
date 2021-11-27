@@ -243,8 +243,8 @@ function _check_lazy_plugins()
   for _, t in ipairs(_get_lazy_plugins()) do
     if vim.fn.isdirectory(t.rtp) == 1
       and (t['local'] or 0) == 0
-      and (t['hook_source'] or '') == ''
-      and (t['hook_add'] or '') == ''
+      and (t.hook_source or '') == ''
+      and (t.hook_add or '') == ''
       and vim.fn.isdirectory(t.rtp..'/plugin') == 0
       and vim.fn.isdirectory(t.rtp..'/after/plugin') == 0 then
       table.insert(rv, t.name)
