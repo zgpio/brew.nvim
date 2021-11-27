@@ -708,7 +708,7 @@ function _end()
       vim.tbl_values(_plugins))) do
     -- Load dependencies
     if plugin.depends ~= nil then
-      depends = depends + plugin.depends
+      vim.list_extend(depends, plugin.depends)
     end
 
     if plugin.merged==0 then

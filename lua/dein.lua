@@ -30,9 +30,9 @@ function M._init()
   M._event_plugins = {}
   M._progname = vim.fn.fnamemodify(vim.v.progname, ':r')
   M._init_runtimepath = vim.o.rtp
-  local SUDO_USER = vim.env['SUDO_USER']
-  local USER = vim.env['USER']
-  local HOME = vim.env['HOME']
+  local SUDO_USER = vim.env.SUDO_USER
+  local USER = vim.env.USER
+  local HOME = vim.env.HOME
   M._is_sudo = (SUDO_USER~=nil and USER ~= SUDO_USER
     and HOME ~= vim.fn.expand('~'..USER)
     and HOME == vim.fn.expand('~'..SUDO_USER))
