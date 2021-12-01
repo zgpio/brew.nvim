@@ -247,6 +247,7 @@ function M.load_state(path, ...)
     catch {
       function(error)
         if vim.v.exception ~= 'Cache loading error' then
+          require 'dein/util'
           _error('Loading state error: ' .. vim.v.exception)
         end
         _clear_state()

@@ -344,7 +344,7 @@ function _cd(path)
     }
   }
 end
-function _rm(path)
+local function _rm(path)
   if isdir(path)==0 and vim.fn.filereadable(path)==0 then
     return
   end
@@ -559,7 +559,7 @@ local function check_output(context, process)
   process.eof = 1
 end
 local function print_progress_message(msg)
-  local msg = _convert2list(msg)
+  msg = _convert2list(msg)
   local context = __global_context
   if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
     return
