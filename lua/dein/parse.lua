@@ -4,6 +4,7 @@ require 'dein/util'
 dein.enable_name_conversion = dein.enable_name_conversion or false
 dein.default_options = dein.default_options or {}
 
+local types
 local function unique(items)
   local flags = {}
   local rv = {}
@@ -14,6 +15,22 @@ local function unique(items)
      end
   end
   return rv
+end
+local function _get_types()
+  if types == nil then
+    -- Load types.
+    types = {}
+    local fl = vim.split(vim.fn.globpath(vim.o.rtp, 'lua/dein/types/*.lua', 1), '\n')
+    for _, typ in ipairs(vim.tbl_map(
+      function(v)
+        return require('dein/types/'..vim.fn.fnamemodify(v, ':t:r'))
+      end, fl)) do
+      if not vim.tbl_isempty(typ) then
+        types[typ.name] = typ
+      end
+    end
+  end
+  return types
 end
 local function __check_type(repo, options)
   local plugin = {}
@@ -338,26 +355,10 @@ function generate_dummy_mappings(plugin)
   end
 end
 
-local types
 function _get_type(name)
   return (_get_types()[name] or {})
 end
-function _get_types()
-  if types == nil then
-    -- Load types.
-    types = {}
-    local fl = vim.split(vim.fn.globpath(vim.o.rtp, 'lua/dein/types/*.lua', 1), '\n')
-    for _, typ in ipairs(vim.tbl_map(
-      function(v)
-        return require('dein/types/'..vim.fn.fnamemodify(v, ':t:r'))
-      end, fl)) do
-      if not vim.tbl_isempty(typ) then
-        types[typ.name] = typ
-      end
-    end
-  end
-  return types
-end
+
 function _name_conversion(path)
   return vim.fn.fnamemodify(vim.fn.get(vim.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
 end
