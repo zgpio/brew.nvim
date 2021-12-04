@@ -158,6 +158,64 @@ function _init(repo, options)
   end
   return plugin
 end
+local function parse_lazy(plugin)
+  -- Auto convert2list.
+  for _, key in ipairs({'on_ft', 'on_path', 'on_cmd', 'on_func', 'on_map',
+      'on_source', 'on_event'}) do
+    if plugin[key] ~= nil and type(plugin[key]) ~= 'table' then
+        plugin[key] = {plugin[key]}
+    end
+  end
+
+  if plugin.on_i ~= nil and plugin.on_i ~= 0 then
+    plugin.on_event = {'InsertEnter'}
+  end
+  if plugin.on_idle ~= nil and plugin.on_idle ~= 0 then
+    plugin.on_event = {'FocusLost', 'CursorHold'}
+  end
+  local event_plugins = dein._event_plugins
+  -- TODO: https://github.com/neovim/neovim/issues/12048
+  assert(event_plugins[true]==nil)
+  if plugin.on_event ~= nil then
+    for _, event in ipairs(plugin.on_event) do
+      if event_plugins[event] == nil then
+        event_plugins[event] = {plugin.name}
+      else
+        table.insert(event_plugins[event], plugin.name)
+        event_plugins[event] = unique(event_plugins[event])
+      end
+    end
+  end
+  dein._event_plugins = event_plugins
+
+  if plugin.on_cmd ~= nil then
+    generate_dummy_commands(plugin)
+  end
+  if plugin.on_map ~= nil then
+    generate_dummy_mappings(plugin)
+  end
+  return plugin
+end
+
+local function merge_ftplugin(ftplugin)
+  local _ftplugin = dein._ftplugin
+  -- TODO
+  assert(_ftplugin[true]==nil)
+  for ft, val in pairs(ftplugin) do
+    if _ftplugin[ft] == nil then
+      _ftplugin[ft] = val
+    else
+      _ftplugin[ft] = _ftplugin[ft] .. '\n' .. val
+    end
+  end
+  _ftplugin = vim.tbl_map(
+    function(v)
+      return vim.fn.substitute(v, [=[\n\s*\\\|\%(^\|\n\)\s*"[^\n]*]=], '', 'g')
+    end,
+    _ftplugin
+  )
+  dein._ftplugin = _ftplugin
+end
 function _add(repo, options, overwrite)
   if nil == overwrite then
       overwrite = true
@@ -202,44 +260,6 @@ function _add(repo, options, overwrite)
 
   _plugins[plugin.name] = plugin
   dein._plugins = _plugins
-  return plugin
-end
-function parse_lazy(plugin)
-  -- Auto convert2list.
-  for _, key in ipairs({'on_ft', 'on_path', 'on_cmd', 'on_func', 'on_map',
-      'on_source', 'on_event'}) do
-    if plugin[key] ~= nil and type(plugin[key]) ~= 'table' then
-        plugin[key] = {plugin[key]}
-    end
-  end
-
-  if plugin.on_i ~= nil and plugin.on_i ~= 0 then
-    plugin.on_event = {'InsertEnter'}
-  end
-  if plugin.on_idle ~= nil and plugin.on_idle ~= 0 then
-    plugin.on_event = {'FocusLost', 'CursorHold'}
-  end
-  local event_plugins = dein._event_plugins
-  -- TODO: https://github.com/neovim/neovim/issues/12048
-  assert(event_plugins[true]==nil)
-  if plugin.on_event ~= nil then
-    for _, event in ipairs(plugin.on_event) do
-      if event_plugins[event] == nil then
-        event_plugins[event] = {plugin.name}
-      else
-        table.insert(event_plugins[event], plugin.name)
-        event_plugins[event] = unique(event_plugins[event])
-      end
-    end
-  end
-  dein._event_plugins = event_plugins
-
-  if plugin.on_cmd ~= nil then
-    generate_dummy_commands(plugin)
-  end
-  if plugin.on_map ~= nil then
-    generate_dummy_mappings(plugin)
-  end
   return plugin
 end
 
@@ -316,26 +336,6 @@ function generate_dummy_mappings(plugin)
       end
     end
   end
-end
-
-function merge_ftplugin(ftplugin)
-  local _ftplugin = dein._ftplugin
-  -- TODO
-  assert(_ftplugin[true]==nil)
-  for ft, val in pairs(ftplugin) do
-    if _ftplugin[ft] == nil then
-      _ftplugin[ft] = val
-    else
-      _ftplugin[ft] = _ftplugin[ft] .. '\n' .. val
-    end
-  end
-  _ftplugin = vim.tbl_map(
-    function(v)
-      return vim.fn.substitute(v, [=[\n\s*\\\|\%(^\|\n\)\s*"[^\n]*]=], '', 'g')
-    end,
-    _ftplugin
-  )
-  dein._ftplugin = _ftplugin
 end
 
 local types
