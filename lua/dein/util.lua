@@ -50,7 +50,7 @@ function __msg2list(expr)
   end
 end
 
-function _get_myvimrc()
+local function _get_myvimrc()
   local vimrc = vim.env.MYVIMRC
   if vimrc == '' then
     vimrc = vim.fn.matchstr(vim.fn.split(vim.fn.execute('scriptnames'), '\n')[0], [[^\s*\d\+:\s\zs.*]])
@@ -110,7 +110,7 @@ function _execute_hook(plugin, hook)
     }
   }
 end
-function _check_clean()
+function M.check_clean()
   local dein = require 'dein'
   local plugins_directories = vim.tbl_map(function(v) return v.path end, vim.tbl_values(dein.get()))
   local path = _substitute_path(vim.fn.globpath(dein._base_path, 'repos/*/*/*'))

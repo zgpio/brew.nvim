@@ -90,7 +90,7 @@ function M.build(...)
   return _build(plugins)
 end
 function M.check_clean()
-  return _check_clean()
+  return require'dein/util'.check_clean()
 end
 function M.source(...)
   return _source({...})
