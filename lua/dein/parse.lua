@@ -4,7 +4,7 @@ require 'dein/util'
 dein.enable_name_conversion = dein.enable_name_conversion or false
 dein.default_options = dein.default_options or {}
 
-function unique(items)
+local function unique(items)
   local flags = {}
   local rv = {}
   for i=1,#items do
@@ -14,6 +14,27 @@ function unique(items)
      end
   end
   return rv
+end
+local function __check_type(repo, options)
+  local plugin = {}
+  require 'dein/types/git'
+  for _, t in ipairs(vim.tbl_values(_get_types())) do
+    plugin = t:init(repo, options)
+    if vim.fn.empty(plugin)==0 then
+      break
+    end
+  end
+
+  if vim.fn.empty(plugin)==1 then
+    plugin['type'] = 'none'
+    plugin['local'] = 1
+    plugin.path = ''
+    if vim.fn.isdirectory(repo)==1 then
+      plugin.path = repo
+    end
+  end
+
+  return plugin
 end
 local function _dict(plug)
   local plugin = vim.tbl_extend('force', { rtp='', sourced=false }, plug)
@@ -341,27 +362,6 @@ function _name_conversion(path)
   return vim.fn.fnamemodify(vim.fn.get(vim.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
 end
 
-function __check_type(repo, options)
-  local plugin = {}
-  require 'dein/types/git'
-  for _, t in ipairs(vim.tbl_values(_get_types())) do
-    plugin = t:init(repo, options)
-    if vim.fn.empty(plugin)==0 then
-      break
-    end
-  end
-
-  if vim.fn.empty(plugin)==1 then
-    plugin['type'] = 'none'
-    plugin['local'] = 1
-    plugin.path = ''
-    if vim.fn.isdirectory(repo)==1 then
-      plugin.path = repo
-    end
-  end
-
-  return plugin
-end
 function _local(localdir, options, includes)
   local base = vim.fn.fnamemodify(_expand(localdir), ':p')
   local directories = {}
