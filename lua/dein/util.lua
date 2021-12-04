@@ -8,10 +8,10 @@ local is_mac = (not is_windows) and vim.fn.has('win32unix') == 0
 
 local _merged_length = 3
 
-function _is_windows()
+function M.is_windows()
   return is_windows
 end
-function _is_mac()
+function M.is_mac()
   return is_mac
 end
 function _get_runtime_path()
@@ -27,7 +27,7 @@ function _get_runtime_path()
   return rtp
 end
 
-function _is_fish()
+function M.is_fish()
   require 'dein/install'
   return _is_async() and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
 end
@@ -535,13 +535,13 @@ function _notify(msg)
       cmd = cmd.. ' --icon=' .. vim.fn.string(icon)
     end
     cmd = cmd.. ' ' .. vim.fn.string(title) .. ' ' .. vim.fn.string(msg)
-  elseif _is_windows() and vim.fn.executable('Snarl_CMD')==1 then
+  elseif M.is_windows() and vim.fn.executable('Snarl_CMD')==1 then
     cmd = vim.fn.printf('Snarl_CMD snShowMessage %d "%s" "%s"',
            dein.notification_time, title, msg)
     if icon ~= '' then
       cmd = cmd.. ' "' .. icon .. '"'
     end
-  elseif _is_mac() then
+  elseif M.is_mac() then
     cmd = ''
     if vim.fn.executable('terminal-notifier')==1 then
       cmd = cmd .. 'terminal-notifier -title ' ..
@@ -767,7 +767,7 @@ function _download(uri, outpath)
   end
   if c ~= '' then
     return vim.fn.printf('%s "%s" "%s"', c, outpath, uri)
-  elseif _is_windows() then
+  elseif M.is_windows() then
     -- Use powershell
     -- TODO: Proxy support
     local pscmd = vim.fn.printf("(New-Object Net.WebClient).DownloadFile('%s', '%s')", uri, outpath)

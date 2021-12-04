@@ -1,4 +1,8 @@
-filename = '/Users/zgp/vtest/.config/nvim/rc/dein.toml'
+local info = debug.getinfo(1, "S")
+local sfile = info.source:sub(2) -- remove @
+local project_root = vim.fn.fnamemodify(sfile, ':p:h:h')
+
+filename = project_root .. '/t/t.toml'
 local text = vim.fn.join(vim.fn.readfile(filename), "\n")
 text = vim.fn.iconv(text, 'utf8', vim.o.encoding)
 TOML = require "toml"

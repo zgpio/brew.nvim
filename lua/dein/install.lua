@@ -369,12 +369,12 @@ local function _rm(path)
   -- Note: In Windows, ['rmdir', '/S', '/Q'] does not work.
   -- After Vim 8.0.928, double quote escape does not work in job.  Too bad.
   local cmdline = ' "' .. path .. '"'
-  if _is_windows() then
+  if util.is_windows() then
     -- Note: In rm command, must use "\" instead of "/".
     cmdline = vim.fn.substitute(cmdline, '/', '\\\\', 'g')
   end
 
-  local rm_command = _is_windows() and 'cmd /C rmdir /S /Q' or 'rm -rf'
+  local rm_command = util.is_windows() and 'cmd /C rmdir /S /Q' or 'rm -rf'
   cmdline = rm_command .. cmdline
   local result = vim.fn.system(cmdline)
   if vim.v.shell_error~=0 then
@@ -881,7 +881,7 @@ function _copy_directories(srcs, dest)
 
   local status = 0
   local result
-  if _is_windows() then
+  if util.is_windows() then
     if vim.fn.executable('robocopy')==0 then
       _error('robocopy command is needed.')
       return 1
@@ -982,7 +982,7 @@ end
 
 local WIN_QUERY = [[a%d:repository(owner:\\""%s\\"", name:\\""%s\\""){ pushedAt nameWithOwner }]]
 local LIN_QUERY = [[a%d:repository(owner:\"%s\", name:\"%s\"){ pushedAt nameWithOwner }]]
-local QUERY = _is_windows() and WIN_QUERY or LIN_QUERY
+local QUERY = util.is_windows() and WIN_QUERY or LIN_QUERY
 function _check_update(plugins, force, async)
   if dein.install_github_api_token == '' then
     ERROR('You need to set dein.install_github_api_token to check updated plugins.')

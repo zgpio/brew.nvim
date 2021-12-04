@@ -1,5 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
-require 'dein/util'
+local util = require 'dein/util'
 -- Global options definition.
 -- TODO load user config
 dein.types_git_command_path = 'git'
@@ -12,7 +12,7 @@ local M = {
   executable=vim.fn.executable(dein.types_git_command_path),
 }
 
-local is_windows = _is_windows()
+local is_windows = util.is_windows()
 local function is_absolute(path)
   if is_windows then
     return path:find('^[\\/]')~=nil or path:find('^%a:')~=nil
@@ -184,7 +184,7 @@ function M:get_sync_command(plugin)
       cmd = cmd .. '; if ($?) { ' .. pull_cmd .. ' }'
       cmd = cmd .. '; if ($?) { ' .. submodule_cmd .. ' }'
     else
-      local AND = _is_fish() and '; and ' or ' && '
+      local AND = util.is_fish() and '; and ' or ' && '
       cmd = vim.fn.join({
         fetch_cmd, remote_origin_cmd, pull_cmd, submodule_cmd}, AND)
     end
