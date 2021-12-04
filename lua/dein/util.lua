@@ -31,7 +31,7 @@ function M.is_fish()
   require 'dein/install'
   return _is_async() and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
 end
-function _is_powershell()
+function M.is_powershell()
   require 'dein/install'
   local t = vim.fn.fnamemodify(vim.o.shell, ':t:r')
   return _is_async() and (t == 'powershell' or t == 'pwsh')

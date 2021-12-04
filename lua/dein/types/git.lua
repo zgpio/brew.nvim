@@ -178,7 +178,7 @@ function M:get_sync_command(plugin)
     local pull_cmd = gcmd .. ' ' .. dein.types_git_pull_command
     local submodule_cmd = gcmd .. ' submodule update --init --recursive'
     local cmd
-    if _is_powershell() then
+    if util.is_powershell() then
       cmd = fetch_cmd
       cmd = cmd .. '; if ($?) { ' .. remote_origin_cmd .. ' }'
       cmd = cmd .. '; if ($?) { ' .. pull_cmd .. ' }'
