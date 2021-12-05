@@ -468,6 +468,27 @@ local function async_get(async, process)
 
   return is_timeout, is_skip, status
 end
+local function call_post_update_hooks(plugins)
+    local cwd = vim.fn.getcwd()
+    try {
+      function()
+        -- Reload plugins to execute hooks
+        vim.api.nvim_command('runtime! plugin/*.vim')
+        for _, plugin in ipairs(plugins) do
+          _cd(plugin.path)
+          _call_hook('post_update', {plugin})
+        end
+      end,
+      catch {
+        function(e)
+          print('caught error: ' .. e)
+        end
+      }
+    }
+    _cd(cwd)
+end
+
+
 local function check_output(context, process)
   local is_timeout, is_skip, status
   if context.async then
@@ -531,22 +552,6 @@ local function check_output(context, process)
     else
       plugin.uri = ''
     end
-
-    local cwd = vim.fn.getcwd()
-    try {
-      function()
-        _cd(plugin.path)
-        -- Reload plugins to execute hooks
-        vim.api.nvim_command('runtime! plugin/*.vim')
-        _call_hook('post_update', {plugin})
-      end,
-      catch {
-        function(e)
-          print('caught error: ' .. e)
-        end
-      }
-    }
-    _cd(cwd)
 
     if _build({plugin.name})~=0 then
       log(get_plugin_message(plugin, num, max, 'Build failed'))
@@ -639,8 +644,16 @@ function __done(context)
   _recache_runtimepath()
 
   if vim.fn.empty(context.synced_plugins)==0 then
-    _call_hook('done_update', {context.synced_plugins})
     _source(vim.tbl_map(function(v) return v.name end, vim.fn.copy(context.synced_plugins)))
+
+    -- Execute post_update hooks
+    local post_update_plugins = vim.tbl_filter(function (v) return v.hook_post_update ~= nil end,
+      vim.fn.copy(context.synced_plugins))
+    if not vim.tbl_isempty(post_update_plugins) then
+      call_post_update_hooks(post_update_plugins)
+    end
+
+    _call_hook('done_update', {context.synced_plugins})
   end
 
   vim.api.nvim_command('redraw')
