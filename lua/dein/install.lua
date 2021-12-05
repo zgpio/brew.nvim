@@ -87,7 +87,7 @@ local function __convert_args(args)
   return args
 end
 function clear_runtimepath()
-  if _get_cache_path() == '' then
+  if util.get_cache_path() == '' then
     util._error('Invalid base path.')
     return
   end
@@ -953,7 +953,7 @@ function __list_directory(directory)
   return _globlist(directory .. '/*')
 end
 function __get_rollback_directory()
-  local parent = string.format('%s/rollbacks/%s', _get_cache_path(), dein._progname)
+  local parent = string.format('%s/rollbacks/%s', util.get_cache_path(), dein._progname)
   if isdir(parent)==0 then
     vim.fn.mkdir(parent, 'p')
   end

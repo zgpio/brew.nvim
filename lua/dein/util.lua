@@ -19,7 +19,7 @@ function _get_runtime_path()
   if rtp ~= '' then
     return rtp
   end
-  rtp = _get_cache_path() .. '/.dein'
+  rtp = M.get_cache_path() .. '/.dein'
   dein._runtime_path = rtp
   if vim.fn.isdirectory(rtp)==0 then
     vim.fn.mkdir(rtp, 'p')
@@ -157,7 +157,7 @@ function _check_vimrcs()
   return 1
 end
 function _save_cache(vimrcs, is_state, is_starting)
-  if _get_cache_path() == '' or (is_starting==0) then
+  if M.get_cache_path() == '' or (is_starting==0) then
     -- Ignore
     return true
   end
@@ -253,7 +253,7 @@ function _check_lazy_plugins()
   return rv
 end
 
-function _get_cache_path()
+function M.get_cache_path()
   local cache_path = dein._cache_path
   if cache_path ~= '' then
     return cache_path
@@ -282,7 +282,7 @@ function _save_state(is_starting)
     return 1
   end
 
-  if _get_cache_path() == '' or is_starting == 0 or dein._is_sudo then
+  if M.get_cache_path() == '' or is_starting == 0 or dein._is_sudo then
     -- Ignore
     return 1
   end
@@ -377,11 +377,11 @@ function _save_state(is_starting)
     (dein.cache_directory or dein._base_path) ..'/state_' .. dein._progname .. '.vim')
 end
 function _writefile(path, list)
-  if dein._is_sudo or (vim.fn.filewritable(_get_cache_path())==0) then
+  if dein._is_sudo or (vim.fn.filewritable(M.get_cache_path())==0) then
     return 1
   end
 
-  path = _get_cache_path() .. '/' .. path
+  path = M.get_cache_path() .. '/' .. path
   local dir = vim.fn.fnamemodify(path, ':h')
   if vim.fn.isdirectory(dir) == 0 then
     vim.fn.mkdir(dir, 'p')
@@ -595,7 +595,7 @@ function _begin(path, vimrcs)
     dein._base_path = dein._base_path:sub(1, -2)
   end
   _get_runtime_path()
-  _get_cache_path()
+  M.get_cache_path()
   dein._vimrcs = _get_vimrcs(vimrcs)
   if dein.inline_vimrcs~=nil then
     dein._vimrcs = vim.tbl_extend('keep', dein._vimrcs, dein.inline_vimrcs)
@@ -647,10 +647,10 @@ function _save_merged_plugins()
   local h = slice(merged, 1, _merged_length - 1)
   local t = slice(merged, _merged_length)
   vim.list_extend(h, {vim.fn.string(t)})
-  vim.fn.writefile(h, _get_cache_path() .. '/merged')
+  vim.fn.writefile(h, M.get_cache_path() .. '/merged')
 end
 function _load_merged_plugins()
-  local path = _get_cache_path() .. '/merged'
+  local path = M.get_cache_path() .. '/merged'
   if vim.fn.filereadable(path)==0 then
     return {}
   end
