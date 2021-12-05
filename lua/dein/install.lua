@@ -536,6 +536,8 @@ local function check_output(context, process)
     try {
       function()
         _cd(plugin.path)
+        -- Reload plugins to execute hooks
+        vim.api.nvim_command('runtime! plugin/*.vim')
         _call_hook('post_update', {plugin})
       end,
       catch {
