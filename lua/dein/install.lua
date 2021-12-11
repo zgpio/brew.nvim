@@ -78,29 +78,13 @@ function _is_async()
 end
 -- FIXME: The logic is different from the `:h jobstart`
 local function __convert_args(args)
-  local args = iconv(args, vim.o.encoding, 'char')
+  args = iconv(args, vim.o.encoding, 'char')
   if not vim.tbl_islist(args) then
     local rv = vim.api.nvim_eval('split(&shell) + split(&shellcmdflag)')
     table.insert(rv, args)
     args = rv
   end
   return args
-end
-function clear_runtimepath()
-  if util.get_cache_path() == '' then
-    util._error('Invalid base path.')
-    return
-  end
-
-  local runtimepath = _get_runtime_path()
-
-  -- Remove runtime path
-  _rm(runtimepath)
-
-  if isdir(runtimepath)==0 then
-    -- Create runtime path
-    vim.fn.mkdir(runtimepath, 'p')
-  end
 end
 local function append_log_file(msg)
   local fn = dein.install_log_filename
@@ -610,6 +594,23 @@ local function check_loop(context)
   context.processes = vim.tbl_filter(function(v) return v.eof==0 end, context.processes)
   return context
 end
+
+function clear_runtimepath()
+  if util.get_cache_path() == '' then
+    util._error('Invalid base path.')
+    return
+  end
+
+  local runtimepath = _get_runtime_path()
+
+  -- Remove runtime path
+  _rm(runtimepath)
+
+  if isdir(runtimepath)==0 then
+    -- Create runtime path
+    vim.fn.mkdir(runtimepath, 'p')
+  end
+end
 function __install_blocking(context)
   try {
     function()
@@ -675,13 +676,14 @@ function __done(context)
   end
 end
 
+-- job_id -> job object
 local job_execute = {}
-function job_execute_on_out(job_id, data, event)
+local function job_execute_on_out(job_id, data, event)
   for i, line in ipairs(data) do
     print(line)
   end
 
-  local candidates = job_execute.candidates
+  local candidates = job_execute[job_id].candidates
   if vim.tbl_isempty(candidates) then
     table.insert(candidates, data[1])
   else
@@ -691,14 +693,16 @@ function job_execute_on_out(job_id, data, event)
   vim.list_extend(candidates, slice(data, 2))
 end
 function _execute(command)
-  job_execute.candidates = {}  -- list
-
-  local job = Job:start(__convert_args(command), {on_stdout=job_execute_on_out})
-
+  local job = Job:start(command, {on_init=function (obj) obj.candidates = {} end, on_stdout=job_execute_on_out,
+    on_stderr=function (job_id, data, event)
+      print('on_stderr:', job_id, vim.inspect(data), event)
+    end
+  })
+  job_execute[job.id] = job
   return job:wait(dein.install_process_timeout * 1000)
 end
 function _each(cmd, plugins)
-  local plugins = vim.tbl_filter(function(v) return isdir(v.path)==1 end, _get_plugins(plugins))
+  plugins = vim.tbl_filter(function(v) return isdir(v.path)==1 end, _get_plugins(plugins))
 
   local global_context_save = __global_context
 
@@ -1394,7 +1398,7 @@ function _update(plugins, update_type, async)
 
   __timer = vim.fn.timer_start(50, _polling, {['repeat']=-1})
 end
-function __init_job(process, context, cmd)
+local function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
 
   if not context.async then

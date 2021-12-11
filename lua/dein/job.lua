@@ -14,13 +14,14 @@ function Job:start(args, opt)
   if opt.env then
     options.env = opt.env
   end
+  if opt.on_init then
+      opt.on_init(o)
+  end
   if opt.on_stdout then
     options.on_stdout = function(job_id, data, event) opt.on_stdout(job_id, data, event) end
   end
   if opt.on_stderr then
-    options.on_stderr = function(job_id, data, event)
-      opt.on_stderr(data)
-    end
+    options.on_stderr = function(job_id, data, event) opt.on_stderr(job_id, data, event) end
   end
   if opt.on_exit then
     options.on_exit = function(job_id, exitval, event)
