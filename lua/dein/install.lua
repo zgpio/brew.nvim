@@ -179,7 +179,7 @@ function _load_rollback(rollbackfile, plugins)
   for _, plugin in ipairs(plugins) do
     local typ = _get_type(plugin.type)
     local cmd = typ:get_rollback_command(_get_type(plugin.type), revisions[plugin.name])
-    _each(cmd, plugin)
+    _each(cmd, {plugin})
   end
 
   _recache_runtimepath()
@@ -701,6 +701,7 @@ function _execute(command)
   job_execute[job.id] = job
   return job:wait(dein.install_process_timeout * 1000)
 end
+-- plugins must be { plugin_tbl1, ... }
 function _each(cmd, plugins)
   plugins = vim.tbl_filter(function(v) return isdir(v.path)==1 end, _get_plugins(plugins))
 
@@ -822,7 +823,7 @@ function _build(plugins)
     end,
     _get_plugins(plugins))) do
     print_progress_message('Building: ' .. plugin.name)
-    if _each(plugin.build, plugin)==1 then
+    if _each(plugin.build, {plugin})==1 then
       error = 1
     end
   end

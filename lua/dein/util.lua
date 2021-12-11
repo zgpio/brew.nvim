@@ -394,6 +394,8 @@ function skipempty(string)
   return vim.tbl_filter(function(v) return v~='' end, vim.split(string, '\n'))
 end
 
+-- plugins: { plugin_tbl1, ... } / { plugin_name1, ... } / plugin_name
+-- NOTE: remove support for plugin_tbl
 function _get_plugins(plugins)
   if vim.tbl_isempty(plugins) then
     return vim.tbl_values(dein.get())
