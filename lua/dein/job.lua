@@ -1,7 +1,7 @@
 local Job = {}
 
 -- Class instantiation function
-function Job:start(args, opt)
+function Job:start(cmd, opt)
   local o = {}
   setmetatable(o, self)
   self.__index = self
@@ -26,7 +26,7 @@ function Job:start(args, opt)
   if opt.on_exit then
     options.on_exit = function(job_id, exitval, event)
       o.__exitval = exitval
-      opt.on_exit(exitval)
+      opt.on_exit(job_id, exitval, event)
     end
   else
     options.on_exit = function(job_id, exitval, event)
@@ -35,10 +35,10 @@ function Job:start(args, opt)
   end
   o.options = options
   -- NOTE vim functions lua callback supported after nvim PR #12507
-  o.id = vim.fn.jobstart(args, o.options)
+  o.id = vim.fn.jobstart(cmd, o.options)
   o.pid = vim.fn.jobpid(o.id)
   o.__exitval = nil
-  o.args = args
+  o.cmd = cmd
 
   return o
 end

@@ -70,7 +70,7 @@ local function init_context(plugins, update_type, async)
   ctx.titlestring = vim.o.titlestring
   return ctx
 end
-function _status()
+local function _status()
   return vim.v.shell_error
 end
 function _is_async()
@@ -377,9 +377,9 @@ local function get_plugin_message(plugin, number, max, message)
          number, max, plugin.name, message)
 end
 
-local function lock_revision(process, context)
+local function lock_revision(process)
   local num = process.number
-  local max = context.max_plugins
+  local max = process.max_plugins
   local plugin = process.plugin
 
   local typ = _get_type(plugin['type'])
@@ -413,9 +413,11 @@ local function lock_revision(process, context)
     return -1
   end
 end
-local function async_get(async, process)
+local RUNNING = -1
+local function async_get(process)
+  local async = process.async
   -- Check job status
-  local status = -1
+  local status = RUNNING
   if process.job.__exitval then
     async.eof = 1
     status = process.job.__exitval
@@ -447,7 +449,7 @@ local function async_get(async, process)
 
   if is_timeout then
     process.job:stop()
-    status = -1
+    status = RUNNING
   end
 
   return is_timeout, is_skip, status
@@ -476,7 +478,7 @@ end
 local function check_output(context, process)
   local is_timeout, is_skip, status
   if context.async then
-    is_timeout, is_skip, status = async_get(process.async, process)
+    is_timeout, is_skip, status = async_get(process)
   else
     is_timeout, is_skip, status = false, false, process.status
   end
@@ -486,14 +488,14 @@ local function check_output(context, process)
   end
 
   local num = process.number
-  local max = context.max_plugins
+  local max = process.max_plugins
   local plugin = process.plugin
 
   if isdir(plugin.path)==1
          and (plugin.rev or '') ~= ''
          and (plugin['local'] or 0)==0 then
     -- Restore revision.
-    lock_revision(process, context)
+    lock_revision(process)
   end
 
   local new_rev = get_revision_number(plugin)
@@ -1475,7 +1477,7 @@ function __init_process(plugin, context, cmd)
             -- The repository may be checked out.
             plugin.rev = ''
 
-            lock_revision(process, context)
+            lock_revision(process)
           end,
           catch {
             function(e)
