@@ -1546,19 +1546,8 @@ function __sync(plugin, context)
   return context
 end
 function _polling()
-  local save_guioptions
-  if vim.fn.exists('+guioptions')==1 then
-    -- Note: guioptions-! does not work in async state
-    save_guioptions = vim.o.guioptions
-    vim.api.nvim_command('set guioptions-=!')
-  end
-
   local _, new_context = install_async(__global_context)
   __global_context = new_context
-
-  if vim.fn.exists('+guioptions')==1 then
-    vim.o.guioptions = save_guioptions
-  end
 end
 function _get_progress()
   return __progress
