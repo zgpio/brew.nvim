@@ -1,5 +1,6 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
-require 'dein/util'
+local util = require 'dein/util'
+local M = {}
 -- Global options definition.
 dein.enable_name_conversion = dein.enable_name_conversion or false
 dein.default_options = dein.default_options or {}
@@ -79,7 +80,7 @@ local function _dict(plug)
     end
   end
 
-  plugin.path = _chomp(_expand(plugin.path))
+  plugin.path = util.chomp(util.expand(plugin.path))
   if (plugin.rev or '') ~= '' then
     -- Add revision path
     plugin.path = plugin.path ..'_'.. vim.fn.substitute(plugin.rev, '[^[:alnum:].-]', '_', 'g')
@@ -92,9 +93,9 @@ local function _dict(plug)
   end
   -- TODO ?_? dein use [0:]
   if plugin.rtp == '~' then
-    plugin.rtp = _expand(plugin.rtp)
+    plugin.rtp = util.expand(plugin.rtp)
   end
-  plugin.rtp = _chomp(plugin.rtp)
+  plugin.rtp = util.chomp(plugin.rtp)
   if dein._is_sudo and not (plugin.trusted==1) then
     plugin.rtp = ''
   end
@@ -158,7 +159,7 @@ local function _dict(plug)
   return plugin
 end
 function _init(repo, options)
-  repo = _expand(repo)
+  repo = util.expand(repo)
   options.type = options.type or 'git'
   local typ = _get_type(options.type)
   local plugin = typ:init(repo, options)
@@ -268,7 +269,7 @@ function _add(repo, options, overwrite)
       plugin = parse_lazy(plugin)
     end
     if plugin.hook_add~=nil then
-      _execute_hook(plugin, plugin.hook_add)
+      util.execute_hook(plugin, plugin.hook_add)
     end
     if plugin.ftplugin~=nil then
       merge_ftplugin(plugin.ftplugin)
@@ -364,23 +365,23 @@ function _name_conversion(path)
 end
 
 function _local(localdir, options, includes)
-  local base = vim.fn.fnamemodify(_expand(localdir), ':p')
+  local base = vim.fn.fnamemodify(util.expand(localdir), ':p')
   local directories = {}
   for _, glob in ipairs(includes) do
     local dirs = vim.tbl_filter(
       function(v) return vim.fn.isdirectory(v)==1 end,
-      _globlist(base .. glob)
+      util.globlist(base .. glob)
     )
     dirs = vim.tbl_map(
       function(v)
-        return vim.fn.substitute(_substitute_path(vim.fn.fnamemodify(v, ':p')), '/$', '', '')
+        return vim.fn.substitute(util.substitute_path(vim.fn.fnamemodify(v, ':p')), '/$', '', '')
       end,
       dirs
     )
     directories = vim.fn.extend(directories, dirs)
   end
 
-  for _, dir in ipairs(_uniq(directories)) do
+  for _, dir in ipairs(util.uniq(directories)) do
     options = vim.tbl_extend('force', {
       ['repo']=dir,
       ['local']=1,
@@ -395,11 +396,11 @@ function _local(localdir, options, includes)
     end
   end
 end
-function _load_toml(filename, default)
+function M.load_toml(filename, default)
   local toml
   try {
     function()
-      filename = _expand(filename)
+      filename = util.expand(filename)
       local text = vim.fn.join(vim.fn.readfile(filename), "\n")
       -- fileencoding is always utf8
       text = vim.fn.iconv(text, 'utf8', vim.o.encoding)
@@ -444,10 +445,12 @@ function _load_toml(filename, default)
   end
 
   -- Add to dein._vimrcs
-  table.insert(dein._vimrcs, _expand(filename))
+  table.insert(dein._vimrcs, util.expand(filename))
 end
-function _load_dict(dict, default)
+function M.load_dict(dict, default)
   for repo, options in pairs(dict) do
     _add(repo, vim.fn.extend(vim.fn.copy(options), default, 'keep'))
   end
 end
+
+return M

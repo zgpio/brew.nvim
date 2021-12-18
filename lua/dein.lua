@@ -78,7 +78,10 @@ end
 function M.update(...)
   require 'dein/install'
   local args = {...}
-  return _update((args[1] or {}), 'update', _is_async())
+  if #args > 0 and type(args[1]) == 'table' then
+    args = args[1]
+  end
+  return _update(args, 'update', _is_async())
 end
 function M.build(...)
   require 'dein/install'
@@ -96,9 +99,8 @@ function M.source(...)
   return _source({...})
 end
 function M.check_install(...)
-  require 'dein/util'
   local args = {...}
-  return _check_install((args[1] or {}))
+  return require 'dein/util'.check_install((args[1] or {}))
 end
 function M.check_update(...)
   require 'dein/install'
@@ -106,29 +108,25 @@ function M.check_update(...)
   return _check_update((args[2] or {}), (args[1] or false), _is_async())
 end
 function M.direct_install(repo, ...)
-  require 'dein/install'
   local args = {...}
   local opts = {}
   if #args > 0 then
     opts = args[1]
   end
-  _direct_install(repo, opts)
+  require 'dein/install'.direct_install(repo, opts)
 end
 function M.reinstall(plugins)
-  require 'dein/install'
-  _reinstall(plugins)
+  require 'dein/install'.reinstall(plugins)
 end
 function M.remote_plugins()
   require 'dein/install'
   return _remote_plugins()
 end
 function M.recache_runtimepath()
-  require 'dein/install'
-  _recache_runtimepath()
+  require 'dein/install'.recache_runtimepath()
 end
 function M.check_lazy_plugins()
-  require 'dein/util'
-  return _check_lazy_plugins()
+  return require 'dein/util'.check_lazy_plugins()
 end
 function M.get_direct_plugins_path()
   return (dein.cache_directory or dein._base_path).."/direct_install.vim"
@@ -143,21 +141,17 @@ function M.End()
   return _end()
 end
 function M.load_toml(filename, ...)
-  require 'dein/parse'
   local args = {...}
-  return _load_toml(filename, (args[1] or {}))
+  return require 'dein/parse'.load_toml(filename, (args[1] or {}))
 end
 function M.save_state()
-  require 'dein/util'
-  return _save_state(vim.fn.has('vim_starting'))
+  return require'dein/util'.save_state(vim.fn.has('vim_starting'))
 end
 function M.get_log()
-  require 'dein/install'
-  return vim.fn.join(_get_log(), "\n")
+  return vim.fn.join(require 'dein/install'.get_log(), "\n")
 end
 function M.get_progress()
-  require 'dein/install'
-  return _get_progress()
+  return require 'dein/install'.get_progress()
 end
 function M.each(command, ...)
   require 'dein/install'
@@ -169,9 +163,8 @@ function M.each(command, ...)
   return _each(command, plugins)
 end
 function M.load_dict(dict, ...)
-  require 'dein/parse'
   local args = {...}
-  return _load_dict(dict, (args[1] or {}))
+  return require 'dein/parse'.load_dict(dict, (args[1] or {}))
 end
 function M.add(repo, ...)
   require 'dein/util'
@@ -179,12 +172,10 @@ function M.add(repo, ...)
   return _add(repo, (args[1] or {}), false)
 end
 function M.get_updates_log()
-  require 'dein/install'
-  return vim.fn.join(_get_updates_log(), "\n")
+  return vim.fn.join(require 'dein/install'.get_updates_log(), "\n")
 end
 function M.clear_state()
-  require 'dein/util'
-  _clear_state()
+  require 'dein/util'.clear_state()
 end
 function M.load_rollback(rollbackfile, ...)
   require 'dein/install'
@@ -219,8 +210,7 @@ function M.Local(dir, ...)
   return _local(dir, (args[1] or {}), (args[2] or {'*'}))
 end
 function M.call_hook(hook_name, ...)
-  require 'dein/util'
-  return _call_hook(hook_name, {...})
+  return require 'dein/util'.call_hook(hook_name, {...})
 end
 function M.load_state(path, ...)
   if vim.fn.exists('#dein') == 0 then
@@ -246,11 +236,11 @@ function M.load_state(path, ...)
     end,
     catch {
       function(error)
+        local util = require 'dein/util'
         if vim.v.exception ~= 'Cache loading error' then
-          require 'dein/util'
           _error('Loading state error: ' .. vim.v.exception)
         end
-        _clear_state()
+        util.clear_state()
         print('caught error: ' .. error)
         rv = 1
       end

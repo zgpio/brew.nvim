@@ -1,5 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
-require 'dein/util'
+local util = require 'dein/util'
 local a = vim.api
 local C = vim.api.nvim_command
 local M = {}
@@ -31,12 +31,12 @@ function _on_pre_cmd(name)
         vim.tbl_map(function(x) return x:lower() end, vim.deepcopy(v.on_cmd or {})), name)
         or vim.fn.stridx(name:lower(), s) == 0
     end,
-    _get_lazy_plugins()
+    util.get_lazy_plugins()
   )
   _source(t)
 end
 function _on_default_event(event)
-  local lazy_plugins = _get_lazy_plugins()
+  local lazy_plugins = util.get_lazy_plugins()
   local plugins = {}
 
   local path = vim.fn.expand('<afile>')
@@ -44,7 +44,7 @@ function _on_default_event(event)
   if vim.fn.fnamemodify(path, ':t') == '~' then
     path = '~'
   end
-  path = _expand(path)
+  path = util.expand(path)
 
   for _, ft in ipairs(vim.split(vim.bo.filetype, '.', true)) do
     local t = vim.tbl_filter(
@@ -94,8 +94,8 @@ function _source(...)
     plugins = vim.tbl_map(function(v) return (_plugins[v] or {}) end, plugins)
   end
 
-  local rtps = _uniq(_split_rtp(vim.o.rtp))
-  local index = vim.fn.index(rtps, _get_runtime_path())
+  local rtps = util.uniq(util.split_rtp(vim.o.rtp))
+  local index = vim.fn.index(rtps, util.get_runtime_path())
   if index < 0 then
     return 1
   end
@@ -108,15 +108,15 @@ function _source(...)
   end
 
   local filetype_before = vim.fn.execute('autocmd FileType')
-  vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
+  vim.o.rtp = util.join_rtp(rtps, vim.o.rtp, '')
 
-  _call_hook('source', {sourced})
+  util.call_hook('source', {sourced})
 
   -- Reload script files.
   for _, plugin in ipairs(sourced) do
     for _, directory in ipairs({'plugin', 'after/plugin'}) do
       if vim.fn.isdirectory(plugin.rtp..'/'..directory)==1 then
-        for _, file in ipairs(_globlist(plugin.rtp..'/'..directory..'/**/*.vim')) do
+        for _, file in ipairs(util.globlist(plugin.rtp..'/'..directory..'/**/*.vim')) do
           C('source ' .. vim.fn.fnameescape(file))
         end
       end
@@ -150,12 +150,12 @@ function _source(...)
   end
 
   if vim.fn.has('vim_starting')==0 then
-    _call_hook('post_source', {sourced})
+    util.call_hook('post_source', {sourced})
   end
 end
 --@param plugins plugin name list
 function _on_event(event, plugins)
-  local lazy_plugins = vim.tbl_filter(function(v) return not v.sourced end, _get_plugins(plugins))
+  local lazy_plugins = vim.tbl_filter(function(v) return not v.sourced end, util.get_plugins(plugins))
   if vim.tbl_isempty(lazy_plugins) then
     C('autocmd! dein-events ' ..event)
     return
@@ -221,7 +221,7 @@ function M._on_func(name)
       return vim.fn.stridx(function_prefix, v.normalized_name..'#') == 0
         or vim.tbl_contains(v.on_func or {}, name)
     end,
-    _get_lazy_plugins()
+    util.get_lazy_plugins()
   )
   _source(x)
 end
@@ -277,7 +277,7 @@ function is_reset_ftplugin(plugins)
     local after = plugin.rtp .. '/after/ftplugin/' .. ft
     -- TODO: use vim.tbl_filter instead
     local real = {}
-    for i, t in ipairs({'ftplugin', 'indent', 'after/ftplugin', 'after/indent'}) do
+    for _, t in ipairs({'ftplugin', 'indent', 'after/ftplugin', 'after/indent'}) do
       if vim.fn.filereadable(string.format('%s/%s/%s.vim', plugin.rtp, t, ft))==1 then
         table.insert(real, t)
       end
@@ -302,9 +302,9 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
   -- Load dependencies
   for _, name in ipairs((plugin['depends'] or {})) do
     if plugins[name] == nil then
-      require 'dein/util'._error(string.format('Plugin name "%s" is not found.', name))
+      util._error(string.format('Plugin name "%s" is not found.', name))
     elseif plugin.lazy==0 and (plugins[name].lazy == 1) then
-      require 'dein/util'._error(
+      util._error(
         string.format('Not lazy plugin "%s" depends lazy "%s" plugin.', plugin.name, name))
     else
       source_plugin(plugins, rtps, index, plugins[name], sourced)

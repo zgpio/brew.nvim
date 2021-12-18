@@ -14,7 +14,7 @@ end
 function M.is_mac()
   return is_mac
 end
-function _get_runtime_path()
+function M.get_runtime_path()
   local rtp = dein._runtime_path
   if rtp ~= '' then
     return rtp
@@ -36,32 +36,40 @@ function M.is_powershell()
   local t = vim.fn.fnamemodify(vim.o.shell, ':t:r')
   return _is_async() and (t == 'powershell' or t == 'pwsh')
 end
-function _error(msg)
-  for _, mes in ipairs(__msg2list(msg)) do
-    a.nvim_command(string.format("echohl WarningMsg | echomsg '[dein] %s' | echohl None", mes))
-  end
-end
-
-function __msg2list(expr)
-  if vim.tbl_islist(expr) then
+local function _msg2list(expr)
+  if vim.tbl_islist(expr) then  -- type(expr) == 'table'
     return expr
   else
     return vim.split(expr, '\n')
   end
 end
 
+function _error(msg)
+  for _, mes in ipairs(_msg2list(msg)) do
+    a.nvim_command(string.format("echohl WarningMsg | echomsg '[dein] %s' | echohl None", mes))
+  end
+end
+function M._error(msg)
+  for _, mes in ipairs(_msg2list(msg)) do
+    local c = string.format('echomsg "[dein] %s"', mes)
+    a.nvim_command('echohl WarningMsg')
+    a.nvim_command(c)
+    a.nvim_command('echohl None')
+  end
+end
+
 local function _get_myvimrc()
   local vimrc = vim.env.MYVIMRC
   if vimrc == '' then
-    vimrc = vim.fn.matchstr(vim.fn.split(vim.fn.execute('scriptnames'), '\n')[0], [[^\s*\d\+:\s\zs.*]])
+    vimrc = vim.fn.matchstr(vim.fn.split(vim.fn.execute('scriptnames'), '\n')[1], [[^\s*\d\+:\s\zs.*]])
   end
-  return _substitute_path(vimrc)
+  return M.substitute_path(vimrc)
 end
 
-function _clear_state()
+function M.clear_state()
   local base = dein.cache_directory or dein._base_path
-  local caches = _globlist(base..'/state_*.vim')
-  vim.list_extend(caches, _globlist(base..'/cache_*'))
+  local caches = M.globlist(base..'/state_*.vim')
+  vim.list_extend(caches, M.globlist(base..'/cache_*'))
   caches = vim.tbl_filter(function(v) return v~='' end, caches)
   for _, cache in ipairs(caches) do
     vim.fn.delete(cache)
@@ -69,7 +77,7 @@ function _clear_state()
 end
 
 -- test cases: '~/Desktop/', '$HOME/Desktop/', 'C:\Users'
-function _expand(path)
+function M.expand(path)
   local p
   if path:find('^~') then
     p = vim.fn.fnamemodify(path, ':p')
@@ -80,13 +88,13 @@ function _expand(path)
   end
 
   if (is_windows and p:find([[\]])) then
-    return _substitute_path(p)
+    return M.substitute_path(p)
   else
     return p
   end
 end
 
-function _execute_hook(plugin, hook)
+function M.execute_hook(plugin, hook)
   -- dein_log:write(vim.inspect({"_execute_hook", plugin.name, hook}), "\n")
   -- dein_log:flush()
   try {
@@ -113,7 +121,7 @@ end
 function M.check_clean()
   local dein = require 'dein'
   local plugins_directories = vim.tbl_map(function(v) return v.path end, vim.tbl_values(dein.get()))
-  local path = _substitute_path(vim.fn.globpath(dein._base_path, 'repos/*/*/*'))
+  local path = M.substitute_path(vim.fn.globpath(dein._base_path, 'repos/*/*/*'))
   return vim.tbl_filter(
     function(v)
       return vim.fn.isdirectory(v) and vim.fn.fnamemodify(v, ':t') ~= 'dein.vim' and vim.fn.index(plugins_directories, v) < 0
@@ -137,7 +145,7 @@ local function _get_merged_plugins()
 end
 
 function _check_vimrcs()
-  local time = vim.fn.getftime(_get_runtime_path())
+  local time = vim.fn.getftime(M.get_runtime_path())
   local ret = vim.tbl_isempty(vim.tbl_filter(
     function(v)
       return time < v
@@ -152,11 +160,11 @@ function _check_vimrcs()
     return 0
   end
 
-  _clear_state()
+  M.clear_state()
 
   return 1
 end
-function _save_cache(vimrcs, is_state, is_starting)
+local function _save_cache(vimrcs, is_state, is_starting)
   if M.get_cache_path() == '' or (is_starting==0) then
     -- Ignore
     return true
@@ -193,7 +201,7 @@ function _save_cache(vimrcs, is_state, is_starting)
 end
 
 --@param ... {{{}, {}, ...}}
-function _call_hook(hook_name, ...)
+function M.call_hook(hook_name, ...)
   local args = ...
   local hook = 'hook_' .. hook_name
   local t
@@ -203,15 +211,15 @@ function _call_hook(hook_name, ...)
       return ((hook_name ~= 'source' and hook_name ~= 'post_source')
         or x.sourced) and x[hook] ~= nil and vim.fn.isdirectory(x.path)==1
     end,
-    _get_plugins(t)
+    M.get_plugins(t)
   )
 
   for _, plugin in ipairs(
     vim.tbl_filter(function(x) return x[hook] ~= nil end, _tsort(plugins))) do
-    _execute_hook(plugin, plugin[hook])
+    M.execute_hook(plugin, plugin[hook])
   end
 end
-function _globlist(path)
+function M.globlist(path)
   return vim.split(vim.fn.glob(path), '\n')
 end
 function _add_after(rtps, path)
@@ -226,7 +234,7 @@ function _add_after(rtps, path)
   return rtps
 end
 --@returns [{}, {}]
-function _get_lazy_plugins()
+function M.get_lazy_plugins()
   local plugins = vim.tbl_values(dein._plugins)
   -- table.filter  https://gist.github.com/FGRibreau/3790217
   local rv = {}
@@ -238,9 +246,9 @@ function _get_lazy_plugins()
   return rv
 end
 
-function _check_lazy_plugins()
+function M.check_lazy_plugins()
   local rv = {}
-  for _, t in ipairs(_get_lazy_plugins()) do
+  for _, t in ipairs(M.get_lazy_plugins()) do
     if vim.fn.isdirectory(t.rtp) == 1
       and (t['local'] or 0) == 0
       and (t.hook_source or '') == ''
@@ -268,7 +276,7 @@ function M.get_cache_path()
   return cache_path
 end
 
-function _substitute_path(path)
+function M.substitute_path(path)
   if (is_windows or vim.fn.has('win32unix')==1) and path:find([[\]]) then
     return vim.fn.tr(path, [[\]], '/')
   else
@@ -276,7 +284,11 @@ function _substitute_path(path)
   end
 end
 
-function _save_state(is_starting)
+local function skipempty(string)
+  return vim.tbl_filter(function(v) return v~='' end, vim.split(string, '\n'))
+end
+
+function M.save_state(is_starting)
   if dein._block_level ~= 0 then
     _error('Invalid save_state() usage.')
     return 1
@@ -289,12 +301,11 @@ function _save_state(is_starting)
 
   if (dein.auto_recache or 0) == 1 then
     _notify('auto recached')
-    require 'dein/install'
-    _recache_runtimepath()
+    require 'dein/install'.recache_runtimepath()
   end
 
-  dein._vimrcs = _uniq(dein._vimrcs)
-  vim.o.rtp = _join_rtp(_uniq(_split_rtp(vim.o.rtp)), vim.o.rtp, '')
+  dein._vimrcs = M.uniq(dein._vimrcs)
+  vim.o.rtp = M.join_rtp(M.uniq(M.split_rtp(vim.o.rtp)), vim.o.rtp, '')
 
   _save_cache(dein._vimrcs, 1, is_starting)
 
@@ -324,7 +335,7 @@ function _save_state(is_starting)
   end
 
   -- Add dummy mappings/commands
-  for _, plugin in ipairs(_get_lazy_plugins()) do
+  for _, plugin in ipairs(M.get_lazy_plugins()) do
     for _, command in ipairs(plugin.dummy_commands or {}) do
       table.insert(lines, 'silent! ' .. command[2])
     end
@@ -369,14 +380,14 @@ function _save_state(is_starting)
     vim.list_extend(lines,
       vim.tbl_filter(
         function(v) return not (v:find('^%s*"') or v:find('^%s$')) end,
-        vim.fn.readfile(_expand(vimrc))
+        vim.fn.readfile(M.expand(vimrc))
       ))
   end
 
   vim.fn.writefile(lines,
     (dein.cache_directory or dein._base_path) ..'/state_' .. dein._progname .. '.vim')
 end
-function _writefile(path, list)
+function M.writefile(path, list)
   if dein._is_sudo or (vim.fn.filewritable(M.get_cache_path())==0) then
     return 1
   end
@@ -390,13 +401,9 @@ function _writefile(path, list)
   return vim.fn.writefile(list, path)
 end
 
-function skipempty(string)
-  return vim.tbl_filter(function(v) return v~='' end, vim.split(string, '\n'))
-end
-
 -- plugins: { plugin_tbl1, ... } / { plugin_name1, ... } / plugin_name
 -- NOTE: remove support for plugin_tbl
-function _get_plugins(plugins)
+function M.get_plugins(plugins)
   if vim.tbl_isempty(plugins) then
     return vim.tbl_values(dein.get())
   else
@@ -408,12 +415,12 @@ function _get_plugins(plugins)
           return dein.get(v)
         end
       end,
-      _convert2list(plugins)
+      M.convert2list(plugins)
     )
     local rv = {}
-    for k, v in pairs(plugins) do
+    for _, v in ipairs(plugins) do
       if not vim.tbl_isempty(v) then
-        rv[k] = v
+        table.insert(rv, v)
       end
     end
     return rv
@@ -433,15 +440,7 @@ function M.map_filter(t, filterIter)
   return rv
 end
 
-function M._error(msg)
-  for i, mes in ipairs(msg2list(msg)) do
-    local c = string.format('echomsg "[dein] %s"', mes)
-    a.nvim_command('echohl WarningMsg')
-    a.nvim_command(c)
-    a.nvim_command('echohl None')
-  end
-end
-function _split_rtp(rtp)
+function M.split_rtp(rtp)
   if vim.fn.stridx(rtp, [[\,]]) < 0 then
     return vim.split(rtp, ',')
   end
@@ -449,7 +448,7 @@ function _split_rtp(rtp)
   local split = vim.fn.split(rtp, [[\\\@<!\%(\\\\\)*\zs,]])
   return vim.fn.map(split, [[substitute(v:val, '\\\([\\,]\)', '\1', 'g')]])
 end
-function _join_rtp(list, runtimepath, rtp)
+function M.join_rtp(list, runtimepath, rtp)
   if vim.fn.stridx(runtimepath, [[\,]]) < 0 and vim.fn.stridx(rtp, ',') < 0 then
     return vim.fn.join(list, ',')
   else
@@ -480,7 +479,7 @@ function _tsort(plugins)
 
   return sorted
 end
-function _convert2list(expr)
+function M.convert2list(expr)
   if type(expr) == 'table' then
     return vim.deepcopy(expr)
   elseif type(expr) == 'string' then
@@ -497,19 +496,17 @@ function escape(path)
   -- Escape a path for runtimepath.
   return vim.fn.substitute(path, [[,\|\\,\@=]], [[\\\0]], 'g')
 end
-function _check_install(plugins)
+function M.check_install(plugins)
+  plugins = M.convert2list(plugins)
   if not vim.tbl_isempty(plugins) then
-    local invalids = vim.tbl_filter(function(x) return vim.tbl_isempty(dein.get(x)) end,
-      _convert2list(plugins))
+    local invalids = vim.tbl_filter(function(x) return vim.tbl_isempty(dein.get(x)) end, plugins)
     if not vim.tbl_isempty(invalids) then
-      M._error('Invalid plugins: ' .. vim.fn.string(vim.fn.map(invalids, 'v:val')))
+      M._error('Invalid plugins: ' .. vim.fn.string(invalids))
       return -1
     end
-  end
-  if vim.tbl_isempty(plugins) then
-    plugins = vim.tbl_values(dein.get())
+    plugins = vim.tbl_map(function(v) return dein.get(v) end, plugins)
   else
-    plugins = vim.tbl_map(function(v) return dein.get(v) end, _convert2list(plugins))
+    plugins = vim.tbl_values(dein.get())
   end
   plugins = vim.tbl_filter(function(x) return vim.fn.isdirectory(x.path)==0 end, plugins)
   if vim.tbl_isempty(plugins) then return 0 end
@@ -527,7 +524,7 @@ function _notify(msg)
     return
   end
 
-  local icon = _expand(dein.notification_icon)
+  local icon = M.expand(dein.notification_icon)
 
   local title = '[dein]'
   local cmd = ''
@@ -561,14 +558,8 @@ function _notify(msg)
     _system(cmd)
   end
 end
-function msg2list(expr)
-  if type(expr) == 'table' then
-    return expr
-  else
-    return vim.split(expr, '\n')
-  end
-end
-function _get_vimrcs(vimrcs)
+
+local function _get_vimrcs(vimrcs)
   if vim.fn.empty(vimrcs)==1 then
     return {_get_myvimrc()}
   else
@@ -576,7 +567,7 @@ function _get_vimrcs(vimrcs)
       function(v)
         return vim.fn.expand(v)
       end,
-      _convert2list(vimrcs)
+      M.convert2list(vimrcs)
     )
   end
 end
@@ -592,11 +583,11 @@ function _begin(path, vimrcs)
   end
 
   dein._block_level = dein._block_level + 1
-  dein._base_path = _expand(path)
+  dein._base_path = M.expand(path)
   if dein._base_path:sub(-1) == '/' then
     dein._base_path = dein._base_path:sub(1, -2)
   end
-  _get_runtime_path()
+  M.get_runtime_path()
   M.get_cache_path()
   dein._vimrcs = _get_vimrcs(vimrcs)
   if dein.inline_vimrcs~=nil then
@@ -620,7 +611,7 @@ function _begin(path, vimrcs)
   end
 
   -- Insert dein runtimepath to the head in 'runtimepath'.
-  local rtps = _split_rtp(vim.o.rtp)
+  local rtps = M.split_rtp(vim.o.rtp)
   local idx = vim.fn.index(rtps, vim.env.VIMRUNTIME)
   if idx < 0 then
     M._error('Invalid runtimepath.')
@@ -632,7 +623,7 @@ function _begin(path, vimrcs)
   end
   rtps = vim.fn.insert(rtps, dein._runtime_path, idx)
   rtps = _add_after(rtps, dein._runtime_path..'/after')
-  vim.o.runtimepath = _join_rtp(rtps, vim.o.rtp, dein._runtime_path)
+  vim.o.runtimepath = M.join_rtp(rtps, vim.o.rtp, dein._runtime_path)
 end
 
 -- TODO: duplicate
@@ -651,7 +642,7 @@ function _save_merged_plugins()
   vim.list_extend(h, {vim.fn.string(t)})
   vim.fn.writefile(h, M.get_cache_path() .. '/merged')
 end
-function _load_merged_plugins()
+function M.load_merged_plugins()
   local path = M.get_cache_path() .. '/merged'
   if vim.fn.filereadable(path)==0 then
     return {}
@@ -667,7 +658,7 @@ function _load_merged_plugins()
   return h
 end
 
-function _chomp(str)
+function M.chomp(str)
   if str ~= '' and str:sub(-1) == '/' then
     return str:sub(1, -2)
   else
@@ -695,7 +686,7 @@ function _end()
   end
 
   -- Add runtimepath
-  local rtps = _split_rtp(vim.o.rtp)
+  local rtps = M.split_rtp(vim.o.rtp)
   local index = vim.fn.index(rtps, dein._runtime_path)
   if index < 0 then
     M._error('Invalid runtimepath.')
@@ -723,14 +714,14 @@ function _end()
     plugin.sourced = sourced
   end
   dein._plugins = _plugins
-  vim.o.rtp = _join_rtp(rtps, vim.o.rtp, '')
+  vim.o.rtp = M.join_rtp(rtps, vim.o.rtp, '')
 
   if vim.fn.empty(depends)==0 then
     _source(depends)
   end
 
   if dein._hook_add ~= '' then
-    _execute_hook({}, dein._hook_add)
+    M.execute_hook({}, dein._hook_add)
   end
 
   local _event_plugins = dein._event_plugins
@@ -745,17 +736,17 @@ function _end()
   end
 
   for _, vimrc in ipairs(dein.inline_vimrcs or {}) do
-    vim.api.nvim_command("source ".._expand(vimrc))
+    vim.api.nvim_command("source "..M.expand(vimrc))
   end
 
   if not vim_starting then
-    _call_hook('add')
-    _call_hook('source')
-    _call_hook('post_source')
+    M.call_hook('add')
+    M.call_hook('source')
+    M.call_hook('post_source')
   end
 end
 
-function _download(uri, outpath)
+function M.download(uri, outpath)
   local c
   if dein.download_command==nil then
     if vim.fn.executable('curl')==1 then
@@ -779,7 +770,7 @@ function _download(uri, outpath)
   end
 end
 --@param list basic type list
-function _uniq(list)
+function M.uniq(list)
   list = vim.deepcopy(list)
   local l = {}
   local i = 1

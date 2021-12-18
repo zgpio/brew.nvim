@@ -13,7 +13,7 @@ print(git._is_absolute('home/fool'))
 print(git._is_git_dir('/home/fool'))
 print(git._is_git_dir('/Users/zgp/Note/.git'))
 
-plugin = {
+local plugin = {
     repo = "https://gitee.com/zgpio/onedark.vim",
     path = "/Users/zgp/vtest/.cache/dein/repos/gitee.com/zgpio/onedark.vim"
 }

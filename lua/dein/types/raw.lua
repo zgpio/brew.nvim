@@ -1,4 +1,4 @@
-require 'dein/util'
+local util = require 'dein/util'
 local M = {
   name='raw',
 }
@@ -25,6 +25,6 @@ function M.get_sync_command(plugin)
   end
 
   local outpath = path .. '/' .. vim.fn.fnamemodify(plugin.repo, ':t')
-  return _download(plugin.repo, outpath)
+  return util.download(plugin.repo, outpath)
 end
 return M
