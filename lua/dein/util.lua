@@ -28,13 +28,11 @@ function M.get_runtime_path()
 end
 
 function M.is_fish()
-  require 'dein/install'
-  return _is_async() and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
+  return require 'dein/install'.is_async() and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
 end
 function M.is_powershell()
-  require 'dein/install'
   local t = vim.fn.fnamemodify(vim.o.shell, ':t:r')
-  return _is_async() and (t == 'powershell' or t == 'pwsh')
+  return require 'dein/install'.is_async() and (t == 'powershell' or t == 'pwsh')
 end
 local function _msg2list(expr)
   if vim.tbl_islist(expr) then  -- type(expr) == 'table'
@@ -44,14 +42,9 @@ local function _msg2list(expr)
   end
 end
 
-function _error(msg)
-  for _, mes in ipairs(_msg2list(msg)) do
-    a.nvim_command(string.format("echohl WarningMsg | echomsg '[dein] %s' | echohl None", mes))
-  end
-end
 function M._error(msg)
-  for _, mes in ipairs(_msg2list(msg)) do
-    local c = string.format('echomsg "[dein] %s"', mes)
+  for _, s in ipairs(_msg2list(msg)) do
+    local c = 'echomsg '..vim.fn.string("[dein] "..s)
     a.nvim_command('echohl WarningMsg')
     a.nvim_command(c)
     a.nvim_command('echohl None')
@@ -109,9 +102,8 @@ function M.execute_hook(plugin, hook)
     end,
     catch {
       function(error)
-        _error('Error occurred while executing hook: ' ..
-               vim.fn.get(plugin, 'name', ''))
-        _error(vim.v.exception)
+        M._error('Error occurred while executing hook: ' .. vim.fn.get(plugin, 'name', ''))
+        M._error(vim.v.exception)
 
         print('caught error: ' .. error)
       end
@@ -222,7 +214,7 @@ end
 function M.globlist(path)
   return vim.split(vim.fn.glob(path), '\n')
 end
-function _add_after(rtps, path)
+function M.add_after(rtps, path)
   vim.validate{
     rtps={rtps, 't'},
     path={path, 's'},
@@ -290,7 +282,7 @@ end
 
 function M.save_state(is_starting)
   if dein._block_level ~= 0 then
-    _error('Invalid save_state() usage.')
+    M._error('Invalid save_state() usage.')
     return 1
   end
 
@@ -356,7 +348,7 @@ function M.save_state(is_starting)
     -- Invalid hooks detection
     for k, v in pairs(plugin) do
       if vim.fn.stridx(k, 'hook_') == 0 and type(v) ~= 'string' then
-        _error(vim.fn.printf('%s: "%s" must be string to save state', plugin.name, k))
+        M._error(vim.fn.printf('%s: "%s" must be string to save state', plugin.name, k))
       end
     end
   end
@@ -622,7 +614,7 @@ function _begin(path, vimrcs)
     return 1
   end
   rtps = vim.fn.insert(rtps, dein._runtime_path, idx)
-  rtps = _add_after(rtps, dein._runtime_path..'/after')
+  rtps = M.add_after(rtps, dein._runtime_path..'/after')
   vim.o.runtimepath = M.join_rtp(rtps, vim.o.rtp, dein._runtime_path)
 end
 
@@ -635,7 +627,7 @@ function slice(tbl, first, last, step)
   end
   return sliced
 end
-function _save_merged_plugins()
+function M.save_merged_plugins()
   local merged = _get_merged_plugins()
   local h = slice(merged, 1, _merged_length - 1)
   local t = slice(merged, _merged_length)
@@ -707,7 +699,7 @@ function _end()
     if plugin.merged==0 then
       table.insert(rtps, index+1, plugin.rtp)
       if vim.fn.isdirectory(plugin.rtp..'/after')==1 then
-        rtps = _add_after(rtps, plugin.rtp..'/after')
+        rtps = M.add_after(rtps, plugin.rtp..'/after')
       end
     end
 

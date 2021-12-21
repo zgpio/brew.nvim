@@ -22,4 +22,7 @@ print(util.check_install({'nvim-treesitter', 'bbb', 'ccc'}))
 print(util.check_install({'nvim-treesitter', 'neomake', }))
 print(util.check_install())
 
+print(util._error('{"auto-pairs"}'))
+print(util._error("{'nvim-treesitter'}"))
+
 print('done')

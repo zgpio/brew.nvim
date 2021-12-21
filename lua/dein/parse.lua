@@ -58,7 +58,7 @@ local function _dict(plug)
   local plugin = vim.tbl_extend('force', { rtp='', sourced=false }, plug)
 
   if plugin.name == nil then
-    plugin.name = _name_conversion(plugin.repo)
+    plugin.name = M.name_conversion(plugin.repo)
   end
 
   if plugin.normalized_name == nil then
@@ -112,8 +112,8 @@ local function _dict(plug)
   -- Deprecated check.
   for _, key in ipairs({'directory', 'base'}) do
     if plugin[key] ~= nil then
-      _error('plugin name = ' .. plugin.name)
-      _error(vim.fn.string(key) .. ' is deprecated.')
+      util._error('plugin name = ' .. plugin.name)
+      util._error(vim.fn.string(key) .. ' is deprecated.')
     end
   end
 
@@ -176,6 +176,19 @@ function _init(repo, options)
   end
   return plugin
 end
+local function generate_dummy_commands(plugin)
+  plugin.dummy_commands = {}
+  for _, name in ipairs(plugin.on_cmd) do
+    -- Define dummy commands.
+    local raw_cmd = 'command -complete=customlist,v:lua._dummy_complete -bang -bar -range -nargs=* ' .. name
+      .. vim.fn.printf(" call v:lua._on_cmd(%s, %s, <q-args>, expand('<bang>'), expand('<line1>'), expand('<line2>'))",
+       vim.fn.string(name), vim.fn.string(plugin.name))
+
+    table.insert(plugin.dummy_commands, {name, raw_cmd})
+    vim.api.nvim_command('silent! '..raw_cmd)
+  end
+end
+
 local function parse_lazy(plugin)
   -- Auto convert2list.
   for _, key in ipairs({'on_ft', 'on_path', 'on_cmd', 'on_func', 'on_map',
@@ -252,7 +265,7 @@ function _add(repo, options, overwrite)
     if not overwrite then
       -- Only warning when starting
       if vim.fn.has('vim_starting')==1 then
-        _error(vim.fn.printf('Plugin name "%s" is already defined.', plugin.name))
+        util._error(vim.fn.printf('Plugin name "%s" is already defined.', plugin.name))
       end
       return {}
     end
@@ -279,19 +292,6 @@ function _add(repo, options, overwrite)
   _plugins[plugin.name] = plugin
   dein._plugins = _plugins
   return plugin
-end
-
-function generate_dummy_commands(plugin)
-  plugin.dummy_commands = {}
-  for _, name in ipairs(plugin.on_cmd) do
-    -- Define dummy commands.
-    local raw_cmd = 'command -complete=customlist,v:lua._dummy_complete -bang -bar -range -nargs=* ' .. name
-      .. vim.fn.printf(" call v:lua._on_cmd(%s, %s, <q-args>, expand('<bang>'), expand('<line1>'), expand('<line2>'))",
-       vim.fn.string(name), vim.fn.string(plugin.name))
-
-    table.insert(plugin.dummy_commands, {name, raw_cmd})
-    vim.api.nvim_command('silent! '..raw_cmd)
-  end
 end
 
 function table.slice(tbl, first, last, step)
@@ -360,7 +360,7 @@ function _get_type(name)
   return (_get_types()[name] or {})
 end
 
-function _name_conversion(path)
+function M.name_conversion(path)
   return vim.fn.fnamemodify(vim.fn.get(vim.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
 end
 
@@ -411,15 +411,15 @@ function M.load_toml(filename, default)
       -- TODO catch /Text.TOML:/
       function(e)
         print(e)
-        _error('Invalid toml format: ' .. filename)
-        _error(vim.v.exception)
+        util._error('Invalid toml format: ' .. filename)
+        util._error(vim.v.exception)
         return 1
       end
     }
   }
 
   if type(toml)~='table' or vim.tbl_islist(toml) then
-    _error('Invalid toml file: ' .. filename)
+    util._error('Invalid toml file: ' .. filename)
     return 1
   end
 
@@ -435,7 +435,7 @@ function M.load_toml(filename, default)
   if toml.plugins then
     for _, plugin in ipairs(toml.plugins) do
       if not plugin.repo then
-        _error('No repository plugin data: ' .. filename)
+        util._error('No repository plugin data: ' .. filename)
         return 1
       end
 

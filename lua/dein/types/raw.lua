@@ -13,7 +13,7 @@ function M.init(repo, options)
   directory = vim.fn.substitute(directory, [[^https:/\+\|^git@]], '', '')
   directory = vim.fn.substitute(directory, ':', '/', 'g')
 
-  return { ['name']=_name_conversion(repo), ['type']='raw',
+  return { ['name']=require'dein/parse'.name_conversion(repo), ['type']='raw',
           ['path']=dein._base_path..'/repos/'..directory }
 end
 

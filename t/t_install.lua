@@ -13,8 +13,8 @@ assert(install._truncate_skipping('hello world', 6, 2, '...')=='h...ld')
 print(install.__echo_mode('hello world\nneovim\n', 'error'))
 
 -- Test install log
-print(install.__updates_log('hello log'))
-print(install.__updates_log('foo bar'))
+print(install._updates_log('hello log'))
+print(install._updates_log('foo bar'))
 print(vim.inspect(install._var_updates_log))
 install._log('install log')
 print(vim.inspect(install._var_log))

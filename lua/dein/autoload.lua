@@ -179,7 +179,7 @@ function _on_cmd(command, name, args, bang, line1, line2)
   _source({name})
 
   if vim.fn.exists(':' .. command) ~= 2 then
-    _error(string.format('command %s is not found.', command))
+    util._error(string.format('command %s is not found.', command))
     return
   end
 
@@ -345,7 +345,7 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
   if plugin.merged==0 or (plugin['local']==1 or false) then
     table.insert(rtps, index+1, plugin.rtp)
     if vim.fn.isdirectory(plugin.rtp..'/after') == 1 then
-      rtps = _add_after(rtps, plugin.rtp..'/after')
+      rtps = util.add_after(rtps, plugin.rtp..'/after')
     end
   end
 
@@ -360,7 +360,7 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
   end
 end
 
-function get_input()
+local function get_input()
   local input = ''
   local termstr = '<M-_>'
 

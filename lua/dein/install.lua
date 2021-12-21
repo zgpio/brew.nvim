@@ -73,7 +73,7 @@ end
 local function _status()
   return vim.v.shell_error
 end
-function _is_async()
+function M.is_async()
   return dein.install_max_processes > 1
 end
 -- FIXME: The logic is different from the `:h jobstart`
@@ -110,7 +110,7 @@ local function log(msg)
   table.insert(var_log, msg)
   append_log_file(msg)
 end
-local function __updates_log(msg)
+local function _updates_log(msg)
   msg = util.convert2list(msg)
 
   table.insert(var_updates_log, msg)
@@ -124,7 +124,7 @@ local function ERROR(msg)
   end
 
   __echo(msg, 'error')
-  __updates_log(msg)
+  _updates_log(msg)
 end
 
 function _system(command)
@@ -150,7 +150,7 @@ function _rollback(date, plugins)
     return
   end
 
-  _load_rollback(rollbacks[0], plugins)
+  M.load_rollback(rollbacks[1], plugins)
 end
 local function check_rollback(plugin)
   return plugin['local']==nil and (plugin.frozen or 0)==0
@@ -198,8 +198,8 @@ function _save_rollback(rollbackfile, plugins)
 
   vim.fn.writefile({vim.fn.json_encode(revisions)}, vim.fn.expand(rollbackfile))
 end
-function _load_rollback(rollbackfile, plugins)
-  local revisions = vim.fn.json_decode(vim.fn.readfile(rollbackfile)[0])
+function M.load_rollback(rollbackfile, plugins)
+  local revisions = vim.fn.json_decode(vim.fn.readfile(rollbackfile)[1])
 
   plugins = util.get_plugins(plugins)
   -- TODO has_key(v:lua._get_type(v:val.type), 'get_rollback_command')
@@ -370,13 +370,13 @@ local function _rm(path)
   cmdline = rm_command .. cmdline
   local result = vim.fn.system(cmdline)
   if vim.v.shell_error~=0 then
-    _error(result)
+    util._error(result)
   end
 
   -- Error check.
   if vim.fn.getftype(path) ~= '' then
-    _error(string.format('"%s" cannot be removed.', path))
-    _error(string.format('cmdline is "%s".', cmdline))
+    util._error(string.format('"%s" cannot be removed.', path))
+    util._error(string.format('cmdline is "%s".', cmdline))
   end
 end
 
@@ -421,6 +421,9 @@ local function lock_revision(process)
     return -1
   end
 end
+local function _get_short_message(plugin, number, max, message)
+  return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) %s', number, max, message)
+end
 local RUNNING = -1
 local function async_get(process)
   local async = process.async
@@ -441,7 +444,7 @@ local function async_get(process)
   if output ~= '' then
     process.output = output
     process.start_time = vim.fn.localtime()
-    log(__get_short_message(process.plugin, process.number,
+    log(_get_short_message(process.plugin, process.number,
           process.max_plugins, output))
   end
   async.candidates = (async.eof==1) and {} or {candidates[#candidates]}
@@ -534,7 +537,7 @@ local function check_output(context, process)
 
     local log_messages = vim.fn.split(get_updated_log_message(plugin, new_rev, process.rev), '\n')
     plugin.commit_count = vim.fn.len(log_messages)
-    log(vim.tbl_map(function(v) return __get_short_message(plugin, num, max, v) end, log_messages))
+    log(vim.tbl_map(function(v) return _get_short_message(plugin, num, max, v) end, log_messages))
 
     plugin.old_rev = process.rev
     plugin.new_rev = new_rev
@@ -629,7 +632,7 @@ local function clear_runtimepath()
     vim.fn.mkdir(runtimepath, 'p')
   end
 end
-local function __install_blocking(context)
+local function install_blocking(context)
   try {
     function()
       while true do
@@ -663,11 +666,42 @@ local function get_errored_message(plugins)
 
   return msg
 end
+
+local function restore_view(context)
+  if context.progress_type == 'tabline' then
+    vim.o.showtabline = context.showtabline
+    vim.o.tabline = context.tabline
+  elseif context.progress_type == 'title' then
+    vim.o.title = context.title
+    vim.o.titlestring = context.titlestring
+  end
+end
+local function get_updated_message(context, plugins)
+  if vim.fn.empty(plugins)==1 then
+    return ''
+  end
+  local function t(v)
+    local changes = ''
+    if v.commit_count==1 then
+      changes = '(1 change)'
+    else
+      changes = string.format('(%d changes)', v.commit_count)
+    end
+    local updated = ''
+    if v.old_rev ~= '' and v.uri:find('^%a%w*://github.com/') then
+      updated = "\n" .. string.format('    %s/compare/%s...%s',
+        vim.fn.substitute(vim.fn.substitute(v.uri, [[\.git$]], '', ''), [[^\h\w*:]], 'https:', ''), v.old_rev, v.new_rev)
+    end
+    return '  ' .. v.name .. changes .. updated
+  end
+
+  return "Updated plugins:\n" .. vim.fn.join(vim.tbl_map(t, vim.fn.copy(plugins)), "\n")
+end
 function __done(context)
-  __restore_view(context)
+  restore_view(context)
 
   if vim.fn.has('vim_starting')==0 then
-    __notify(__get_updated_message(context, context.synced_plugins))
+    __notify(get_updated_message(context, context.synced_plugins))
     __notify(get_errored_message(context.errored_plugins))
   end
 
@@ -830,7 +864,7 @@ local function update_loop(context)
           vim.api.nvim_command('redraw')
         end
       else
-        errored = __install_blocking(context)
+        errored = install_blocking(context)
       end
     end,
     catch {
@@ -935,7 +969,7 @@ function M.copy_directories(srcs, dest)
   local result
   if util.is_windows() then
     if vim.fn.executable('robocopy')==0 then
-      _error('robocopy command is needed.')
+      util._error('robocopy command is needed.')
       return 1
     end
 
@@ -959,10 +993,10 @@ function M.copy_directories(srcs, dest)
     end
 
     if status~=0 then
-      _error('copy command failed.')
-      _error(iconv(result, 'char', vim.o.encoding))
-      _error('cmdline: ' .. temp)
-      _error('tempfile: ' .. vim.fn.string(lines))
+      util._error('copy command failed.')
+      util._error(iconv(result, 'char', vim.o.encoding))
+      util._error('cmdline: ' .. temp)
+      util._error('tempfile: ' .. vim.fn.string(lines))
     end
   else -- Not Windows
     srcs = vim.tbl_map(
@@ -993,9 +1027,9 @@ function M.copy_directories(srcs, dest)
       end
     end
     if status~=0 then
-      _error('copy command failed.')
-      _error(result)
-      _error('cmdline: ' .. cmdline)
+      util._error('copy command failed.')
+      util._error(result)
+      util._error('cmdline: ' .. cmdline)
     end
   end
 
@@ -1141,7 +1175,7 @@ function M.reinstall(plugins)
     repeat
       -- Remove the plugin
       if plugin.type == 'none' or (plugin['local'] or 0)==1 or (plugin.sourced and vim.fn.index({'dein'}, plugin.normalized_name) >= 0) then
-        _error(vim.fn.printf('|%s| Cannot reinstall the plugin!', plugin.name))
+        util._error(vim.fn.printf('|%s| Cannot reinstall the plugin!', plugin.name))
         break
       end
 
@@ -1155,40 +1189,6 @@ function M.reinstall(plugins)
   end
 
   _update(util.convert2list(plugins), 'install', 0)
-end
-function __get_short_message(plugin, number, max, message)
-  return vim.fn.printf('(%'..vim.fn.len(max)..'d/%d) %s', number, max, message)
-end
-
-function __get_updated_message(context, plugins)
-  if vim.fn.empty(plugins)==1 then
-    return ''
-  end
-  function t(v)
-    local changes = ''
-    if v.commit_count==1 then
-      changes = '(1 change)'
-    else
-      changes = string.format('(%d changes)', v.commit_count)
-    end
-    local updated = ''
-    if v.old_rev ~= '' and v.uri:find('^%a%w*://github.com/') then
-      updated = "\n" .. string.format('    %s/compare/%s...%s',
-        vim.fn.substitute(vim.fn.substitute(v.uri, [[\.git$]], '', ''), [[^\h\w*:]], 'https:', ''), v.old_rev, v.new_rev)
-    end
-    return '  ' .. v.name .. changes .. updated
-  end
-
-  return "Updated plugins:\n" .. vim.fn.join(vim.tbl_map(t, vim.fn.copy(plugins)), "\n")
-end
-function __restore_view(context)
-  if context.progress_type == 'tabline' then
-    vim.o.showtabline = context.showtabline
-    vim.o.tabline = context.tabline
-  elseif context.progress_type == 'title' then
-    vim.o.title = context.title
-    vim.o.titlestring = context.titlestring
-  end
 end
 
 function __echo(expr, mode)
@@ -1235,7 +1235,7 @@ function __notify(msg)
     _notify(msg)
   end
 
-  __updates_log(msg)
+  _updates_log(msg)
   __progress = vim.fn.join(msg, "\n")
 end
 
@@ -1324,11 +1324,11 @@ function M.recache_runtimepath()
   merge_files(plugins, 'after/ftdetect')
 
   -- TODO: silent
-  _remote_plugins()
+  M.remote_plugins()
 
   util.call_hook('post_source')
 
-  _save_merged_plugins()
+  util.save_merged_plugins()
 
   -- FIXME
   -- _save_rollback(__get_rollback_directory() .. '/' .. vim.fn.strftime('%Y%m%d%H%M%S'), {})
@@ -1371,6 +1371,10 @@ function _update(plugins, update_type, async)
   plugins = util.get_plugins(plugins)
 
   if update_type == 'install' then
+    local installed_plugins = vim.tbl_filter(function(v) return isdir(v.path)==1 end, plugins)
+    if not vim.tbl_isempty(installed_plugins) then
+      util._error('Already installed: '..vim.inspect(vim.tbl_map(function(v) return v.name end, installed_plugins)))
+    end
     plugins = vim.tbl_filter(function(v) return isdir(v.path)==0 end, plugins)
   end
 
@@ -1435,7 +1439,7 @@ local function __init_job(process, context, cmd)
   process.id = process.job.pid
   return process
 end
-function _remote_plugins()
+function M.remote_plugins()
   if vim.fn.has('vim_starting')==1 then
     -- Note: UpdateRemotePlugins is not defined in vim_starting
     vim.api.nvim_command('autocmd dein VimEnter * silent lua dein.remote_plugins()')
@@ -1584,7 +1588,7 @@ if _TEST then
   M._truncate_skipping = truncate_skipping
   M.__echo_mode = __echo_mode
   M._var_updates_log = var_updates_log
-  M.__updates_log = __updates_log
+  M._updates_log = _updates_log
   M._var_log = var_log
   M._append_log_file = append_log_file
   M._log = log

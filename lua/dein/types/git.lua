@@ -137,14 +137,14 @@ function M:get_uri(repo, options)
   end
 
   if protocol ~= 'https' and protocol ~= 'ssh' then
-    _error(string.format('Repo: %s The protocol "%s" is unsecure and invalid.',
+    util._error(string.format('Repo: %s The protocol "%s" is unsecure and invalid.',
            repo, protocol))
     return ''
   end
 
   local uri
   if repo:find('/')==nil then
-    _error(string.format('vim-scripts.org is deprecated.'
+    util._error(string.format('vim-scripts.org is deprecated.'
       .. ' You can use "vim-scripts/%s" instead.', repo))
     return ''
   else

@@ -71,17 +71,17 @@ function M.get(...)
   end
 end
 function M.install(...)
-  require 'dein/install'
+  local install = require 'dein/install'
   local args = {...}
-  return _update((args[1] or {}), 'install', _is_async())
+  return _update((args[1] or {}), 'install', install.is_async())
 end
 function M.update(...)
-  require 'dein/install'
+  local install = require 'dein/install'
   local args = {...}
   if #args > 0 and type(args[1]) == 'table' then
     args = args[1]
   end
-  return _update(args, 'update', _is_async())
+  return _update(args, 'update', install.is_async())
 end
 function M.build(...)
   require 'dein/install'
@@ -103,9 +103,9 @@ function M.check_install(...)
   return require 'dein/util'.check_install((args[1] or {}))
 end
 function M.check_update(...)
-  require 'dein/install'
+  local install = require 'dein/install'
   local args = {...}
-  return _check_update((args[2] or {}), (args[1] or false), _is_async())
+  return _check_update((args[2] or {}), (args[1] or false), install.is_async())
 end
 function M.direct_install(repo, ...)
   local args = {...}
@@ -115,12 +115,15 @@ function M.direct_install(repo, ...)
   end
   require 'dein/install'.direct_install(repo, opts)
 end
-function M.reinstall(plugins)
-  require 'dein/install'.reinstall(plugins)
+function M.reinstall(...)
+  local args = {...}
+  if #args > 0 and type(args[1]) == 'table' then
+    args = args[1]
+  end
+  require 'dein/install'.reinstall(args)
 end
 function M.remote_plugins()
-  require 'dein/install'
-  return _remote_plugins()
+  return require 'dein/install'.remote_plugins()
 end
 function M.recache_runtimepath()
   require 'dein/install'.recache_runtimepath()
@@ -178,13 +181,12 @@ function M.clear_state()
   require 'dein/util'.clear_state()
 end
 function M.load_rollback(rollbackfile, ...)
-  require 'dein/install'
   local args = {...}
   local plugins = {}
   if #args > 0 then
     plugins = args[1]
   end
-  _load_rollback(rollbackfile, plugins)
+  require 'dein/install'.load_rollback(rollbackfile, plugins)
 end
 function M.save_rollback(rollbackfile, ...)
   require 'dein/install'
@@ -238,7 +240,7 @@ function M.load_state(path, ...)
       function(error)
         local util = require 'dein/util'
         if vim.v.exception ~= 'Cache loading error' then
-          _error('Loading state error: ' .. vim.v.exception)
+          util._error('Loading state error: ' .. vim.v.exception)
         end
         util.clear_state()
         print('caught error: ' .. error)
