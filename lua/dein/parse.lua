@@ -1,9 +1,10 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local util = require 'dein/util'
 local M = {}
+local brew = dein
 -- Global options definition.
-dein.enable_name_conversion = dein.enable_name_conversion or false
-dein.default_options = dein.default_options or {}
+brew.enable_name_conversion = brew.enable_name_conversion or false
+brew.default_options = brew.default_options or {}
 
 local types
 local function unique(items)
@@ -67,7 +68,7 @@ local function _dict(plug)
           [[\c^n\?vim[_-]\|[_-]n\?vim$]], '', 'g')
   end
 
-  if plug.name==nil and dein.enable_name_conversion then
+  if plug.name==nil and brew.enable_name_conversion then
     -- Use normalized name.
     plugin.name = plugin.normalized_name
   end
@@ -76,7 +77,7 @@ local function _dict(plug)
     if plugin.path:find('^%a:[/\\]') or plugin.path:find('^/') then
       plugin.path = plugin.repo
     else
-      plugin.path = dein._base_path..'/repos/'..plugin.name
+      plugin.path = brew._base_path..'/repos/'..plugin.name
     end
   end
 
@@ -96,7 +97,7 @@ local function _dict(plug)
     plugin.rtp = util.expand(plugin.rtp)
   end
   plugin.rtp = util.chomp(plugin.rtp)
-  if dein._is_sudo and not (plugin.trusted==1) then
+  if brew._is_sudo and not (plugin.trusted==1) then
     plugin.rtp = ''
   end
 
@@ -138,7 +139,7 @@ local function _dict(plug)
       and plugin.build==nil
       and plugin['if']==nil
       and plugin.hook_post_update==nil
-      and vim.fn.stridx(plugin.rtp, dein._base_path) == 0
+      and vim.fn.stridx(plugin.rtp, brew._base_path) == 0
     plugin.merged = plugin.merged and 1 or 0
   end
 
@@ -167,8 +168,8 @@ function _init(repo, options)
     plugin = __check_type(repo, options)
   end
   plugin = vim.tbl_extend('force', plugin, options)
-  if not vim.tbl_isempty(dein.default_options) then
-    plugin = vim.tbl_extend('keep', plugin, dein.default_options)
+  if not vim.tbl_isempty(brew.default_options) then
+    plugin = vim.tbl_extend('keep', plugin, brew.default_options)
   end
   plugin.repo = repo
   if vim.fn.empty(options)==0 then
@@ -204,7 +205,7 @@ local function parse_lazy(plugin)
   if plugin.on_idle ~= nil and plugin.on_idle ~= 0 then
     plugin.on_event = {'FocusLost', 'CursorHold'}
   end
-  local event_plugins = dein._event_plugins
+  local event_plugins = brew._event_plugins
   -- TODO: https://github.com/neovim/neovim/issues/12048
   assert(event_plugins[true]==nil)
   if plugin.on_event ~= nil then
@@ -217,7 +218,7 @@ local function parse_lazy(plugin)
       end
     end
   end
-  dein._event_plugins = event_plugins
+  brew._event_plugins = event_plugins
 
   if plugin.on_cmd ~= nil then
     generate_dummy_commands(plugin)
@@ -229,7 +230,7 @@ local function parse_lazy(plugin)
 end
 
 local function merge_ftplugin(ftplugin)
-  local _ftplugin = dein._ftplugin
+  local _ftplugin = brew._ftplugin
   -- TODO
   assert(_ftplugin[true]==nil)
   for ft, val in pairs(ftplugin) do
@@ -245,13 +246,13 @@ local function merge_ftplugin(ftplugin)
     end,
     _ftplugin
   )
-  dein._ftplugin = _ftplugin
+  brew._ftplugin = _ftplugin
 end
 function _add(repo, options, overwrite)
   if nil == overwrite then
       overwrite = true
   end
-  local _plugins = dein._plugins
+  local _plugins = brew._plugins
   local plugin = _dict(_init(repo, options))
   local plugin_check = (_plugins[plugin.name] or {})
   overwrite = options.overwrite or overwrite
@@ -273,7 +274,7 @@ function _add(repo, options, overwrite)
     -- Overwrite
     -- Note: reparse is needed.
     options = vim.tbl_extend('keep', options,
-      (dein._plugins[plugin.name]['orig_opts'] or {}))
+      (brew._plugins[plugin.name]['orig_opts'] or {}))
     plugin = _dict(_init(repo, options))
   end
 
@@ -290,7 +291,7 @@ function _add(repo, options, overwrite)
   end
 
   _plugins[plugin.name] = plugin
-  dein._plugins = _plugins
+  brew._plugins = _plugins
   return plugin
 end
 
@@ -389,7 +390,7 @@ function _local(localdir, options, includes)
       ['name']=vim.fn.fnamemodify(dir, ':t')
     }, options)
 
-    if dein._plugins[options.name] then
+    if brew._plugins[options.name] then
       vim.fn['dein#config'](options.name, options)
     else
       _add(dir, options)
@@ -426,7 +427,7 @@ function M.load_toml(filename, default)
   -- Parse.
   if toml.hook_add then
     local pattern = [[\n\s*\\\|\%(^\|\n\)\s*"[^\n]*]]
-    dein._hook_add = dein._hook_add .. "\n" .. vim.fn.substitute(toml.hook_add, pattern, '', 'g')
+    brew._hook_add = brew._hook_add .. "\n" .. vim.fn.substitute(toml.hook_add, pattern, '', 'g')
   end
   if toml.ftplugin then
     merge_ftplugin(toml.ftplugin)
@@ -444,8 +445,8 @@ function M.load_toml(filename, default)
     end
   end
 
-  -- Add to dein._vimrcs
-  table.insert(dein._vimrcs, util.expand(filename))
+  -- Add to brew._vimrcs
+  table.insert(brew._vimrcs, util.expand(filename))
 end
 function M.load_dict(dict, default)
   for repo, options in pairs(dict) do

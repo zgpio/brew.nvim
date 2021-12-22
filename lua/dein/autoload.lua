@@ -2,6 +2,7 @@
 local util = require 'dein/util'
 local a = vim.api
 local C = vim.api.nvim_command
+local brew = dein
 local M = {}
 
 dein_log = io.open(vim.fn.expand('~/pmlog.txt'), 'a+')
@@ -83,7 +84,7 @@ end
 --If you omit it, it will source all plugins.
 function _source(...)
   local plugins = {...}
-  local _plugins = dein._plugins
+  local _plugins = brew._plugins
   if #plugins == 0 then plugins = vim.tbl_values(_plugins)
   else plugins = ... end
   if #plugins == 0 then
@@ -349,7 +350,7 @@ function source_plugin(plugins, rtps, index, plugin, sourced)
     end
   end
 
-  if (dein.lazy_rplugins or false) and not dein._loaded_rplugins
+  if (brew.lazy_rplugins or false) and not brew._loaded_rplugins
          and vim.fn.isdirectory(plugin.rtp..'/rplugin')==1 then
     -- Enable remote plugin
     vim.g.loaded_remote_plugins = nil
@@ -431,10 +432,10 @@ function mapargrec(map, mode)
   return arg
 end
 function set_dein_ftplugin(ftplugin)
-  dein._ftplugin = ftplugin
+  brew._ftplugin = ftplugin
 end
 function set_dein_plugins(plugins)
-  dein._plugins = plugins
+  brew._plugins = plugins
 end
 
 return M
