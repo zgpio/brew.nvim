@@ -1,15 +1,16 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local util = require 'dein/util'
+local brew = dein
 -- Global options definition.
 -- TODO load user config
-dein.types_git_command_path = 'git'
-dein.types_git_default_protocol = 'https'
-dein.types_git_clone_depth = 0
-dein.types_git_pull_command = 'pull --ff --ff-only'
+brew.types_git_command_path = 'git'
+brew.types_git_default_protocol = 'https'
+brew.types_git_clone_depth = 0
+brew.types_git_pull_command = 'pull --ff --ff-only'
 local M = {
   name='git',
-  command=dein.types_git_command_path,
-  executable=vim.fn.executable(dein.types_git_command_path),
+  command=brew.types_git_command_path,
+  executable=vim.fn.executable(brew.types_git_command_path),
 }
 
 local is_windows = util.is_windows()
@@ -133,7 +134,7 @@ function M:get_uri(repo, options)
   if protocol == ''
          or vim.fn.match(repo, [[\<\%(gh\|github\|bb\|bitbucket\):\S\+]])~=-1
          or options.type__protocol then
-    protocol = options.type__protocol or dein.types_git_default_protocol
+    protocol = options.type__protocol or brew.types_git_default_protocol
   end
 
   if protocol ~= 'https' and protocol ~= 'ssh' then
@@ -161,7 +162,7 @@ function M:get_sync_command(plugin)
   if vim.fn.isdirectory(plugin.path)==0 then
     local commands = {self.command, '-c', 'credential.helper=', 'clone', '--recursive'}
 
-    local depth = plugin.type__depth or dein.types_git_clone_depth
+    local depth = plugin.type__depth or brew.types_git_clone_depth
     if depth > 0 and (plugin.rev or '') == '' and self:get_uri(plugin.repo, plugin):find('^git@')==nil then
       table.insert(commands, '--depth=' .. depth)
     end
@@ -175,7 +176,7 @@ function M:get_sync_command(plugin)
 
     local fetch_cmd = gcmd .. ' -c credential.helper= fetch '
     local remote_origin_cmd = gcmd .. ' remote set-head origin -a'
-    local pull_cmd = gcmd .. ' ' .. dein.types_git_pull_command
+    local pull_cmd = gcmd .. ' ' .. brew.types_git_pull_command
     local submodule_cmd = gcmd .. ' submodule update --init --recursive'
     local cmd
     if util.is_powershell() then
@@ -263,7 +264,7 @@ function M:init(repo, options)
   directory = vim.fn.substitute(directory, [[^https:/\+\|^git@]], '', '')
   directory = vim.fn.substitute(directory, ':', '/', 'g')
 
-  return { ['type']='git', ['path']=dein._base_path..'/repos/'..directory }
+  return { ['type']='git', ['path']=brew._base_path..'/repos/'..directory }
 end
 
 -- From minpac plugin manager

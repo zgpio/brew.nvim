@@ -1,4 +1,5 @@
 local util = require 'dein/util'
+local brew = dein
 local M = {
   name='raw',
 }
@@ -14,7 +15,7 @@ function M.init(repo, options)
   directory = vim.fn.substitute(directory, ':', '/', 'g')
 
   return { ['name']=require'dein/parse'.name_conversion(repo), ['type']='raw',
-          ['path']=dein._base_path..'/repos/'..directory }
+          ['path']=brew._base_path..'/repos/'..directory }
 end
 
 function M.get_sync_command(plugin)

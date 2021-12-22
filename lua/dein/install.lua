@@ -2,16 +2,17 @@
 local util = require 'dein/util'
 local Job = require 'dein/job'
 local isdir = vim.fn.isdirectory
+local brew = dein
 local M = {}
 
 -- Global options definition.
-dein.install_max_processes = dein.install_max_processes or 8
-dein.install_progress_type = dein.install_progress_type or 'echo'
-dein.install_message_type = dein.install_message_type or 'echo'
-dein.install_process_timeout = dein.install_process_timeout or 120
-dein.install_log_filename = dein.install_log_filename or ''
-dein.install_github_api_token = dein.install_github_api_token or ''
-dein.install_curl_command = dein.install_curl_command or 'curl'
+brew.install_max_processes = brew.install_max_processes or 8
+brew.install_progress_type = brew.install_progress_type or 'echo'
+brew.install_message_type = brew.install_message_type or 'echo'
+brew.install_process_timeout = brew.install_process_timeout or 120
+brew.install_log_filename = brew.install_log_filename or ''
+brew.install_github_api_token = brew.install_github_api_token or ''
+brew.install_curl_command = brew.install_curl_command or 'curl'
 
 -- Variables
 local __global_context = {}
@@ -53,15 +54,15 @@ local function init_context(plugins, update_type, async)
   ctx.prev_number = -1
   ctx.plugins = plugins
   ctx.max_plugins = vim.fn.len(ctx.plugins)
-  if vim.fn.has('vim_starting')==1 and dein.install_progress_type ~= 'none' then
+  if vim.fn.has('vim_starting')==1 and brew.install_progress_type ~= 'none' then
     ctx.progress_type = 'echo'
   else
-    ctx.progress_type = dein.install_progress_type
+    ctx.progress_type = brew.install_progress_type
   end
-  if vim.fn.has('vim_starting')==1 and dein.install_message_type ~= 'none' then
+  if vim.fn.has('vim_starting')==1 and brew.install_message_type ~= 'none' then
     ctx.message_type = 'echo'
   else
-    ctx.message_type = dein.install_message_type
+    ctx.message_type = brew.install_message_type
   end
   ctx.laststatus = vim.o.laststatus
   ctx.showtabline = vim.o.showtabline
@@ -74,7 +75,7 @@ local function _status()
   return vim.v.shell_error
 end
 function M.is_async()
-  return dein.install_max_processes > 1
+  return brew.install_max_processes > 1
 end
 -- FIXME: The logic is different from the `:h jobstart`
 local function __convert_args(args)
@@ -87,7 +88,7 @@ local function __convert_args(args)
   return args
 end
 local function append_log_file(msg)
-  local fn = dein.install_log_filename
+  local fn = brew.install_log_filename
   if not fn or fn=='' then
     return
   end
@@ -137,7 +138,7 @@ function _system(command)
   return vim.fn.substitute(output, '\n$', '', '')
 end
 local function __get_rollback_directory()
-  local parent = string.format('%s/rollbacks/%s', util.get_cache_path(), dein._progname)
+  local parent = string.format('%s/rollbacks/%s', util.get_cache_path(), brew._progname)
   if isdir(parent)==0 then
     vim.fn.mkdir(parent, 'p')
   end
@@ -450,7 +451,7 @@ local function async_get(process)
   async.candidates = (async.eof==1) and {} or {candidates[#candidates]}
 
   local is_timeout = (vim.fn.localtime() - process.start_time)
-                     >= (process.plugin.timeout or dein.install_process_timeout)
+                     >= (process.plugin.timeout or brew.install_process_timeout)
 
   local is_skip = true
   if async.eof==1 then
@@ -594,7 +595,7 @@ local function get_progress_message(name, number, max)
 end
 local function check_loop(context)
   while context.number < context.max_plugins
-         and vim.fn.len(context.processes) < dein.install_max_processes do
+         and vim.fn.len(context.processes) < brew.install_max_processes do
 
     local plugin = context.plugins[context.number+1]
     __sync(plugin, context)
@@ -762,7 +763,7 @@ function _execute(command)
     end
   })
   job_execute[job.id] = job
-  return job:wait(dein.install_process_timeout * 1000)
+  return job:wait(brew.install_process_timeout * 1000)
 end
 -- plugins must be { plugin_tbl1, ... }
 function _each(cmd, plugins)
@@ -811,7 +812,7 @@ local function copy_files(plugins, directory)
   end
 end
 local function helptags()
-  if dein._runtime_path == '' or dein._is_sudo then
+  if brew._runtime_path == '' or brew._is_sudo then
     return ''
   end
 
@@ -821,7 +822,7 @@ local function helptags()
       if isdir(tags)==0 then
         vim.fn.mkdir(tags, 'p')
       end
-      copy_files(vim.tbl_filter(function(v) return v.merged==0 end, vim.tbl_values(dein.get())), 'doc')
+      copy_files(vim.tbl_filter(function(v) return v.merged==0 end, vim.tbl_values(brew.get())), 'doc')
       vim.api.nvim_command('silent execute "helptags" '..vim.fn.string(vim.fn.fnameescape(tags)))
     end,
     catch {
@@ -899,9 +900,9 @@ local function generate_ftplugin()
     vim.fn.mkdir(after, 'p')
   end
 
-  -- Merge dein._ftplugin
+  -- Merge brew._ftplugin
   local ftplugin = {}
-  for key, string in pairs(dein._ftplugin) do
+  for key, string in pairs(brew._ftplugin) do
     local fts = (key == '_') and {'_'} or vim.split(key, '_')
     for _, ft in ipairs(fts) do
       if not ftplugin.ft then
@@ -948,7 +949,7 @@ function M.direct_install(repo, options)
   _source({plugin.name})
 
   -- Add to direct_install.vim
-  local file = dein.get_direct_plugins_path()
+  local file = brew.get_direct_plugins_path()
   local line = vim.fn.printf('lua dein.add(%s, %s)', vim.fn.string(repo), vim.fn.string(opts))
   if vim.fn.filereadable(file)==0 then
     vim.fn.writefile({line}, file)
@@ -1049,11 +1050,11 @@ local WIN_QUERY = [[a%d:repository(owner:\\""%s\\"", name:\\""%s\\""){ pushedAt 
 local LIN_QUERY = [[a%d:repository(owner:\"%s\", name:\"%s\"){ pushedAt nameWithOwner }]]
 local QUERY = util.is_windows() and WIN_QUERY or LIN_QUERY
 function _check_update(plugins, force, async)
-  if dein.install_github_api_token == '' then
-    ERROR('You need to set dein.install_github_api_token to check updated plugins.')
+  if brew.install_github_api_token == '' then
+    ERROR('You need to set brew.install_github_api_token to check updated plugins.')
     return
   end
-  if vim.fn.executable(dein.install_curl_command)==0 then
+  if vim.fn.executable(brew.install_curl_command)==0 then
     ERROR('curl must be executable to check updated plugins.')
     return
   end
@@ -1082,8 +1083,8 @@ function _check_update(plugins, force, async)
     end
 
     local commands = {
-      dein.install_curl_command, '-H', '"Authorization: bearer ' ..
-      dein.install_github_api_token..'"',
+      brew.install_curl_command, '-H', '"Authorization: bearer ' ..
+      brew.install_github_api_token..'"',
       '-X', 'POST', '-d',
       '"{ ""query"": ""query {' .. query .. '}"" }"',
       'https://api.github.com/graphql'
@@ -1103,7 +1104,7 @@ function _check_update(plugins, force, async)
   -- Get outputs
   local results = {}
   for _, process in ipairs(processes) do
-    process.job:wait(dein.install_process_timeout * 1000)
+    process.job:wait(brew.install_process_timeout * 1000)
     if not vim.tbl_isempty(process.candidates) then
       try {
         function()
@@ -1293,14 +1294,14 @@ function __echo_mode(m, mode)
 end
 
 function M.recache_runtimepath()
-  if dein._is_sudo then
+  if brew._is_sudo then
     return
   end
 
   -- Clear runtime path.
   clear_runtimepath()
 
-  local plugins = vim.tbl_values(dein.get())
+  local plugins = vim.tbl_values(brew.get())
 
   local merged_plugins = vim.tbl_filter(function(v) return v.merged==1 end, vim.fn.copy(plugins))
 
@@ -1363,7 +1364,7 @@ local function polling()
 end
 -- update_type: install or update
 function _update(plugins, update_type, async)
-  if dein._is_sudo then
+  if brew._is_sudo then
     ERROR('update/install is disabled in sudo session.')
     return
   end
@@ -1453,7 +1454,7 @@ function M.remote_plugins()
   -- Load not loaded neovim remote plugins
   local remote_plugins = vim.tbl_filter(
     function(v) return isdir(v.rtp .. '/rplugin')==1 and not v.sourced end,
-    vim.tbl_values(dein.get()))
+    vim.tbl_values(brew.get()))
 
   require 'dein/autoload'
   _source(remote_plugins)
