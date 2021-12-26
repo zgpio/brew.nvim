@@ -70,7 +70,7 @@ function _on_default_event(event)
     lazy_plugins
   )
   vim.list_extend(plugins, t)
-  local t = vim.tbl_filter(
+  t = vim.tbl_filter(
     function(v)
       return v.on_event==nil and v.on_if~=nil and a.nvim_eval(tostring(v.on_if))==1
     end,
@@ -80,6 +80,117 @@ function _on_default_event(event)
 
   source_events(event, plugins)
 end
+
+-- TODO: review
+-- NOTE: 不访问全局变量
+local function source_plugin(plugins, rtps, index, plugin, sourced)
+  if plugin.sourced or vim.tbl_contains(sourced, plugin) then
+    return
+  end
+
+  table.insert(sourced, plugin)
+
+  -- Load dependencies
+  for _, name in ipairs(plugin.depends or {}) do
+    if plugins[name] == nil then
+      util._error(string.format('Plugin name "%s" is not found.', name))
+    elseif plugin.lazy==0 and (plugins[name].lazy == 1) then
+      util._error(
+        string.format('Not lazy plugin "%s" depends lazy "%s" plugin.', plugin.name, name))
+    else
+      source_plugin(plugins, rtps, index, plugins[name], sourced)
+    end
+  end
+
+  plugin.sourced = true
+
+  local lazy_plugins = vim.tbl_filter(
+    function(v) return not v.sourced and v.rtp ~= '' end,
+    vim.tbl_values(plugins)
+  )
+  local sources = vim.tbl_filter(
+    function(v)
+      return vim.tbl_contains((v.on_source or {}), plugin.name)
+    end,
+    lazy_plugins
+  )
+
+  for _, on_source in ipairs(sources) do
+    source_plugin(plugins, rtps, index, on_source, sourced)
+  end
+
+  if plugin.dummy_commands ~= nil then
+    for _, command in ipairs(plugin.dummy_commands) do
+      C('silent! delcommand '..command[1])
+    end
+    plugin.dummy_commands = {}
+  end
+
+  if plugin.dummy_mappings ~= nil then
+    for _, map in ipairs(plugin.dummy_mappings) do
+      C('silent! '..map[1]..'unmap '..map[2])
+    end
+    plugin.dummy_mappings = {}
+  end
+
+  if plugin.merged==0 or (plugin['local']==1 or false) then
+    table.insert(rtps, index+1, plugin.rtp)
+    if vim.fn.isdirectory(plugin.rtp..'/after') == 1 then
+      rtps = util.add_after(rtps, plugin.rtp..'/after')
+    end
+  end
+
+  if (brew.lazy_rplugins or false) and not brew._loaded_rplugins
+         and vim.fn.isdirectory(plugin.rtp..'/rplugin')==1 then
+    -- Enable remote plugin
+    vim.g.loaded_remote_plugins = nil
+
+    vim.api.nvim_command('runtime! plugin/rplugin.vim')
+
+    M._loaded_rplugins = true
+  end
+end
+
+local function reset_ftplugin()
+  local filetype_state = vim.fn.execute('filetype')
+
+  if vim.b.did_indent or vim.b.did_ftplugin then
+    C('filetype plugin indent off')
+  end
+
+  if string.find(filetype_state, 'plugin:ON') then
+    C('silent! filetype plugin on')
+  end
+
+  if string.find(filetype_state, 'indent:ON') then
+    C('silent! filetype indent on')
+  end
+end
+-- 检查plugins中是否存在ftplugin
+local function is_reset_ftplugin(plugins)
+  local ft = vim.bo.filetype
+  if ft == '' then
+    return 0
+  end
+
+  for _, plugin in ipairs(plugins) do
+    local ftplugin = plugin.rtp .. '/ftplugin/' .. ft
+    local after = plugin.rtp .. '/after/ftplugin/' .. ft
+    -- TODO: use vim.tbl_filter instead
+    local real = {}
+    for _, t in ipairs({'ftplugin', 'indent', 'after/ftplugin', 'after/indent'}) do
+      if vim.fn.filereadable(string.format('%s/%s/%s.vim', plugin.rtp, t, ft))==1 then
+        table.insert(real, t)
+      end
+    end
+    if #real > 0 or vim.fn.isdirectory(ftplugin)==1 or vim.fn.isdirectory(after)==1
+        or vim.fn.glob(ftplugin.. '_*.vim') ~= '' or vim.fn.glob(after .. '_*.vim') ~= '' then
+      return 1
+    end
+  end
+  return 0
+end
+
 --@param ... the plugin name list or plugin dict list.
 --If you omit it, it will source all plugins.
 function _source(...)
@@ -204,7 +315,7 @@ function _on_cmd(command, name, args, bang, line1, line2)
         -- E481: No range allowed
         local cmd = 'execute ' .. vim.fn.string(command .. bang ..' '.. args)
         vim.api.nvim_command(cmd)
-        -- print('caught error: ' .. e)
+        print('caught error: ' .. e)
       end
     }
   }
@@ -249,115 +360,6 @@ function source_events(event, plugins)
     elseif vim.fn.exists('#User#' .. event)==1 then
       C('doautocmd <nomodeline> User ' ..event)
     end
-  end
-end
-function reset_ftplugin()
-  local filetype_state = vim.fn.execute('filetype')
-
-  if vim.b.did_indent or vim.b.did_ftplugin then
-    C('filetype plugin indent off')
-  end
-
-  if string.find(filetype_state, 'plugin:ON') then
-    C('silent! filetype plugin on')
-  end
-
-  if string.find(filetype_state, 'indent:ON') then
-    C('silent! filetype indent on')
-  end
-end
-
-function is_reset_ftplugin(plugins)
-  local ft = vim.bo.filetype
-  if ft == '' then
-    return 0
-  end
-
-  for i, plugin in ipairs(plugins) do
-    local ftplugin = plugin.rtp .. '/ftplugin/' .. ft
-    local after = plugin.rtp .. '/after/ftplugin/' .. ft
-    -- TODO: use vim.tbl_filter instead
-    local real = {}
-    for _, t in ipairs({'ftplugin', 'indent', 'after/ftplugin', 'after/indent'}) do
-      if vim.fn.filereadable(string.format('%s/%s/%s.vim', plugin.rtp, t, ft))==1 then
-        table.insert(real, t)
-      end
-    end
-    if #real > 0 or vim.fn.isdirectory(ftplugin)==1 or vim.fn.isdirectory(after)==1
-        or vim.fn.glob(ftplugin.. '_*.vim') ~= '' or vim.fn.glob(after .. '_*.vim') ~= '' then
-      return 1
-    end
-  end
-  return 0
-end
-
--- TODO: review
--- NOTE: 不访问全局变量
-function source_plugin(plugins, rtps, index, plugin, sourced)
-  if plugin.sourced or vim.tbl_contains(sourced, plugin) then
-    return
-  end
-
-  table.insert(sourced, plugin)
-
-  -- Load dependencies
-  for _, name in ipairs((plugin['depends'] or {})) do
-    if plugins[name] == nil then
-      util._error(string.format('Plugin name "%s" is not found.', name))
-    elseif plugin.lazy==0 and (plugins[name].lazy == 1) then
-      util._error(
-        string.format('Not lazy plugin "%s" depends lazy "%s" plugin.', plugin.name, name))
-    else
-      source_plugin(plugins, rtps, index, plugins[name], sourced)
-    end
-  end
-
-  plugin.sourced = true
-
-  local lazy_plugins = vim.tbl_filter(
-    function(v) return not v.sourced and v.rtp ~= '' end,
-    vim.tbl_values(plugins)
-  )
-  local sources = vim.tbl_filter(
-    function(v)
-      return vim.tbl_contains((v.on_source or {}), plugin.name)
-    end,
-    lazy_plugins
-  )
-
-  for _, on_source in ipairs(sources) do
-    source_plugin(plugins, rtps, index, on_source, sourced)
-  end
-
-  if plugin.dummy_commands ~= nil then
-    for _, command in ipairs(plugin.dummy_commands) do
-      C('silent! delcommand '..command[1])
-    end
-    plugin.dummy_commands = {}
-  end
-
-  if plugin.dummy_mappings ~= nil then
-    for _, map in ipairs(plugin.dummy_mappings) do
-      C('silent! '..map[1]..'unmap '..map[2])
-    end
-    plugin.dummy_mappings = {}
-  end
-
-  if plugin.merged==0 or (plugin['local']==1 or false) then
-    table.insert(rtps, index+1, plugin.rtp)
-    if vim.fn.isdirectory(plugin.rtp..'/after') == 1 then
-      rtps = util.add_after(rtps, plugin.rtp..'/after')
-    end
-  end
-
-  if (brew.lazy_rplugins or false) and not brew._loaded_rplugins
-         and vim.fn.isdirectory(plugin.rtp..'/rplugin')==1 then
-    -- Enable remote plugin
-    vim.g.loaded_remote_plugins = nil
-
-    vim.api.nvim_command('runtime! plugin/rplugin.vim')
-
-    M._loaded_rplugins = true
   end
 end
 
@@ -430,12 +432,6 @@ function mapargrec(map, mode)
     arg = vim.fn.maparg(arg, mode)
   end
   return arg
-end
-function set_dein_ftplugin(ftplugin)
-  brew._ftplugin = ftplugin
-end
-function set_dein_plugins(plugins)
-  brew._plugins = plugins
 end
 
 return M

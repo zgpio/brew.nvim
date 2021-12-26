@@ -224,7 +224,7 @@ local function parse_lazy(plugin)
     generate_dummy_commands(plugin)
   end
   if plugin.on_map ~= nil then
-    generate_dummy_mappings(plugin)
+    M.generate_dummy_mappings(plugin)
   end
   return plugin
 end
@@ -303,7 +303,8 @@ function table.slice(tbl, first, last, step)
   return sliced
 end
 
-function generate_dummy_mappings(plugin)
+-- on_map: List or Dict
+function M.generate_dummy_mappings(plugin)
   plugin.dummy_mappings = {}
   local items = {}
   if vim.tbl_islist(plugin.on_map) then

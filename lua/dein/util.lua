@@ -192,6 +192,30 @@ local function _save_cache(vimrcs, is_state, is_starting)
     (brew.cache_directory or base_path) ..'/cache_' .. brew._progname)
 end
 
+local function tsort_impl(target, mark, sorted)
+  if vim.tbl_isempty(target) or mark[target.name]~=nil then
+    return
+  end
+
+  mark[target.name] = 1
+  if target.depends~=nil then
+    for _, depend in ipairs(target.depends) do
+      tsort_impl(brew.get(depend), mark, sorted)
+    end
+  end
+
+  table.insert(sorted, target)
+end
+--@param plugins plugin list
+local function _tsort(plugins)
+  local sorted = {}
+  local mark = {}
+  for _, target in ipairs(plugins) do
+    tsort_impl(target, mark, sorted)
+  end
+
+  return sorted
+end
 --@param ... {{{}, {}, ...}}
 function M.call_hook(hook_name, ...)
   local args = ...
@@ -382,6 +406,10 @@ end
 function M.edit_state_file()
   a.nvim_command(':e '..(brew.cache_directory or brew._base_path) ..'/state_' .. brew._progname .. '.vim')
 end
+function M.edit_cache_file()
+  local base_path = brew._base_path
+  a.nvim_command(':e '..(brew.cache_directory or base_path) ..'/cache_' .. brew._progname)
+end
 function M.writefile(path, list)
   if brew._is_sudo or (vim.fn.filewritable(M.get_cache_path())==0) then
     return 1
@@ -449,30 +477,6 @@ function M.join_rtp(list, runtimepath, rtp)
   else
     return vim.fn.join(vim.tbl_map(escape, list), ',')
   end
-end
-local function tsort_impl(target, mark, sorted)
-  if vim.tbl_isempty(target) or mark[target.name]~=nil then
-    return
-  end
-
-  mark[target.name] = 1
-  if target.depends~=nil then
-    for _, depend in ipairs(target.depends) do
-      tsort_impl(brew.get(depend), mark, sorted)
-    end
-  end
-
-  table.insert(sorted, target)
-end
---@param plugins plugin list
-function _tsort(plugins)
-  local sorted = {}
-  local mark = {}
-  for _, target in ipairs(plugins) do
-    tsort_impl(target, mark, sorted)
-  end
-
-  return sorted
 end
 function M.convert2list(expr)
   if type(expr) == 'table' then
