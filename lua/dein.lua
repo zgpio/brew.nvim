@@ -132,7 +132,7 @@ function M.check_lazy_plugins()
   return require 'dein/util'.check_lazy_plugins()
 end
 function M.get_direct_plugins_path()
-  return (dein.cache_directory or dein._base_path).."/direct_install.vim"
+  return (M.cache_directory or M._base_path).."/direct_install.vim"
 end
 function M.begin(path, ...)
   require 'dein/util'
@@ -170,9 +170,8 @@ function M.load_dict(dict, ...)
   return require 'dein/parse'.load_dict(dict, (args[1] or {}))
 end
 function M.add(repo, ...)
-  require 'dein/util'
   local args = {...}
-  return _add(repo, (args[1] or {}), false)
+  return require 'dein/parse'._add(repo, (args[1] or {}), false)
 end
 function M.get_updates_log()
   return vim.fn.join(require 'dein/install'.get_updates_log(), "\n")
@@ -228,7 +227,7 @@ function M.load_state(path, ...)
   if (M._is_sudo or not sourced) then return 1 end
   M._base_path = vim.fn.expand(path)
 
-  local state = (dein.cache_directory or M._base_path)
+  local state = (M.cache_directory or M._base_path)
     .. '/state_' .. M._progname .. '.vim'
   if vim.fn.filereadable(state)==0 then return 1 end
   local rv = 0
@@ -252,7 +251,7 @@ function M.load_state(path, ...)
 end
 function load_cache_raw(vimrcs)
   M._vimrcs = vimrcs
-  local cache = (dein.cache_directory or M._base_path) ..'/cache_' .. M._progname
+  local cache = (M.cache_directory or M._base_path) ..'/cache_' .. M._progname
   local time = vim.fn.getftime(cache)
   local t = vim.tbl_filter(
     function(v)
@@ -266,13 +265,13 @@ function load_cache_raw(vimrcs)
     )
   )
   if #t~=0 then
-    return {{}, {}}
+    return {}, {}
   end
   local list = vim.fn.readfile(cache)
   if #list ~= 3 or vim.fn.string(M._vimrcs) ~= list[1] then
-    return {{}, {}}
+    return {}, {}
   end
-  return {vim.fn.json_decode(list[2]), vim.fn.json_decode(list[3])}
+  return vim.fn.json_decode(list[2]), vim.fn.json_decode(list[3])
 end
 
 function M.tap(name)

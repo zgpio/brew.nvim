@@ -1,5 +1,6 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local util = require 'dein/util'
+local parse = require 'dein/parse'
 local Job = require 'dein/job'
 local isdir = vim.fn.isdirectory
 local brew = dein
@@ -118,6 +119,92 @@ local function _updates_log(msg)
   log(msg)
 end
 
+local function strwidthpart(str, width)
+  if width <= 0 then
+    return ''
+  end
+  local ret = str
+  local w = vim.fn.strwidth(str)
+  while w > width do
+    local char = vim.fn.matchstr(ret, '.$')
+    ret = ret:sub(1, vim.fn.len(ret)-vim.fn.len(char))
+    w = w - vim.fn.strwidth(char)
+  end
+
+  return ret
+end
+local function strwidthpart_reverse(str, width)
+  if width <= 0 then
+    return ''
+  end
+  local ret = str
+  local w = vim.fn.strwidth(str)
+  while w > width do
+    local char = vim.fn.matchstr(ret, '^.')
+    ret = ret:sub(vim.fn.len(char)+1)
+    w = w - vim.fn.strwidth(char)
+  end
+
+  return ret
+end
+local function truncate_skipping(str, max, footer_width, separator)
+  local width = vim.fn.strwidth(str)
+  if width <= max then
+    return str
+  else
+    local header_width = max - vim.fn.strwidth(separator) - footer_width
+    return strwidthpart(str, header_width) .. separator .. strwidthpart_reverse(str, footer_width)
+  end
+end
+
+local function __echo_mode(m, mode)
+  for _, m in ipairs(vim.fn.split(m, [[\r\?\n]], 1)) do
+    if vim.fn.has('vim_starting')==0 and mode~='error' then
+      m = truncate_skipping(m, vim.o.columns - 1, vim.o.columns/3, '...')
+    end
+
+    if mode == 'error' then
+      vim.api.nvim_command(string.format("echohl WarningMsg | echomsg %s | echohl None", vim.fn.string(m)))
+    elseif mode == 'echomsg' then
+      vim.api.nvim_command(string.format("echomsg %s", vim.fn.string(m)))
+    else
+      vim.api.nvim_command(string.format("echo %s", vim.fn.string(m)))
+    end
+  end
+end
+local function __echo(expr, mode)
+  local msg = vim.tbl_map(
+    function(v)
+      return '[dein] ' ..  v
+    end,
+    vim.tbl_filter(function(v) return v~='' end, util.convert2list(expr)))
+  if vim.fn.empty(msg)==1 then
+    return
+  end
+
+  local more_save = vim.o.more
+  local showcmd_save = vim.o.showcmd
+  local ruler_save = vim.o.ruler
+  vim.o.more = false
+  vim.o.showcmd = false
+  vim.o.ruler = false
+
+  local height = math.max(1, vim.o.cmdheight)
+  vim.api.nvim_command("echo ''")
+  for i=1,vim.fn.len(msg),height do
+    vim.api.nvim_command("redraw")
+
+    local m = vim.fn.join(slice(msg, i, i+height-1), "\n")
+    __echo_mode(m, mode)
+    if vim.fn.has('vim_starting')==1 then
+      vim.api.nvim_command("echo ''")
+    end
+  end
+
+  vim.o.more = more_save
+  vim.o.showcmd = showcmd_save
+  vim.o.ruler = ruler_save
+end
 local function ERROR(msg)
   msg = util.convert2list(msg)
   if vim.fn.empty(msg)==1 then
@@ -161,7 +248,7 @@ local function get_revision_number(plugin)
     return ''
   end
 
-  local type = _get_type(plugin.type)
+  local type = parse._get_type(plugin.type)
   if type.get_revision_number ~= nil then
     return type:get_revision_number(plugin)
   end
@@ -207,7 +294,7 @@ function M.load_rollback(rollbackfile, plugins)
   plugins = vim.tbl_filter(
     function(v)
       return revisions[v.name]~=nil
-        and _get_type(v.type).name == 'git'
+        and parse._get_type(v.type).name == 'git'
         and check_rollback(v)
         and get_revision_number(v) ~= revisions[v.name]
     end,
@@ -217,8 +304,8 @@ function M.load_rollback(rollbackfile, plugins)
   end
 
   for _, plugin in ipairs(plugins) do
-    local typ = _get_type(plugin.type)
-    local cmd = typ:get_rollback_command(_get_type(plugin.type), revisions[plugin.name])
+    local typ = parse._get_type(plugin.type)
+    local cmd = typ:get_rollback_command(revisions[plugin.name])
     _each(cmd, {plugin})
   end
 
@@ -276,7 +363,7 @@ local function get_default_ftplugin()
 end
 
 local function get_updated_log_message(plugin, new_rev, old_rev)
-  local type = _get_type(plugin.type)
+  local type = parse._get_type(plugin.type)
 
   -- TODO has_key(type, 'get_log_command')
   local cmd = ''
@@ -391,7 +478,7 @@ local function lock_revision(process)
   local max = process.max_plugins
   local plugin = process.plugin
 
-  local typ = _get_type(plugin['type'])
+  local typ = parse._get_type(plugin['type'])
   -- TODO !has_key(type, 'get_revision_lock_command')
   if typ.name ~= 'git' then
     return 0
@@ -543,7 +630,7 @@ local function check_output(context, process)
     plugin.old_rev = process.rev
     plugin.new_rev = new_rev
 
-    local type = _get_type(plugin.type)
+    local type = parse._get_type(plugin.type)
     -- TODO has_key(type, 'get_uri')
     if type.name == 'git' then
       plugin.uri = type:get_uri(plugin.repo, plugin)
@@ -940,7 +1027,7 @@ function M.direct_install(repo, options)
   local opts = vim.fn.copy(options)
   opts.merged = 0
 
-  local plugin = _add(repo, opts)
+  local plugin = parse._add(repo, opts)
   if vim.fn.empty(plugin)==1 then
     return
   end
@@ -1192,39 +1279,7 @@ function M.reinstall(plugins)
   _update(util.convert2list(plugins), 'install', 0)
 end
 
-function __echo(expr, mode)
-  local msg = vim.tbl_map(
-    function(v)
-      return '[dein] ' ..  v
-    end,
-    vim.tbl_filter(function(v) return v~='' end, util.convert2list(expr)))
-  if vim.fn.empty(msg)==1 then
-    return
-  end
 
-  local more_save = vim.o.more
-  local showcmd_save = vim.o.showcmd
-  local ruler_save = vim.o.ruler
-  vim.o.more = false
-  vim.o.showcmd = false
-  vim.o.ruler = false
-
-  local height = math.max(1, vim.o.cmdheight)
-  vim.api.nvim_command("echo ''")
-  for i=1,vim.fn.len(msg),height do
-    vim.api.nvim_command("redraw")
-
-    local m = vim.fn.join(slice(msg, i, i+height-1), "\n")
-    __echo_mode(m, mode)
-    if vim.fn.has('vim_starting')==1 then
-      vim.api.nvim_command("echo ''")
-    end
-  end
-
-  vim.o.more = more_save
-  vim.o.showcmd = showcmd_save
-  vim.o.ruler = ruler_save
-end
 function __notify(msg)
   msg = util.convert2list(msg)
   local context = __global_context
@@ -1240,58 +1295,6 @@ function __notify(msg)
   __progress = vim.fn.join(msg, "\n")
 end
 
-local function strwidthpart(str, width)
-  if width <= 0 then
-    return ''
-  end
-  local ret = str
-  local w = vim.fn.strwidth(str)
-  while w > width do
-    local char = vim.fn.matchstr(ret, '.$')
-    ret = ret:sub(1, vim.fn.len(ret)-vim.fn.len(char))
-    w = w - vim.fn.strwidth(char)
-  end
-
-  return ret
-end
-local function strwidthpart_reverse(str, width)
-  if width <= 0 then
-    return ''
-  end
-  local ret = str
-  local w = vim.fn.strwidth(str)
-  while w > width do
-    local char = vim.fn.matchstr(ret, '^.')
-    ret = ret:sub(vim.fn.len(char)+1)
-    w = w - vim.fn.strwidth(char)
-  end
-
-  return ret
-end
-local function truncate_skipping(str, max, footer_width, separator)
-  local width = vim.fn.strwidth(str)
-  if width <= max then
-    return str
-  else
-    local header_width = max - vim.fn.strwidth(separator) - footer_width
-    return strwidthpart(str, header_width) .. separator .. strwidthpart_reverse(str, footer_width)
-  end
-end
-function __echo_mode(m, mode)
-  for _, m in ipairs(vim.fn.split(m, [[\r\?\n]], 1)) do
-    if vim.fn.has('vim_starting')==0 and mode~='error' then
-      m = truncate_skipping(m, vim.o.columns - 1, vim.o.columns/3, '...')
-    end
-
-    if mode == 'error' then
-      vim.api.nvim_command(string.format("echohl WarningMsg | echomsg %s | echohl None", vim.fn.string(m)))
-    elseif mode == 'echomsg' then
-      vim.api.nvim_command(string.format("echomsg %s", vim.fn.string(m)))
-    else
-      vim.api.nvim_command(string.format("echo %s", vim.fn.string(m)))
-    end
-  end
-end
 
 function M.recache_runtimepath()
   if brew._is_sudo then
@@ -1339,8 +1342,7 @@ function M.recache_runtimepath()
   log(vim.fn.strftime('Runtimepath updated: (%Y/%m/%d %H:%M:%S)'))
 end
 local function get_sync_command(plugin, update_type, number, max)
-  require 'dein/parse'
-  local type = _get_type(plugin.type)
+  local type = parse._get_type(plugin.type)
   local cmd
 
   if type.get_sync_command ~= nil then

@@ -1,7 +1,7 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
 local a = vim.api
 local M = {}
-local brew = require 'dein'
+local brew = dein
 local is_windows = vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1
 local is_mac = (not is_windows) and vim.fn.has('win32unix') == 0
   and (vim.fn.has('mac')==1 or vim.fn.has('macunix')==1 or vim.fn.has('gui_macvim')==1
@@ -328,18 +328,32 @@ function M.save_state(is_starting)
   -- Version check
 
   local lines = {
-    'lua require "dein/autoload"',
-    'if luaeval("dein._cache_version") !=# ' .. brew._cache_version .. ' || ' ..
-    'luaeval("dein._init_runtimepath") !=# ' .. vim.fn.string(brew._init_runtimepath) ..
-         ' | throw "Cache loading error" | endif',
-    'let [plugins, ftplugin] = v:lua.load_cache_raw('..
-         vim.fn.string(brew._vimrcs) ..')',
-    "if empty(plugins) | throw 'Cache loading error' | endif",
-    'call luaeval("set_dein_plugins(_A)", plugins)',
-    'call luaeval("set_dein_ftplugin(_A)", ftplugin)',
-    'lua dein._base_path = ' .. vim.fn.string(brew._base_path),
-    'lua dein._runtime_path = ' .. vim.fn.string(brew._runtime_path),
-    'lua dein._cache_path = ' .. vim.fn.string(brew._cache_path),
+--    'lua require "dein/autoload"',
+--    'if luaeval("dein._cache_version") !=# ' .. brew._cache_version .. ' || ' ..
+--    'luaeval("dein._init_runtimepath") !=# ' .. vim.fn.string(brew._init_runtimepath) ..
+--         ' | throw "Cache loading error" | endif',
+--    'let [plugins, ftplugin] = v:lua.load_cache_raw('..
+--         vim.fn.string(brew._vimrcs) ..')',
+--    "if empty(plugins) | throw 'Cache loading error' | endif",
+--    'call luaeval("set_dein_plugins(_A)", plugins)',
+--    'call luaeval("set_dein_ftplugin(_A)", ftplugin)',
+--    'lua dein._base_path = ' .. vim.fn.string(brew._base_path),
+--    'lua dein._runtime_path = ' .. vim.fn.string(brew._runtime_path),
+--    'lua dein._cache_path = ' .. vim.fn.string(brew._cache_path),
+
+    'lua<<EOF',
+    'require "dein/autoload"',
+    'local brew = require "dein"',
+    'if brew._cache_version ~= '..brew._cache_version..' or brew._init_runtimepath ~= '..vim.inspect(brew._init_runtimepath)..
+      ' then error("Cache outdated or runtimepath changed") end',
+    'local plugins, ftplugin = load_cache_raw('.. vim.inspect(brew._vimrcs) ..')',
+    'if vim.tbl_isempty(plugins) then error("Cache loading error") end',
+    'brew._plugins = plugins',
+    'brew._ftplugin = ftplugin',
+    'brew._base_path = ' .. vim.fn.string(brew._base_path),
+    'brew._runtime_path = ' .. vim.fn.string(brew._runtime_path),
+    'brew._cache_path = ' .. vim.fn.string(brew._cache_path),
+    'EOF',
     'let &runtimepath = ' .. vim.fn.string(vim.o.rtp),
   }
 
@@ -410,6 +424,11 @@ function M.edit_cache_file()
   local base_path = brew._base_path
   a.nvim_command(':e '..(brew.cache_directory or base_path) ..'/cache_' .. brew._progname)
 end
+
+function M.edit_merged_file()
+  a.nvim_command(':e '..M.get_cache_path() .. '/merged')
+end
+
 function M.writefile(path, list)
   if brew._is_sudo or (vim.fn.filewritable(M.get_cache_path())==0) then
     return 1

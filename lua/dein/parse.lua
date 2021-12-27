@@ -34,7 +34,7 @@ local function _get_types()
   end
   return types
 end
-local function __check_type(repo, options)
+local function _check_type(repo, options)
   local plugin = {}
   require 'dein/types/git'
   for _, t in ipairs(vim.tbl_values(_get_types())) do
@@ -159,13 +159,13 @@ local function _dict(plug)
 
   return plugin
 end
-function _init(repo, options)
+local function _init(repo, options)
   repo = util.expand(repo)
   options.type = options.type or 'git'
-  local typ = _get_type(options.type)
+  local typ = M._get_type(options.type)
   local plugin = typ:init(repo, options)
   if vim.fn.empty(plugin)==1 then
-    plugin = __check_type(repo, options)
+    plugin = _check_type(repo, options)
   end
   plugin = vim.tbl_extend('force', plugin, options)
   if not vim.tbl_isempty(brew.default_options) then
@@ -248,7 +248,7 @@ local function merge_ftplugin(ftplugin)
   )
   brew._ftplugin = _ftplugin
 end
-function _add(repo, options, overwrite)
+function M._add(repo, options, overwrite)
   if nil == overwrite then
       overwrite = true
   end
@@ -358,7 +358,7 @@ function M.generate_dummy_mappings(plugin)
   end
 end
 
-function _get_type(name)
+function M._get_type(name)
   return (_get_types()[name] or {})
 end
 
@@ -385,16 +385,16 @@ function _local(localdir, options, includes)
 
   for _, dir in ipairs(util.uniq(directories)) do
     options = vim.tbl_extend('force', {
-      ['repo']=dir,
+      repo=dir,
       ['local']=1,
-      ['path']=dir,
-      ['name']=vim.fn.fnamemodify(dir, ':t')
+      path=dir,
+      name=vim.fn.fnamemodify(dir, ':t')
     }, options)
 
     if brew._plugins[options.name] then
       vim.fn['dein#config'](options.name, options)
     else
-      _add(dir, options)
+      M._add(dir, options)
     end
   end
 end
@@ -442,7 +442,7 @@ function M.load_toml(filename, default)
       end
 
       local options = vim.tbl_extend('keep', plugin, default)
-      _add(plugin.repo, options)
+      M._add(plugin.repo, options)
     end
   end
 
@@ -451,8 +451,12 @@ function M.load_toml(filename, default)
 end
 function M.load_dict(dict, default)
   for repo, options in pairs(dict) do
-    _add(repo, vim.fn.extend(vim.fn.copy(options), default, 'keep'))
+    M._add(repo, vim.fn.extend(vim.fn.copy(options), default, 'keep'))
   end
+end
+if _TEST then
+  M._dict = _dict
+  M._init = _init
 end
 
 return M

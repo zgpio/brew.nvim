@@ -219,7 +219,7 @@ function M:get_revision_lock_command(plugin)
 
   return {self.command, 'checkout', rev, '--'}
 end
-function M:get_rollback_command(plugin, rev)
+function M:get_rollback_command(rev)
   if self.executable==0 then
     return {}
   end
