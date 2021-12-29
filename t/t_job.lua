@@ -8,12 +8,12 @@ if not package.path:find(project_root) then
     package.path = package.path .. ';' .. project_root .. [[\lua\?.lua]]
 end
 
-print(package.path)
+--print(package.path)
 local Job = require 'dein/job'  -- import 'Job' class
 print(vim.inspect(Job))
 
 -- Class instantiation
-local job1 = Job:start({'ping', 'localhost'}, {on_exit=function(exitval) print("exit code:", exitval) end})
+local job1 = Job:start({'ping', 'localhost'}, {on_exit=function(job_id, exitval, event) print("exit code:", exitval) end})
 local job2 = Job:start({'ping', 'localhost'})
 
 assert(job2:status())  -- assert job is running
@@ -32,11 +32,20 @@ job1.options.private_var = 1
 assert(job2.options.private_var ~= 1)
 
 
-local job3 = Job:start({'cat'}, {on_stdout=function(job_id, data, event)
-  local str = vim.fn.join(data, " ")
-  print(str)
-end})
-job3:send({"Hello", "World"})
+-- {cmd} is a String it runs in the 'shell', :h jobstart
+local job3 = Job:start('cmd.exe', {
+    on_stdout=function(job_id, data, event)
+        local str = vim.fn.join(data, "\n")
+        print(string.format('job_id: %d, event: %s, data: %s', job_id, event, str))
+    end,
+    on_exit=function(job_id, exitval, event)
+        print(string.format('job_id: %d, event: %s, exitval: %s', job_id, event, exitval))
+    end})
+job3:send({"echo Hello World", ""})  -- the items will be joined by newlines. :h chansend
+job3:send("echo No\n")
+job3:send({"echo Yes\n"})  -- 不会执行, 因为 \n 替换为 <NUL>
+job3:close()
+assert(job3:wait()==0)  -- test job wait
 
 local is_windows = vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1
 
@@ -50,4 +59,4 @@ assert(job4:status())
 assert(job4:wait()==0)  -- test job wait
 assert(job4:status()==false)
 
-local job5 = Job:start({'ping', 'localhost', '&&', 'ping', 'localhost'}, {on_exit=function(exitval) print("exit code:", exitval) end})
+local job5 = Job:start({'ping', 'localhost', '&&', 'ping', 'localhost'}, {on_exit=function(job_id, exitval, event) print("exit code:", exitval) end})
