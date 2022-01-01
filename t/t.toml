@@ -1,0 +1,48 @@
+# vim: set sw=2 sts=4 et tw=78 foldmarker=, foldlevel=0 foldmethod=marker:
+
+[[plugins]]
+repo = 'https://gitee.com/zgpio/vim-gutentags'  # Mirror: 'ludovicchabant/vim-gutentags'
+on_ft = [
+  'python',
+  'cpp',
+  'c'
+]
+hook_add = '''
+" NOTE: cscope and ctags cannot work together; cscope only support C/C++
+let g:gutentags_modules = ['ctags']
+'''
+
+[[plugins]]
+repo = 'https://gitee.com/zgpio/accelerated-jk'  # Mirror: 'rhysd/accelerated-jk'
+on_map = {n = '<Plug>'}
+
+[[plugins]]
+repo = 'https://gitee.com/zgpio/tagbar'  # Modified: 'majutsushi/tagbar'
+#on_if = 'exists("b:gutentags_root")'
+on_map = {n = ['tb']}
+
+[[plugins]]
+repo = 'https://gitee.com/zgpio/denite.nvim'  # Mirror: 'Shougo/denite.nvim'
+on_cmd = 'Denite'
+
+[plugins.ftplugin]
+denite = '''
+" Define mappings
+nnoremap <silent><buffer><expr> <CR> denite#do_map('do_action')
+nnoremap <silent><buffer><expr> a denite#do_map('choose_action')
+'''
+[ftplugin]
+denite-filter = '''
+inoremap <silent><buffer><expr> <CR> denite#do_map('do_action')
+imap <silent><buffer> <c-k> <Plug>(denite_filter_quit)
+'''
+
+[[plugins]]
+repo = 'https://gitee.com/zgpio/defx.nvim'  # Mirror: 'Shougo/defx.nvim'
+on_cmd = 'Defx'
+hook_source = '''
+call defx#custom#column('mark', {
+    \ 'readonly_icon': '✗',
+    \ 'selected_icon': '✓',
+    \ })
+'''
