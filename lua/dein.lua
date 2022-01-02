@@ -230,24 +230,19 @@ function M.load_state(path, ...)
   local state = (M.cache_directory or M._base_path)
     .. '/state_' .. M._progname .. '.vim'
   if vim.fn.filereadable(state)==0 then return 1 end
-  local rv = 0
-  try {
-    function()
-      a.nvim_command('source ' .. vim.fn.fnameescape(state))
-    end,
-    catch {
-      function(error)
-        local util = require 'dein/util'
-        if vim.v.exception ~= 'Cache loading error' then
-          util._error('Loading state error: ' .. vim.v.exception)
-        end
-        util.clear_state()
-        print('caught error: ' .. error)
-        rv = 1
-      end
-    }
-  }
-  return rv
+
+  local status, result = pcall(function() a.nvim_command('source ' .. vim.fn.fnameescape(state)) end)
+  if not status then
+    local util = require 'dein/util'
+    if vim.v.exception ~= 'Cache loading error' then
+      util._error('Loading state error: ' .. vim.v.exception)
+    end
+    util.clear_state()
+    print('caught error: ' .. result)
+    return 1
+  end
+
+  return 0
 end
 function load_cache_raw(vimrcs)
   M._vimrcs = vimrcs
