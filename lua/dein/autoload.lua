@@ -304,21 +304,17 @@ function _on_cmd(command, name, args, bang, line1, line2)
     range = line1..','..line2
   end
 
-  try {
-    function()
+  local status, result = pcall(function()
       local cmd = 'execute ' .. vim.fn.string(range .. command .. bang ..' '.. args)
       vim.api.nvim_command(cmd)
-    end,
-    catch {
-      function(e)
-        -- TODO catch /^Vim\%((\a\+)\)\=:E481/
-        -- E481: No range allowed
-        local cmd = 'execute ' .. vim.fn.string(command .. bang ..' '.. args)
-        vim.api.nvim_command(cmd)
-        print('caught error: ' .. e)
-      end
-    }
-  }
+    end)
+  if not status then
+    -- TODO catch /^Vim\%((\a\+)\)\=:E481/
+    -- E481: No range allowed
+    local cmd = 'execute ' .. vim.fn.string(command .. bang ..' '.. args)
+    vim.api.nvim_command(cmd)
+    print('caught error: ' .. result)
+  end
 end
 
 function M._on_func(name)

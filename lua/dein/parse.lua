@@ -400,25 +400,21 @@ function _local(localdir, options, includes)
 end
 function M.load_toml(filename, default)
   local toml
-  try {
-    function()
+  local status, result = pcall(function()
       filename = util.expand(filename)
       local text = vim.fn.join(vim.fn.readfile(filename), "\n")
       -- fileencoding is always utf8
       text = vim.fn.iconv(text, 'utf8', vim.o.encoding)
       TOML = require "toml"
       toml = TOML.parse(text)
-    end,
-    catch {
-      -- TODO catch /Text.TOML:/
-      function(e)
-        print(e)
-        util._error('Invalid toml format: ' .. filename)
-        util._error(vim.v.exception)
-        return 1
-      end
-    }
-  }
+    end)
+  if not status then
+    -- TODO catch /Text.TOML:/
+    print(result)
+    util._error('Invalid toml format: ' .. filename)
+    util._error(vim.v.exception)
+    return 1
+  end
 
   if type(toml)~='table' or vim.tbl_islist(toml) then
     util._error('Invalid toml file: ' .. filename)

@@ -705,8 +705,7 @@ local function clear_runtimepath()
   end
 end
 local function install_blocking(context)
-  try {
-    function()
+  local status, result = pcall(function()
       while true do
         check_loop(context)
 
@@ -716,13 +715,10 @@ local function install_blocking(context)
         -- FIXME
         assert(false)
       end
-    end,
-    catch {
-      function(e)
-        print('caught error: ' .. e)
-      end
-    }
-  }
+    end)
+  if not status then
+    print('caught error: ' .. result)
+  end
   __done(context)
 
   return vim.fn.len(context.errored_plugins)
@@ -1446,8 +1442,7 @@ local function __init_process(plugin, context, cmd)
   local cwd = vim.fn.getcwd()
   local lang_save = vim.env.LANG
   local prompt_save = vim.env.GIT_TERMINAL_PROMPT
-  try {
-    function()
+  local status, result = pcall(function()
       vim.env.LANG = 'C'
       -- Disable git prompt (git version >= 2.3.0)
       vim.env.GIT_TERMINAL_PROMPT = 0
@@ -1483,13 +1478,10 @@ local function __init_process(plugin, context, cmd)
       end
 
       process = __init_job(process, context, cmd)
-    end,
-    catch {
-      function(e)
-        print('caught error: ' .. e)
-      end
-    }
-  }
+    end)
+  if not status then
+    print('caught error: ' .. result)
+  end
 
   vim.env.LANG = lang_save
   vim.env.GIT_TERMINAL_PROMPT = prompt_save

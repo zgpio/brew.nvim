@@ -282,12 +282,12 @@ function get_gitdir(dir)
     return gitdir
   end
   local line
-  try {
-    function()
+  local status, result = pcall(function()
       line = vim.fn.readfile(gitdir)[1]
-    end,
-    catch { function(error) end }
-  }
+    end)
+  if not status then
+    print(result)
+  end
   if line == nil then
     return ''
   end
@@ -308,8 +308,7 @@ function git_get_remote_origin_url(dir)
     return ''
   end
   local rv = ''
-  try {
-    function()
+  local status, result = pcall(function()
       local lines = vim.fn.readfile(gitdir .. '/config')
       local n, ll, url = 1, vim.fn.len(lines), ''
       while n <= ll do
@@ -331,12 +330,10 @@ function git_get_remote_origin_url(dir)
         end
       end
       rv = url
-    end,
-    catch {
-      function(error)
-      end
-    }
-  }
+    end)
+  if not status then
+    print(result)
+  end
   return rv
 end
 
@@ -346,8 +343,7 @@ function git_get_revision(dir)
     return ''
   end
   local rev = ''
-  try {
-    function()
+  local status, result = pcall(function()
       local line = vim.fn.readfile(gitdir .. '/HEAD')[1]
       if line:find('^ref: ') then
         local ref = line:sub(6)
@@ -363,13 +359,10 @@ function git_get_revision(dir)
         end
       end
       rev = line
-    end,
-    catch {
-      function(error)
-        print(error)
-      end
-    }
-  }
+    end)
+  if not status then
+    print(result)
+  end
   return rev
 end
 function git_get_branch(dir)
@@ -378,21 +371,17 @@ function git_get_branch(dir)
     return ''
   end
   local rv
-  try {
-    function()
+  local status, result = pcall(function()
       local line = vim.fn.readfile(gitdir .. '/HEAD')[1]
       if line:find('^ref: refs/heads/') then
         rv = line:sub(17)
       else
         rv = 'HEAD'
       end
-    end,
-    catch {
-      function(error)
-        rv = ''
-      end
-    }
-  }
+    end)
+  if not status then
+    rv = ''
+  end
   return rv
 end
 
