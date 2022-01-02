@@ -136,25 +136,18 @@ local function _get_merged_plugins()
   return r1
 end
 
+-- return 1 means outdated
 function _check_vimrcs()
   local time = vim.fn.getftime(M.get_runtime_path())
-  local ret = vim.tbl_isempty(vim.tbl_filter(
-    function(v)
-      return time < v
-    end,
-    vim.tbl_map(
-      function(v)
-        return vim.fn.getftime(vim.fn.expand(v))
-      end,
-      vim.deepcopy(brew._vimrcs)
-    )))
-  if ret then
-    return 0
+  for _, v in ipairs(brew._vimrcs) do
+    local vt = vim.fn.getftime(vim.fn.expand(v))
+    if vt > time then
+      M.clear_state()
+      return 1
+    end
   end
 
-  M.clear_state()
-
-  return 1
+  return 0
 end
 local function _save_cache(vimrcs, is_state, is_starting)
   if M.get_cache_path() == '' or (is_starting==0) then
