@@ -388,17 +388,13 @@ end
 function M.system_cd(command, path)
   local cwd = vim.fn.getcwd()
   local rv = ''
-  try {
-    function()
+  local status, result = pcall(function()
       _cd(path)
       rv = _system(command)
-    end,
-    catch {
-      function(e)
-        print('caught error: ' .. e)
-      end
-    }
-  }
+    end)
+  if not status then
+    print('caught error: ' .. result)
+  end
   _cd(cwd)
   return rv
 end
@@ -408,21 +404,17 @@ function _cd(path)
     return
   end
 
-  try {
-    function()
+  local status, result = pcall(function()
       local d = (vim.fn.haslocaldir()==1) and 'lcd' or 'cd'
       vim.api.nvim_command('noautocmd execute '..vim.fn.string(d..' '..vim.fn.fnameescape(path)))
-    end,
-    catch {
-      function(e)
-        ERROR('Error cd to: ' .. path)
-        ERROR('Current directory: ' .. vim.fn.getcwd())
-        ERROR(vim.v.exception)
-        ERROR(vim.v.throwpoint)
-        print('caught error: ' .. e)
-      end
-    }
-  }
+    end)
+  if not status then
+    ERROR('Error cd to: ' .. path)
+    ERROR('Current directory: ' .. vim.fn.getcwd())
+    ERROR(vim.v.exception)
+    ERROR(vim.v.throwpoint)
+    print('caught error: ' .. result)
+  end
 end
 local function _rm(path)
   if isdir(path)==0 and vim.fn.filereadable(path)==0 then
@@ -431,18 +423,14 @@ local function _rm(path)
 
   -- Note: delete rf is broken before Vim 8.1.1378
   if vim.fn.has('patch-8.1.1378')==1 then
-    try {
-      function()
+    local status, result = pcall(function()
         vim.fn.delete(path, 'rf')
-      end,
-      catch {
-        function(e)
-          ERROR('Error deleting directory: ' .. path)
-          ERROR(vim.v.exception)
-          ERROR(vim.v.throwpoint)
-        end
-      }
-    }
+      end)
+    if not status then
+      ERROR('Error deleting directory: ' .. path)
+      ERROR(vim.v.exception)
+      ERROR(vim.v.throwpoint)
+    end
     return
   end
 
@@ -555,21 +543,17 @@ local function async_get(process)
 end
 local function call_post_update_hooks(plugins)
     local cwd = vim.fn.getcwd()
-    try {
-      function()
+    local status, result = pcall(function()
         -- Reload plugins to execute hooks
         vim.api.nvim_command('runtime! plugin/*.vim')
         for _, plugin in ipairs(plugins) do
           _cd(plugin.path)
           util.call_hook('post_update', {plugin})
         end
-      end,
-      catch {
-        function(e)
-          print('caught error: ' .. e)
-        end
-      }
-    }
+      end)
+    if not status then
+      print('caught error: ' .. result)
+    end
     _cd(cwd)
 end
 
@@ -903,26 +887,22 @@ local function helptags()
     return ''
   end
 
-  try {
-    function()
+  local status, result = pcall(function()
       local tags = util.get_runtime_path() .. '/doc'
       if isdir(tags)==0 then
         vim.fn.mkdir(tags, 'p')
       end
       copy_files(vim.tbl_filter(function(v) return v.merged==0 end, vim.tbl_values(brew.get())), 'doc')
       vim.api.nvim_command('silent execute "helptags" '..vim.fn.string(vim.fn.fnameescape(tags)))
-    end,
-    catch {
-      function(e)
-        -- catch /^Vim(helptags):E151:/
-        -- Ignore an error that occurs when there is no help file
-        ERROR('Error generating helptags:')
-        ERROR(vim.v.exception)
-        ERROR(vim.v.throwpoint)
-        print('caught error: ' .. e)
-      end
-    }
-  }
+    end)
+  if not status then
+    -- catch /^Vim(helptags):E151:/
+    -- Ignore an error that occurs when there is no help file
+    ERROR('Error generating helptags:')
+    ERROR(vim.v.exception)
+    ERROR(vim.v.throwpoint)
+    print('caught error: ' .. result)
+  end
 end
 local function install_async(ctx)
   if vim.fn.empty(ctx)==1 then
@@ -943,8 +923,7 @@ local function install_async(ctx)
 end
 local function update_loop(context)
   local errored = 0
-  try {
-    function()
+  local status, result = pcall(function()
       if vim.fn.has('vim_starting')==1 then
         while vim.fn.empty(__global_context)==0 do
           errored, _ = install_async(context)
@@ -954,16 +933,13 @@ local function update_loop(context)
       else
         errored = install_blocking(context)
       end
-    end,
-    catch {
-      function(e)
-        ERROR(vim.v.exception)
-        ERROR(vim.v.throwpoint)
-        print('caught error: ' .. e)
-        errored = 1
-      end
-    }
-  }
+    end)
+  if not status then
+    ERROR(vim.v.exception)
+    ERROR(vim.v.throwpoint)
+    print('caught error: ' .. result)
+    errored = 1
+  end
   return errored
 end
 function _build(plugins)
@@ -1193,19 +1169,15 @@ function _check_update(plugins, force, async)
   for _, process in ipairs(processes) do
     process.job:wait(brew.install_process_timeout * 1000)
     if not vim.tbl_isempty(process.candidates) then
-      try {
-        function()
+      local status, result = pcall(function()
           local json = vim.fn.json_decode(process.candidates[1])
           results = vim.tbl_extend('keep', results,
             util.map_filter(json['data'], function(k, v)
                 return type(v) == "table" and v.pushedAt ~= nil end))
-        end,
-        catch {
-          function(e)
-            ERROR('json output decode error: ' .. vim.fn.string(process.candidates) .. e)
-          end
-        }
-      }
+        end)
+      if not status then
+        ERROR('json output decode error: ' .. vim.fn.string(process.candidates) .. result)
+      end
     end
   end
 
@@ -1497,20 +1469,16 @@ local function __init_process(plugin, context, cmd)
 
       local rev_save = plugin.rev or ''
       if isdir(plugin.path)==1 and (plugin['local'] or 0)==0 and rev_save~='' then
-        try {
-          function()
+        local status, result = pcall(function()
             -- Force checkout HEAD revision.
             -- The repository may be checked out.
             plugin.rev = ''
 
             lock_revision(process)
-          end,
-          catch {
-            function(e)
-              print('caught error: ' .. e)
-            end
-          }
-        }
+          end)
+        if not status then
+          print('caught error: ' .. result)
+        end
         plugin.rev = rev_save
       end
 
