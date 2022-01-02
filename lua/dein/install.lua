@@ -843,8 +843,7 @@ function _each(cmd, plugins)
 
   local cwd = vim.fn.getcwd()
   local error = 0
-  try {
-    function()
+  local status, result = pcall(function()
       for _, plugin in ipairs(plugins) do
         _cd(plugin.path)
 
@@ -852,15 +851,12 @@ function _each(cmd, plugins)
           error = 1
         end
       end
-    end,
-    catch {
-      function(e)
-        ERROR(vim.v.exception .. ' ' .. vim.v.throwpoint)
-        error = 1
-        print('caught error: ' .. e)
-      end
-    }
-  }
+    end)
+  if not status then
+    ERROR(vim.v.exception .. ' ' .. vim.v.throwpoint)
+    error = 1
+    print('caught error: ' .. result)
+  end
 
   __global_context = global_context_save
   _cd(cwd)

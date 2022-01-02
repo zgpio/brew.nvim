@@ -91,8 +91,7 @@ end
 function M.execute_hook(plugin, hook)
   -- dein_log:write(vim.inspect({"_execute_hook", plugin.name, hook}), "\n")
   -- dein_log:flush()
-  try {
-    function()
+  local status, result = pcall(function()
       -- TODO 恢复 g:dein#plugin 提供的功能
       brew.plugin = plugin
       if type(hook) == 'string' then
@@ -100,16 +99,12 @@ function M.execute_hook(plugin, hook)
       else
         vim.fn.call(hook, {})
       end
-    end,
-    catch {
-      function(error)
-        M._error('Error occurred while executing hook: ' .. vim.fn.get(plugin, 'name', ''))
-        M._error(vim.v.exception)
-
-        print('caught error: ' .. error)
-      end
-    }
-  }
+    end)
+  if not status then
+    M._error('Error occurred while executing hook: ' .. vim.fn.get(plugin, 'name', ''))
+    M._error(vim.v.exception)
+    print('caught error: ' .. result)
+  end
 end
 function M.check_clean()
   local plugins_directories = vim.tbl_map(function(v) return v.path end, vim.tbl_values(brew.get()))
