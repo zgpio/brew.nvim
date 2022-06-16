@@ -388,7 +388,7 @@ function M.save_state(is_starting)
       else
         e = 'User ' .. event
       end
-      vim.list_extend(lines, {vim.fn.printf('autocmd dein-events %s lua _on_event("%s", %s)',
+      vim.list_extend(lines, {vim.fn.printf('autocmd dein-events %s lua require"dein/autoload"._on_event("%s", %s)',
             e, event, vim.inspect(plugins))})
     end
   end
@@ -735,7 +735,7 @@ function _end()
     if vim.fn.exists('##'..event) then
       local t = event .. ' *'
       a.nvim_command(
-        vim.fn.printf('autocmd dein-events %s lua _on_event("%s", %s)',
+        vim.fn.printf('autocmd dein-events %s lua require"dein/autoload"._on_event("%s", %s)',
         t, event, vim.inspect(plugins))
       )
     end

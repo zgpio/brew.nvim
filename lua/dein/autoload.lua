@@ -36,50 +36,6 @@ function _on_pre_cmd(name)
   )
   _source(t)
 end
-function _on_default_event(event)
-  local lazy_plugins = util.get_lazy_plugins()
-  local plugins = {}
-
-  local path = vim.fn.expand('<afile>')
-  -- For ":edit ~".
-  if vim.fn.fnamemodify(path, ':t') == '~' then
-    path = '~'
-  end
-  path = util.expand(path)
-
-  for _, ft in ipairs(vim.split(vim.bo.filetype, '.', true)) do
-    local t = vim.tbl_filter(
-      function(v)
-        return vim.tbl_contains(v.on_ft or {}, ft)
-      end,
-      lazy_plugins
-    )
-    vim.list_extend(plugins, t)
-  end
-
-  local t = vim.tbl_filter(
-    function(v)
-      local t = vim.tbl_filter(
-        function(val)
-          return path == val
-        end,
-        vim.deepcopy(v.on_path or {})
-      )
-      return not vim.tbl_isempty(t)
-    end,
-    lazy_plugins
-  )
-  vim.list_extend(plugins, t)
-  t = vim.tbl_filter(
-    function(v)
-      return v.on_event==nil and v.on_if~=nil and a.nvim_eval(tostring(v.on_if))==1
-    end,
-    lazy_plugins
-  )
-  vim.list_extend(plugins, t)
-
-  source_events(event, plugins)
-end
 
 -- TODO: review
 -- NOTE: 不访问全局变量
@@ -265,24 +221,6 @@ function _source(...)
     util.call_hook('post_source', {sourced})
   end
 end
---@param plugins plugin name list
-function _on_event(event, plugins)
-  local lazy_plugins = vim.tbl_filter(function(v) return not v.sourced end, util.get_plugins(plugins))
-  if vim.tbl_isempty(lazy_plugins) then
-    C('autocmd! dein-events ' ..event)
-    return
-  end
-
-  -- TODO: support on_if=true
-  lazy_plugins = vim.tbl_filter(
-    function(v)
-      return v.on_if==nil or vim.fn.eval(v.on_if)==1
-    end,
-    lazy_plugins
-  )
-
-  source_events(event, lazy_plugins)
-end
 
 --@param name plugin name
 --@param bang
@@ -333,7 +271,7 @@ function M._on_func(name)
   )
   _source(x)
 end
-function source_events(event, plugins)
+local function source_events(event, plugins)
   if vim.tbl_isempty(plugins) then
     return
   end
@@ -357,6 +295,70 @@ function source_events(event, plugins)
       C('doautocmd <nomodeline> User ' ..event)
     end
   end
+end
+
+--@param plugins plugin name list
+function M._on_event(event, plugins)
+  local lazy_plugins = vim.tbl_filter(function(v) return not v.sourced end, util.get_plugins(plugins))
+  if vim.tbl_isempty(lazy_plugins) then
+    C('autocmd! dein-events ' ..event)
+    return
+  end
+
+  -- TODO: support on_if=true
+  lazy_plugins = vim.tbl_filter(
+    function(v)
+      return v.on_if==nil or vim.fn.eval(v.on_if)==1
+    end,
+    lazy_plugins
+  )
+
+  source_events(event, lazy_plugins)
+end
+
+function _on_default_event(event)
+  local lazy_plugins = util.get_lazy_plugins()
+  local plugins = {}
+
+  local path = vim.fn.expand('<afile>')
+  -- For ":edit ~".
+  if vim.fn.fnamemodify(path, ':t') == '~' then
+    path = '~'
+  end
+  path = util.expand(path)
+
+  for _, ft in ipairs(vim.split(vim.bo.filetype, '.', true)) do
+    local t = vim.tbl_filter(
+      function(v)
+        return vim.tbl_contains(v.on_ft or {}, ft)
+      end,
+      lazy_plugins
+    )
+    vim.list_extend(plugins, t)
+  end
+
+  local t = vim.tbl_filter(
+    function(v)
+      local t = vim.tbl_filter(
+        function(val)
+          return path == val
+        end,
+        vim.deepcopy(v.on_path or {})
+      )
+      return not vim.tbl_isempty(t)
+    end,
+    lazy_plugins
+  )
+  vim.list_extend(plugins, t)
+  t = vim.tbl_filter(
+    function(v)
+      return v.on_event==nil and v.on_if~=nil and a.nvim_eval(tostring(v.on_if))==1
+    end,
+    lazy_plugins
+  )
+  vim.list_extend(plugins, t)
+
+  source_events(event, plugins)
 end
 
 local function get_input()
