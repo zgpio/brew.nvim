@@ -196,7 +196,7 @@ end
 function M.Local(dir, ...)
   require 'dein/parse'
   local args = {...}
-  return _local(dir, (args[1] or {}), (args[2] or {'*'}))
+  return require'dein/parse'._local(dir, (args[1] or {}), (args[2] or {'*'}))
 end
 function M.call_hook(hook_name, ...)
   return require 'dein/util'.call_hook(hook_name, {...})

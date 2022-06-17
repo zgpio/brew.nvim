@@ -388,6 +388,14 @@ local function get_input()
   return input
 end
 
+local function mapargrec(map, mode)
+  local arg = vim.fn.maparg(map, mode)
+  while vim.fn.maparg(arg, mode) ~= '' do
+    arg = vim.fn.maparg(arg, mode)
+  end
+  return arg
+end
+
 function _on_map(mapping, name, mode)
   local cnt = vim.v.count
   if cnt <= 0 then cnt = '' end
@@ -413,8 +421,8 @@ function _on_map(mapping, name, mode)
   else
     while mapping:find('<[%a%d_-]+>') do
       -- ('<LeaDer>'):gsub('<[lL][eE][aA][dD][eE][rR]>', vim.g.mapleader)
-      mapping = vim.fn.substitute(mapping, [[\c<Leader>]], (vim.g.mapleader or [[\]]), 'g')
-      mapping = vim.fn.substitute(mapping, [[\c<LocalLeader>]], (vim.g.maplocalleader or [[\]]), 'g')
+      mapping = vim.fn.substitute(mapping, [[\c<Leader>]], (vim.g.mapleader or '\\'), 'g')
+      mapping = vim.fn.substitute(mapping, [[\c<LocalLeader>]], (vim.g.maplocalleader or '\\'), 'g')
       local ctrl = vim.fn.matchstr(mapping, [=[<\zs[[:alnum:]_-]\+\ze>]=])
       local s = ("<%s>"):format(ctrl)
       mapping = vim.fn.substitute(mapping, s, a.nvim_replace_termcodes(s, true, true, true), '')
@@ -423,13 +431,6 @@ function _on_map(mapping, name, mode)
   end
 
   return ''
-end
-function mapargrec(map, mode)
-  local arg = vim.fn.maparg(map, mode)
-  while vim.fn.maparg(arg, mode) ~= '' do
-    arg = vim.fn.maparg(arg, mode)
-  end
-  return arg
 end
 
 return M

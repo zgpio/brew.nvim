@@ -343,9 +343,9 @@ function M.generate_dummy_mappings(plugin)
       for _, mode in ipairs(modes) do
         local t
         if mode == 'c' then
-          t = [[ \<C-r>=]]
+          t = vim.api.nvim_eval([[" \<C-r>="]])
         elseif mode == 'i' then
-          t = [[ \<C-o>:call ]]
+          t = vim.api.nvim_eval([[" \<C-o>:call "]])
         else
           t = vim.api.nvim_eval([[" :\<C-u>call "]])
         end
@@ -366,7 +366,7 @@ function M.name_conversion(path)
   return vim.fn.fnamemodify(vim.fn.get(vim.split(path, ':'), -1, ''), [[:s?/$??:t:s?\c\.git\s*$??]])
 end
 
-function _local(localdir, options, includes)
+function M._local(localdir, options, includes)
   local base = vim.fn.fnamemodify(util.expand(localdir), ':p')
   local directories = {}
   for _, glob in ipairs(includes) do
