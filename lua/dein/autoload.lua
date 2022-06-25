@@ -5,7 +5,7 @@ local C = vim.api.nvim_command
 local brew = dein
 local M = {}
 
-dein_log = io.open(vim.fn.expand('~/pmlog.txt'), 'a+')
+brew_log = io.open(vim.fn.expand('~/brew_log.txt'), 'a+')
 function _dummy_complete(arglead, cmdline, cursorpos)
   local command = vim.fn.matchstr(cmdline, [[\h\w*]])
   local exists = vim.fn.exists(':'..command)

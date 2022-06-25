@@ -89,8 +89,8 @@ function M.expand(path)
 end
 
 function M.execute_hook(plugin, hook)
-  -- dein_log:write(vim.inspect({"_execute_hook", plugin.name, hook}), "\n")
-  -- dein_log:flush()
+  -- brew_log:write(vim.inspect({"_execute_hook", plugin.name, hook}), "\n")
+  -- brew_log:flush()
   local status, result = pcall(function()
       -- TODO 恢复 g:dein#plugin 提供的功能
       brew.plugin = plugin

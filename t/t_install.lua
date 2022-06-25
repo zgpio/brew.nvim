@@ -15,6 +15,7 @@ assert(install._strwidthpart_reverse('你好世界', 7)=='好世界')
 assert(install._strwidthpart_reverse('你好世界', 20)=='你好世界')
 assert(install._truncate_skipping('hello world', 6, 2, '...')=='h...ld')
 print(install.__echo_mode('hello world\nneovim\n', 'error'))
+print(install.__echo_mode('"\'h中e"', 'error'))
 
 -- Test install log
 print(install._updates_log('hello log'))
@@ -23,4 +24,8 @@ print(vim.inspect(install._var_updates_log))
 install._log('install log')
 print(vim.inspect(install._var_log))
 
+-- expr: str or list
+-- from/to: encoding {from} to encoding {to}
+-- function iconv(expr, from, to)
 print(install._iconv('你好neovim', 'utf8', 'char'))
+print(vim.inspect(install._iconv({'你好neovim', 'a不b错c'}, 'utf8', 'char')))

@@ -10,5 +10,5 @@ print(vim.inspect(toml.parse(text)))
 print(vim.inspect(toml))
 
 -- print(debug.traceback())
--- dein_log:write(vim.inspect(process), "\n")
--- dein_log:flush()
+-- brew_log:write(vim.inspect(process), "\n")
+-- brew_log:flush()

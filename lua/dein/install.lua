@@ -175,7 +175,7 @@ end
 local function __echo(expr, mode)
   local msg = vim.tbl_map(
     function(v)
-      return '[dein] ' ..  v
+      return '[brew] ' ..  v
     end,
     vim.tbl_filter(function(v) return v~='' end, util.convert2list(expr)))
   if vim.fn.empty(msg)==1 then
@@ -765,6 +765,22 @@ local function get_updated_message(context, plugins)
 
   return "Updated plugins:\n" .. vim.fn.join(vim.tbl_map(t, vim.fn.copy(plugins)), "\n")
 end
+
+local function __notify(msg)
+  msg = util.convert2list(msg)
+  local context = __global_context
+  if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
+    return
+  end
+
+  if context.message_type == 'echo' then
+    _notify(msg)
+  end
+
+  _updates_log(msg)
+  __progress = vim.fn.join(msg, "\n")
+end
+
 function __done(context)
   restore_view(context)
 
@@ -797,7 +813,7 @@ function __done(context)
   __global_context = {}
   __progress = ''
   vim.api.nvim_exec([[
-    augroup dein-install
+    augroup brew-install
       autocmd!
     augroup END
   ]], false)
@@ -1243,23 +1259,6 @@ function M.reinstall(plugins)
   _update(util.convert2list(plugins), 'install', 0)
 end
 
-
-function __notify(msg)
-  msg = util.convert2list(msg)
-  local context = __global_context
-  if vim.fn.empty(msg)==1 or vim.fn.empty(context)==1 then
-    return
-  end
-
-  if context.message_type == 'echo' then
-    _notify(msg)
-  end
-
-  _updates_log(msg)
-  __progress = vim.fn.join(msg, "\n")
-end
-
-
 function M.recache_runtimepath()
   if brew._is_sudo then
     return
@@ -1369,7 +1368,7 @@ function _update(plugins, update_type, async)
   end
 
   vim.api.nvim_exec([[
-    augroup dein-install
+    augroup brew-install
       autocmd!
     augroup END
   ]], false)
@@ -1523,8 +1522,8 @@ function __sync(plugin, context)
   if vim.fn.empty(process)==0 then
     table.insert(context.processes, process)
   end
-  -- call luaeval('dein_log:write(vim.inspect(_A), "\n")', [a:context])
-  -- lua dein_log:flush()
+  -- call luaeval('brew_log:write(vim.inspect(_A), "\n")', [a:context])
+  -- lua brew_log:flush()
   return context
 end
 function M.get_progress()
