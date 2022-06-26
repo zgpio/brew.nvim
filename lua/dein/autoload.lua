@@ -1,5 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
-local util = require 'dein/util'
+local util = require 'brew/util'
 local a = vim.api
 local C = vim.api.nvim_command
 local brew = dein
@@ -301,7 +301,7 @@ end
 function M._on_event(event, plugins)
   local lazy_plugins = vim.tbl_filter(function(v) return not v.sourced end, util.get_plugins(plugins))
   if vim.tbl_isempty(lazy_plugins) then
-    C('autocmd! dein-events ' ..event)
+    C('autocmd! brew-events ' ..event)
     return
   end
 

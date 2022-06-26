@@ -1,9 +1,10 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
-local util = require 'dein/util'
-local parse = require 'dein/parse'
-local Job = require 'dein/job'
+local util = require 'brew/util'
+local parse = require 'brew/parse'
+local Job = require 'brew/job'
 local isdir = vim.fn.isdirectory
 local brew = dein
+local a = vim.api
 local M = {}
 
 -- Global options definition.
@@ -939,6 +940,7 @@ local function update_loop(context)
           vim.api.nvim_command('redraw')
         end
       else
+        print('install_blocking mode')
         errored = install_blocking(context)
       end
     end)
@@ -1380,6 +1382,35 @@ function _update(plugins, update_type, async)
 
   __timer = vim.fn.timer_start(50, polling, {['repeat']=-1})
 end
+
+local function __init_progress_buffer()
+  local bufnr = a.nvim_create_buf(true, true)
+  local replacement = {}
+  for i=0,100,1 do
+      table.insert(replacement, '')
+  end
+  a.nvim_buf_set_lines(bufnr, 0, 100, false, replacement)
+
+  local width = 100
+  local height = 50
+  local top = 0
+  local left = 0
+  local opts = {
+     relative= 'editor',
+     row= top,
+     col= left,
+     width= width,
+     height= height,
+     style= 'minimal',
+     border= 'rounded',
+     focusable= true
+  }
+
+  a.nvim_open_win(bufnr, true, opts)
+  return bufnr
+end
+
+local progress_bufnr
 local function __init_job(process, context, cmd)
   process.start_time = vim.fn.localtime()
 
@@ -1389,15 +1420,29 @@ local function __init_job(process, context, cmd)
     return process
   end
 
+  print('start job cmd ', vim.inspect(cmd))
   process.async = {eof=0}
   process.job = Job:start(cmd, {on_init=function (obj)
       obj.context = context
     end,
     on_exit=function (job_id, data, event)
       print('job_id:', job_id, 'event:', event, 'data:', vim.inspect(data))
+
+      local text = a.nvim_buf_get_lines(progress_bufnr, process.number, process.number+1, false)
+      text[1] = text[1] .. ']'
+      a.nvim_buf_set_lines(progress_bufnr, process.number, process.number+1, false, text)
       check_output(context, process)
     end,
     on_stdout=function (job_id, data, event)
+      local text = a.nvim_buf_get_lines(progress_bufnr, process.number, process.number+1, false)
+      text[1] = text[1] .. '-'
+      a.nvim_buf_set_lines(progress_bufnr, process.number, process.number+1, false, text)
+      print('job_id:', job_id, 'event:', event, 'data:', vim.inspect(data))
+    end,
+    on_stderr=function (job_id, data, event)
+      local text = a.nvim_buf_get_lines(progress_bufnr, process.number, process.number+1, false)
+      text[1] = text[1] .. 'x'
+      a.nvim_buf_set_lines(progress_bufnr, process.number, process.number+1, false, text)
       print('job_id:', job_id, 'event:', event, 'data:', vim.inspect(data))
     end
   })
@@ -1408,7 +1453,7 @@ end
 function M.remote_plugins()
   if vim.fn.has('vim_starting')==1 then
     -- Note: UpdateRemotePlugins is not defined in vim_starting
-    vim.api.nvim_command('autocmd dein VimEnter * silent lua dein.remote_plugins()')
+    vim.api.nvim_command('autocmd brew VimEnter * silent lua dein.remote_plugins()')
     return
   end
 
@@ -1472,6 +1517,9 @@ local function __init_process(plugin, context, cmd)
         plugin.rev = rev_save
       end
 
+      if not progress_bufnr then
+        progress_bufnr = __init_progress_buffer()
+      end
       process = __init_job(process, context, cmd)
     end)
   if not status then

@@ -1,8 +1,8 @@
 -- Unit testing & Integration testing
 -- Test install.lua
 _G._TEST = true
-package.loaded["dein/install"] = nil
-local install = require 'dein/install'
+package.loaded["brew/install"] = nil
+local install = require 'brew/install'
 
 print(vim.inspect(install.__convert_args('ping')))
 assert(install._strwidthpart('fool', 3)=='foo')

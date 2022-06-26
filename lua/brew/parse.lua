@@ -1,5 +1,5 @@
 -- vim: set sw=2 sts=4 et tw=78 foldmethod=indent:
-local util = require 'dein/util'
+local util = require 'brew/util'
 local M = {}
 local brew = dein
 -- Global options definition.

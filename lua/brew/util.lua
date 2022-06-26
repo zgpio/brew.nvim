@@ -29,11 +29,11 @@ function M.get_runtime_path()
 end
 
 function M.is_fish()
-  return require 'dein/install'.is_async() and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
+  return require 'brew/install'.is_async() and vim.fn.fnamemodify(vim.o.shell, ':t:r') == 'fish'
 end
 function M.is_powershell()
   local t = vim.fn.fnamemodify(vim.o.shell, ':t:r')
-  return require 'dein/install'.is_async() and (t == 'powershell' or t == 'pwsh')
+  return require 'brew/install'.is_async() and (t == 'powershell' or t == 'pwsh')
 end
 local function _msg2list(expr)
   if vim.tbl_islist(expr) then  -- type(expr) == 'table'
@@ -45,7 +45,7 @@ end
 
 function M._error(msg)
   for _, s in ipairs(_msg2list(msg)) do
-    local c = 'echomsg '..vim.fn.string("[dein] "..s)
+    local c = 'echomsg '..vim.fn.string("[brew] "..s)
     a.nvim_command('echohl WarningMsg')
     a.nvim_command(c)
     a.nvim_command('echohl None')
@@ -224,7 +224,7 @@ function M.call_hook(hook_name, ...)
   end
 end
 function M.globlist(path)
-  return vim.split(vim.fn.glob(path), '\n')
+  return vim.fn.glob(path, true, true)
 end
 function M.add_after(rtps, path)
   vim.validate{
@@ -304,8 +304,9 @@ function M.save_state(is_starting)
   end
 
   if (brew.auto_recache or 0) == 1 then
-    _notify('auto recached')
-    require 'dein/install'.recache_runtimepath()
+    _notify('auto recached') -----------
+    require 'dein/autoload'
+    require 'brew/install'.recache_runtimepath()
   end
 
   brew._vimrcs = M.uniq(brew._vimrcs)
@@ -388,7 +389,7 @@ function M.save_state(is_starting)
       else
         e = 'User ' .. event
       end
-      vim.list_extend(lines, {vim.fn.printf('autocmd dein-events %s lua require"dein/autoload"._on_event("%s", %s)',
+      vim.list_extend(lines, {vim.fn.printf('autocmd brew-events %s lua require"dein/autoload"._on_event("%s", %s)',
             e, event, vim.inspect(plugins))})
     end
   end
@@ -402,8 +403,12 @@ function M.save_state(is_starting)
       ))
   end
 
+  -- local ta = vim.fn.localtime()
+  -- return 0
   vim.fn.writefile(lines,
     (brew.cache_directory or brew._base_path) ..'/state_' .. brew._progname .. '.vim')
+  -- local tb = vim.fn.localtime()
+  -- print('7777777', tb-ta)
 end
 function M.edit_state_file()
   a.nvim_command(':e '..(brew.cache_directory or brew._base_path) ..'/state_' .. brew._progname .. '.vim')
@@ -532,7 +537,7 @@ function _notify(msg)
 
   local icon = M.expand(brew.notification_icon)
 
-  local title = '[dein]'
+  local title = '[brew]'
   local cmd = ''
   if vim.fn.executable('notify-send')==1 then
     cmd = vim.fn.printf('notify-send --expire-time=%d', brew.notification_time * 1000)
@@ -579,7 +584,7 @@ local function _get_vimrcs(vimrcs)
 end
 
 function _begin(path, vimrcs)
-  if vim.fn.exists('#dein')==0 then
+  if vim.fn.exists('#brew')==0 then
     brew._init()
   end
 
@@ -735,7 +740,7 @@ function _end()
     if vim.fn.exists('##'..event) then
       local t = event .. ' *'
       a.nvim_command(
-        vim.fn.printf('autocmd dein-events %s lua require"dein/autoload"._on_event("%s", %s)',
+        vim.fn.printf('autocmd brew-events %s lua require"dein/autoload"._on_event("%s", %s)',
         t, event, vim.inspect(plugins))
       )
     end

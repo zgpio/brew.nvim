@@ -1,6 +1,6 @@
 local reload = require 'dein/reload'
-reload.reload('dein/util')
-local util = require 'dein/util'
+reload.reload('brew/util')
+local util = require 'brew/util'
 
 -- print(vim.inspect(util))
 assert(util.chomp('foo/') == 'foo')

@@ -1,7 +1,7 @@
 -- test _dict in parse.lua
 -- Q: 为什么要备份为orig_opts
 _TEST = true
-local parse = require'dein/parse'
+local parse = require'brew/parse'
 local plug = {
   depends = "ultisnips",
   hook_post_update = "call coc#util#install()\n",

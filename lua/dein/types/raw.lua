@@ -1,4 +1,4 @@
-local util = require 'dein/util'
+local util = require 'brew/util'
 local brew = dein
 local M = {
   name='raw',
@@ -14,7 +14,7 @@ function M.init(repo, options)
   directory = vim.fn.substitute(directory, [[^https:/\+\|^git@]], '', '')
   directory = vim.fn.substitute(directory, ':', '/', 'g')
 
-  return { ['name']=require'dein/parse'.name_conversion(repo), ['type']='raw',
+  return { ['name']=require'brew/parse'.name_conversion(repo), ['type']='raw',
           ['path']=brew._base_path..'/repos/'..directory }
 end
 

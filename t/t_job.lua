@@ -9,7 +9,7 @@ if not package.path:find(project_root) then
 end
 
 --print(package.path)
-local Job = require 'dein/job'  -- import 'Job' class
+local Job = require 'brew/job'  -- import 'Job' class
 print(vim.inspect(Job))
 
 -- Class instantiation

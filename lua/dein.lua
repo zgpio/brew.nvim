@@ -32,7 +32,7 @@ function M._init()
   end
 
   a.nvim_exec([[
-    augroup dein
+    augroup brew
       autocmd!
       autocmd FuncUndefined *
           \ if stridx(expand('<afile>'), 'remote#') != 0 |
@@ -44,11 +44,11 @@ function M._init()
       autocmd FileType *? lua _on_default_event('FileType')
       autocmd BufWritePost *.vim,*.toml,vimrc,.vimrc lua _check_vimrcs()
     augroup END
-    augroup dein-events | augroup END
+    augroup brew-events | augroup END
   ]], true)
 
   if vim.fn.exists('##CmdUndefined')==0 then return end
-  a.nvim_command([[autocmd dein CmdUndefined *  call v:lua._on_pre_cmd(expand('<afile>'))]])
+  a.nvim_command([[autocmd brew CmdUndefined *  call v:lua._on_pre_cmd(expand('<afile>'))]])
 end
 function M.get(...)
   local args = {...}
@@ -59,12 +59,12 @@ function M.get(...)
   end
 end
 function M.install(...)
-  local install = require 'dein/install'
+  local install = require 'brew/install'
   local args = {...}
   return _update((args[1] or {}), 'install', install.is_async())
 end
 function M.update(...)
-  local install = require 'dein/install'
+  local install = require 'brew/install'
   local args = {...}
   if #args > 0 and type(args[1]) == 'table' then
     args = args[1]
@@ -72,7 +72,7 @@ function M.update(...)
   return _update(args, 'update', install.is_async())
 end
 function M.build(...)
-  require 'dein/install'
+  require 'brew/install'
   local args = {...}
   local plugins = {}
   if #args > 0 then
@@ -81,17 +81,17 @@ function M.build(...)
   return _build(plugins)
 end
 function M.check_clean()
-  return require'dein/util'.check_clean()
+  return require'brew/util'.check_clean()
 end
 function M.source(...)
   return _source({...})
 end
 function M.check_install(...)
   local args = {...}
-  return require 'dein/util'.check_install((args[1] or {}))
+  return require 'brew/util'.check_install((args[1] or {}))
 end
 function M.check_update(...)
-  local install = require 'dein/install'
+  local install = require 'brew/install'
   local args = {...}
   return _check_update((args[2] or {}), (args[1] or false), install.is_async())
 end
@@ -101,51 +101,51 @@ function M.direct_install(repo, ...)
   if #args > 0 then
     opts = args[1]
   end
-  require 'dein/install'.direct_install(repo, opts)
+  require 'brew/install'.direct_install(repo, opts)
 end
 function M.reinstall(...)
   local args = {...}
   if #args > 0 and type(args[1]) == 'table' then
     args = args[1]
   end
-  require 'dein/install'.reinstall(args)
+  require 'brew/install'.reinstall(args)
 end
 function M.remote_plugins()
-  return require 'dein/install'.remote_plugins()
+  return require 'brew/install'.remote_plugins()
 end
 function M.recache_runtimepath()
-  require 'dein/install'.recache_runtimepath()
+  require 'brew/install'.recache_runtimepath()
 end
 function M.check_lazy_plugins()
-  return require 'dein/util'.check_lazy_plugins()
+  return require 'brew/util'.check_lazy_plugins()
 end
 function M.get_direct_plugins_path()
   return (M.cache_directory or M._base_path).."/direct_install.vim"
 end
 function M.begin(path, ...)
-  require 'dein/util'
+  require 'brew/util'
   local args = {...}
   return _begin(path, (args[1] or {}))
 end
 function M.End()
-  require 'dein/util'
+  require 'brew/util'
   return _end()
 end
 function M.load_toml(filename, ...)
   local args = {...}
-  return require 'dein/parse'.load_toml(filename, (args[1] or {}))
+  return require 'brew/parse'.load_toml(filename, (args[1] or {}))
 end
 function M.save_state()
-  return require'dein/util'.save_state(vim.fn.has('vim_starting'))
+  return require'brew/util'.save_state(vim.fn.has('vim_starting'))
 end
 function M.get_log()
-  return vim.fn.join(require 'dein/install'.get_log(), "\n")
+  return vim.fn.join(require 'brew/install'.get_log(), "\n")
 end
 function M.get_progress()
-  return require 'dein/install'.get_progress()
+  return require 'brew/install'.get_progress()
 end
 function M.each(command, ...)
-  require 'dein/install'
+  require 'brew/install'
   local args = {...}
   local plugins = {}
   if #args > 0 then
@@ -155,17 +155,17 @@ function M.each(command, ...)
 end
 function M.load_dict(dict, ...)
   local args = {...}
-  return require 'dein/parse'.load_dict(dict, (args[1] or {}))
+  return require 'brew/parse'.load_dict(dict, (args[1] or {}))
 end
 function M.add(repo, ...)
   local args = {...}
-  return require 'dein/parse'._add(repo, (args[1] or {}), false)
+  return require 'brew/parse'._add(repo, (args[1] or {}), false)
 end
 function M.get_updates_log()
-  return vim.fn.join(require 'dein/install'.get_updates_log(), "\n")
+  return vim.fn.join(require 'brew/install'.get_updates_log(), "\n")
 end
 function M.clear_state()
-  require 'dein/util'.clear_state()
+  require 'brew/util'.clear_state()
 end
 function M.load_rollback(rollbackfile, ...)
   local args = {...}
@@ -173,10 +173,10 @@ function M.load_rollback(rollbackfile, ...)
   if #args > 0 then
     plugins = args[1]
   end
-  require 'dein/install'.load_rollback(rollbackfile, plugins)
+  require 'brew/install'.load_rollback(rollbackfile, plugins)
 end
 function M.save_rollback(rollbackfile, ...)
-  require 'dein/install'
+  require 'brew/install'
   local args = {...}
   local plugins = {}
   if #args > 0 then
@@ -185,7 +185,7 @@ function M.save_rollback(rollbackfile, ...)
   _save_rollback(rollbackfile, plugins)
 end
 function M.rollback(date, ...)
-  require 'dein/install'
+  require 'brew/install'
   local args = {...}
   local plugins = {}
   if #args > 0 then
@@ -194,15 +194,15 @@ function M.rollback(date, ...)
   _rollback(date, plugins)
 end
 function M.Local(dir, ...)
-  require 'dein/parse'
+  require 'brew/parse'
   local args = {...}
-  return require'dein/parse'._local(dir, (args[1] or {}), (args[2] or {'*'}))
+  return require'brew/parse'._local(dir, (args[1] or {}), (args[2] or {'*'}))
 end
 function M.call_hook(hook_name, ...)
-  return require 'dein/util'.call_hook(hook_name, {...})
+  return require 'brew/util'.call_hook(hook_name, {...})
 end
 function M.load_state(path, ...)
-  if vim.fn.exists('#dein') == 0 then
+  if vim.fn.exists('#brew') == 0 then
     M._init()
   end
   local args = {...}
@@ -221,7 +221,7 @@ function M.load_state(path, ...)
 
   local status, result = pcall(function() a.nvim_command('source ' .. vim.fn.fnameescape(state)) end)
   if not status then
-    local util = require 'dein/util'
+    local util = require 'brew/util'
     if vim.v.exception ~= 'Cache loading error' then
       util._error('Loading state error: ' .. vim.v.exception)
     end
